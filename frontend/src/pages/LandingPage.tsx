@@ -33,18 +33,24 @@ function LandingPage() {
 
   const startInterview = async () => {
     setLoading(true)
+    
+    const payload = {
+      candidate_name: name || undefined,
+      candidate_email: email || undefined,
+      selected_level: selectedLevel,
+      direction: selectedDirection,
+      cv_text: cvText || undefined,
+    }
+    
+    console.log('Starting interview with payload:', payload)
+    
     try {
-      const interview = await interviewAPI.startInterview({
-        candidate_name: name || undefined,
-        candidate_email: email || undefined,
-        selected_level: selectedLevel,
-        direction: selectedDirection,
-        cv_text: cvText || undefined,
-      })
+      const interview = await interviewAPI.startInterview(payload)
       navigate(`/interview/${interview.id}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start interview:', error)
-      alert('Не удалось начать интервью')
+      console.error('Error response:', error.response?.data)
+      alert(`Не удалось начать интервью: ${error.response?.data?.detail || error.message}`)
     } finally {
       setLoading(false)
     }
