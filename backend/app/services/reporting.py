@@ -24,6 +24,22 @@ def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessment
     Returns:
         Skill assessment with radar data
     """
+    # Check if assessment already exists
+    existing_assessment = db.query(SkillAssessment).filter(
+        SkillAssessment.interview_id == interview_id
+    ).first()
+    
+    if existing_assessment:
+        # Return existing assessment
+        return SkillAssessmentResponse(
+            algorithms=SkillScore(score=existing_assessment.algorithms_score, comment=existing_assessment.algorithms_comment),
+            architecture=SkillScore(score=existing_assessment.architecture_score, comment=existing_assessment.architecture_comment),
+            clean_code=SkillScore(score=existing_assessment.clean_code_score, comment=existing_assessment.clean_code_comment),
+            debugging=SkillScore(score=existing_assessment.debugging_score, comment=existing_assessment.debugging_comment),
+            communication=SkillScore(score=existing_assessment.communication_score, comment=existing_assessment.communication_comment),
+            next_grade_tips=existing_assessment.next_grade_tips or []
+        )
+    
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
     

@@ -25,8 +25,9 @@ class InterviewResponse(BaseModel):
     status: str
     overall_grade: Optional[str]
     overall_score: Optional[float]
-    trust_score: float
+    trust_score: Optional[float]
     created_at: datetime
+    completed_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -61,9 +62,12 @@ class TaskResponse(BaseModel):
     title: str
     description: str
     difficulty: str
+    category: str
     visible_tests: List[Dict[str, Any]]
     max_score: float
+    actual_score: Optional[float] = None
     status: str
+    created_at: datetime
     
     class Config:
         from_attributes = True
@@ -157,8 +161,8 @@ class FinalReportResponse(BaseModel):
     """Complete final report."""
     interview: InterviewResponse
     tasks: List[TaskResponse]
-    skill_assessment: Optional[SkillAssessmentResponse]
+    skill_assessment: SkillAssessmentResponse
     total_hints_used: int
     total_submissions: int
-    average_task_time: Optional[float]
+    average_task_time: Optional[float] = None
 

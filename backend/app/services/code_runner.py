@@ -44,21 +44,25 @@ def run_code(
     try:
         start_time = time.time()
         
-        # Simulate Python execution for MVP
+        # Execute code against tests
         if language == "python":
-            # Simple simulation - in production would use docker
-            # For now, just check if code is valid Python
-            compile(code, '<string>', 'exec')
+            # Test visible cases
+            for test in visible_tests:
+                if run_single_python_test(code, test):
+                    result["passed_visible"] += 1
             
-            # Simulate passing some tests
-            result["passed_visible"] = min(2, len(visible_tests))
-            result["passed_hidden"] = min(1, len(hidden_tests))
+            # Test hidden cases
+            for test in hidden_tests:
+                if run_single_python_test(code, test):
+                    result["passed_hidden"] += 1
+            
+        elif language in ["javascript", "js"]:
+            # JavaScript simulation
+            result["error_message"] = "JavaScript execution coming soon"
             
         else:
-            # Other languages - simulation
-            result["passed_visible"] = 0
-            result["passed_hidden"] = 0
-            result["error_message"] = f"Language {language} not yet supported in MVP"
+            # Other languages - not yet supported
+            result["error_message"] = f"Language {language} not yet supported"
         
         execution_time = (time.time() - start_time) * 1000
         result["execution_time_ms"] = round(execution_time, 2)
@@ -69,6 +73,72 @@ def run_code(
         result["error_message"] = f"Runtime Error: {str(e)}"
     
     return result
+
+
+def run_single_python_test(code: str, test: Dict[str, Any]) -> bool:
+    """
+    Run a single Python test case.
+    
+    Args:
+        code: Python code to test
+        test: Test case with input and expected_output
+    
+    Returns:
+        True if test passed, False otherwise
+    """
+    try:
+        # Create a safe execution environment
+        local_vars = {}
+        global_vars = {"__builtins__": __builtins__}
+        
+        # Execute the code
+        exec(code, global_vars, local_vars)
+        
+        # Find the solution function
+        solution_func = None
+        for name, obj in local_vars.items():
+            if callable(obj) and not name.startswith('_'):
+                solution_func = obj
+                break
+        
+        if not solution_func:
+            return False
+        
+        # Parse test input
+        test_input = test.get("input")
+        expected = test.get("expected_output")
+        
+        # Handle different input formats
+        if isinstance(test_input, str):
+            # Try to parse as Python literal
+            try:
+                import ast
+                test_input = ast.literal_eval(test_input)
+            except:
+                pass
+        
+        # Run the function
+        if isinstance(test_input, (list, tuple)):
+            result = solution_func(*test_input)
+        elif isinstance(test_input, dict):
+            result = solution_func(**test_input)
+        else:
+            result = solution_func(test_input)
+        
+        # Parse expected output
+        if isinstance(expected, str):
+            try:
+                import ast
+                expected = ast.literal_eval(expected)
+            except:
+                pass
+        
+        # Compare result
+        return result == expected
+        
+    except Exception as e:
+        # Test failed
+        return False
 
 
 def run_ai_generated_tests(

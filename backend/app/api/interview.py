@@ -21,7 +21,7 @@ from ..schemas.interview import (
     FinalReportResponse
 )
 from ..services.scibox_client import scibox_client
-from ..services.adaptive import generate_first_task, generate_next_task
+from ..services.adaptive import generate_first_task, generate_next_task as adaptive_generate_next_task
 from ..services.code_runner import run_code
 from ..services.anti_cheat import calculate_trust_score
 from ..services.reporting import generate_final_report
@@ -114,6 +114,17 @@ async def submit_code(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Code execution failed: {str(e)}")
     
+    # Calculate score for this submission
+    from ..services.adaptive import calculate_task_score
+    score = calculate_task_score(
+        passed_visible=result["passed_visible"],
+        total_visible=result["total_visible"],
+        passed_hidden=result["passed_hidden"],
+        total_hidden=result["total_hidden"],
+        execution_time_ms=result.get("execution_time_ms"),
+        max_score=task.max_score
+    )
+    
     # Create submission record
     submission = Submission(
         task_id=task.id,
@@ -127,6 +138,13 @@ async def submit_code(
         error_message=result.get("error_message")
     )
     db.add(submission)
+    
+    # Update task with actual score if this is the best submission
+    if task.actual_score is None or score > task.actual_score:
+        task.actual_score = score
+        if result["passed_visible"] == result["total_visible"] and result["passed_hidden"] == result["total_hidden"]:
+            task.status = "completed"
+    
     db.commit()
     db.refresh(submission)
     
@@ -292,7 +310,7 @@ async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
             avg_score = 50  # Default if no completed tasks
         
         # Generate next task based on performance
-        task = generate_next_task(
+        task = adaptive_generate_next_task(
             interview_id=interview_id,
             previous_performance=avg_score,
             current_level=interview.selected_level,

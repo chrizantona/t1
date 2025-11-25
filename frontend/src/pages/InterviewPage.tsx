@@ -258,7 +258,8 @@ function InterviewPage() {
               <div className="editor-actions">
                 <button 
                   className="btn-hint" 
-                  onClick={() => setShowHints(!showHints)}
+                  onClick={() => setShowHintPanel(!showHintPanel)}
+                  title="Открыть панель подсказок"
                 >
                   💡 Подсказка
                 </button>
