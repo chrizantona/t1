@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { interviewAPI, resumeAPI } from '../api/client'
+import '../styles/landing.css'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ function LandingPage() {
   const [cvText, setCvText] = useState('')
   const [suggestion, setSuggestion] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'quick' | 'cv'>('quick')
 
   const analyzeCV = async () => {
     if (!cvText.trim()) return
@@ -49,129 +51,316 @@ function LandingPage() {
   }
 
   return (
-    <div style={{ padding: '60px 40px', maxWidth: '900px', margin: '0 auto', background: 'white' }}>
-      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '16px', color: 'var(--color-text-primary)' }}>VibeCode</h1>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '400', color: 'var(--color-text-blue)' }}>
-          AI-платформа для технических собеседований
-        </h2>
-        <p style={{ fontSize: '1.1rem', color: 'var(--color-text-light)', marginTop: '16px' }}>
-          Powered by T1 SciBox LLM
-        </p>
-      </div>
-
-      <div className="card" style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', color: 'var(--color-text-blue)' }}>
-          Информация о кандидате
-        </h3>
-        
-        <input
-          type="text"
-          placeholder="Имя (опционально)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', marginBottom: '16px' }}
-        />
-        
-        <input
-          type="email"
-          placeholder="Email (опционально)"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%' }}
-        />
-      </div>
-
-      <div className="card card-blue" style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--color-primary)' }}>
-          🤖 CV-based Level Suggestion
-        </h3>
-        <p className="light" style={{ marginBottom: '24px', fontSize: '0.95rem' }}>
-          Загрузите резюме, и AI порекомендует оптимальный уровень
-        </p>
-        
-        <textarea
-          placeholder="Вставьте текст резюме здесь..."
-          value={cvText}
-          onChange={(e) => setCvText(e.target.value)}
-          rows={6}
-          style={{ width: '100%', marginBottom: '16px', fontFamily: 'monospace', background: 'white' }}
-        />
-        
-        <button onClick={analyzeCV} disabled={loading || !cvText.trim()}>
-          {loading ? '⏳ Анализ...' : '✨ Проанализировать резюме'}
-        </button>
-        
-        {suggestion && (
-          <div className="card" style={{ marginTop: '24px', background: 'white', border: '2px solid var(--color-primary)' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--color-primary)', fontSize: '1.1rem' }}>
-              💡 Рекомендация AI
-            </h3>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              <p><strong style={{ color: 'var(--color-text-blue)' }}>Уровень:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{suggestion.suggested_level}</span></p>
-              <p><strong style={{ color: 'var(--color-text-blue)' }}>Направление:</strong> {suggestion.suggested_direction}</p>
-              {suggestion.years_of_experience && (
-                <p><strong style={{ color: 'var(--color-text-blue)' }}>Опыт:</strong> {suggestion.years_of_experience} лет</p>
-              )}
-              {suggestion.key_technologies.length > 0 && (
-                <p><strong style={{ color: 'var(--color-text-blue)' }}>Технологии:</strong> {suggestion.key_technologies.join(', ')}</p>
-              )}
-              <p style={{ marginTop: '8px', padding: '12px', background: 'var(--color-bg-light)', borderRadius: '8px', fontSize: '0.95rem' }}>
-                {suggestion.reasoning}
-              </p>
-            </div>
+    <div className="landing-container">
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">VibeCode</h1>
+          <h2 className="hero-subtitle">Умное техническое собеседование</h2>
+          <p className="hero-description">
+            AI-платформа для проведения технических интервью с адаптивными задачами,
+            умным ассистентом и объективной оценкой навыков
+          </p>
+          <div className="hero-badge">
+            <span>⚡</span>
+            Powered by T1 SciBox LLM
           </div>
-        )}
-      </div>
-
-      <div className="card" style={{ marginBottom: '40px' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', color: 'var(--color-text-blue)' }}>
-          Выбор уровня и направления
-        </h3>
-        
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '12px', color: 'var(--color-text-grey)', fontWeight: 600 }}>
-            Уровень:
-          </label>
-          <select
-            value={selectedLevel}
-            onChange={(e) => setSelectedLevel(e.target.value)}
-            style={{ width: '100%' }}
-          >
-            <option value="junior">Junior</option>
-            <option value="middle">Middle</option>
-            <option value="middle+">Middle+</option>
-            <option value="senior">Senior</option>
-          </select>
         </div>
-        
-        <div>
-          <label style={{ display: 'block', marginBottom: '12px', color: 'var(--color-text-grey)', fontWeight: 600 }}>
-            Направление:
-          </label>
-          <select
-            value={selectedDirection}
-            onChange={(e) => setSelectedDirection(e.target.value)}
-            style={{ width: '100%' }}
-          >
-            <option value="backend">Backend</option>
-            <option value="frontend">Frontend</option>
-            <option value="algorithms">Algorithms</option>
-            <option value="fullstack">Fullstack</option>
-          </select>
-        </div>
-      </div>
+      </section>
 
-      <button
-        onClick={startInterview}
-        disabled={loading}
-        style={{ width: '100%', padding: '18px', fontSize: '1.2rem', fontWeight: 700 }}
-      >
-        {loading ? '⏳ Запуск...' : '🚀 Начать интервью'}
-      </button>
+      <div className="main-content">
+        {/* Features */}
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">🎯</div>
+            <h3 className="feature-title">CV Analysis</h3>
+            <p className="feature-description">
+              Загрузите резюме, и AI автоматически определит оптимальный уровень сложности
+              и направление собеседования
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">🤖</div>
+            <h3 className="feature-title">AI Interviewer</h3>
+            <p className="feature-description">
+              Умный интервьюер на базе нейросети задаёт вопросы, помогает подсказками
+              и анализирует ваши решения
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">📊</div>
+            <h3 className="feature-title">Skill Radar</h3>
+            <p className="feature-description">
+              Детальная карта навыков с оценкой по 5 критериям: алгоритмы, архитектура,
+              код, дебаг, коммуникация
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">🛡️</div>
+            <h3 className="feature-title">Anti-Cheat</h3>
+            <p className="feature-description">
+              Система отслеживания подозрительных действий и оценки похожести кода
+              на AI-генерацию
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">💡</div>
+            <h3 className="feature-title">Hint System</h3>
+            <p className="feature-description">
+              Подсказки разного уровня помогают не застрять, но влияют на итоговый балл
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">📈</div>
+            <h3 className="feature-title">Progress Tracking</h3>
+            <p className="feature-description">
+              Отслеживайте свой прогресс между грейдами и получайте персональные рекомендации
+            </p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-section">
+          <div className="stat-item">
+            <div className="stat-number">30-45</div>
+            <div className="stat-text">минут</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-number">2-3</div>
+            <div className="stat-text">задачи</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-number">5</div>
+            <div className="stat-text">критериев оценки</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-number">100%</div>
+            <div className="stat-text">AI-powered</div>
+          </div>
+        </div>
+
+        {/* Start Interview Section */}
+        <section className="start-section">
+          <h2 className="section-title">Начать собеседование</h2>
+          <p className="section-subtitle">Выберите способ: быстрый старт или анализ резюме</p>
+
+          <div className="tabs">
+            <button 
+              className={`tab ${activeTab === 'quick' ? 'active' : ''}`}
+              onClick={() => setActiveTab('quick')}
+            >
+              ⚡ Быстрый старт
+            </button>
+            <button 
+              className={`tab ${activeTab === 'cv' ? 'active' : ''}`}
+              onClick={() => setActiveTab('cv')}
+            >
+              📄 Анализ резюме
+            </button>
+          </div>
+
+          <div className="tab-content">
+            {activeTab === 'quick' ? (
+              <div>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Имя <span className="form-label-optional">(опционально)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Иван Иванов"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Email <span className="form-label-optional">(опционально)</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="ivan@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Уровень</label>
+                    <select
+                      value={selectedLevel}
+                      onChange={(e) => setSelectedLevel(e.target.value)}
+                    >
+                      <option value="junior">Junior</option>
+                      <option value="middle">Middle</option>
+                      <option value="middle+">Middle+</option>
+                      <option value="senior">Senior</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Направление</label>
+                    <select
+                      value={selectedDirection}
+                      onChange={(e) => setSelectedDirection(e.target.value)}
+                    >
+                      <option value="backend">Backend</option>
+                      <option value="frontend">Frontend</option>
+                      <option value="algorithms">Algorithms</option>
+                      <option value="fullstack">Fullstack</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  className="cta-button"
+                  onClick={startInterview}
+                  disabled={loading}
+                >
+                  {loading ? '⏳ Загрузка...' : '🚀 Начать собеседование'}
+                </button>
+
+                <div className="time-estimate">
+                  <span>⏱️</span>
+                  Интервью займёт примерно 30-45 минут
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="cv-upload-area">
+                  <div className="cv-upload-icon">📄</div>
+                  <h3 style={{ marginBottom: '12px', color: 'var(--color-text-primary)' }}>
+                    Загрузите текст резюме
+                  </h3>
+                  <p style={{ color: 'var(--color-text-grey)', marginBottom: '24px' }}>
+                    AI проанализирует опыт и автоматически подберёт уровень сложности
+                  </p>
+                  <textarea
+                    placeholder="Вставьте текст резюме сюда...
+
+Пример: Senior Backend Developer с 5+ годами опыта в Python, Django, PostgreSQL..."
+                    value={cvText}
+                    onChange={(e) => setCvText(e.target.value)}
+                    rows={8}
+                    style={{ 
+                      width: '100%', 
+                      padding: '20px',
+                      borderRadius: '12px',
+                      border: '2px solid var(--color-border)',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                <button
+                  className="cta-button"
+                  onClick={analyzeCV}
+                  disabled={loading || !cvText.trim()}
+                  style={{ marginTop: '24px' }}
+                >
+                  {loading ? '🔄 Анализ резюме...' : '🎯 Проанализировать резюме'}
+                </button>
+
+                {suggestion && (
+                  <div className="suggestion-card">
+                    <div className="suggestion-header">
+                      <span className="suggestion-icon">🎯</span>
+                      <div>
+                        <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '1.5rem' }}>
+                          AI рекомендация
+                        </h3>
+                        <p style={{ margin: '4px 0 0', color: 'var(--color-text-grey)' }}>
+                          Анализ завершён успешно
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="suggestion-stats">
+                      <div className="stat-box">
+                        <div className="stat-label">Рекомендуемый уровень</div>
+                        <div className="stat-value">{suggestion.suggested_level.toUpperCase()}</div>
+                      </div>
+
+                      <div className="stat-box">
+                        <div className="stat-label">Направление</div>
+                        <div className="stat-value">{suggestion.suggested_direction}</div>
+                      </div>
+
+                      {suggestion.years_of_experience && (
+                        <div className="stat-box">
+                          <div className="stat-label">Опыт</div>
+                          <div className="stat-value">{suggestion.years_of_experience} лет</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {suggestion.key_technologies?.length > 0 && (
+                      <div>
+                        <div style={{ 
+                          fontSize: '0.9rem', 
+                          color: 'var(--color-text-grey)', 
+                          marginBottom: '12px',
+                          fontWeight: 600
+                        }}>
+                          Ключевые технологии:
+                        </div>
+                        <div className="tech-tags">
+                          {suggestion.key_technologies.map((tech: string, i: number) => (
+                            <span key={i} className="tech-tag">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {suggestion.reasoning && (
+                      <div style={{ 
+                        padding: '20px',
+                        background: 'white',
+                        borderRadius: '12px',
+                        borderLeft: '4px solid var(--color-primary)',
+                        marginBottom: '24px'
+                      }}>
+                        <div style={{ 
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: 'var(--color-text-grey)',
+                          marginBottom: '8px'
+                        }}>
+                          💡 Обоснование:
+                        </div>
+                        <p style={{ margin: 0, color: 'var(--color-text-grey)', lineHeight: '1.6' }}>
+                          {suggestion.reasoning}
+                        </p>
+                      </div>
+                    )}
+
+                    <button
+                      className="cta-button"
+                      onClick={startInterview}
+                      disabled={loading}
+                    >
+                      {loading ? '⏳ Загрузка...' : '🚀 Начать с рекомендованными параметрами'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
 
 export default LandingPage
-
