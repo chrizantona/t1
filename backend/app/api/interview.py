@@ -267,3 +267,38 @@ async def complete_interview(interview_id: int, db: Session = Depends(get_db)):
     
     return {"status": "completed", "interview_id": interview_id}
 
+
+@router.post("/{interview_id}/next-task", response_model=TaskResponse)
+async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
+    """
+    Generate next adaptive task based on previous performance.
+    """
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    
+    # Get previous tasks to calculate performance
+    previous_tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
+    
+    if not previous_tasks:
+        # If no previous tasks, generate first one
+        task = generate_first_task(interview_id, interview.selected_level, interview.direction, db)
+    else:
+        # Calculate average performance
+        completed_tasks = [t for t in previous_tasks if t.actual_score is not None]
+        if completed_tasks:
+            avg_score = sum([t.actual_score for t in completed_tasks]) / len(completed_tasks)
+        else:
+            avg_score = 50  # Default if no completed tasks
+        
+        # Generate next task based on performance
+        task = generate_next_task(
+            interview_id=interview_id,
+            previous_performance=avg_score,
+            current_level=interview.selected_level,
+            direction=interview.direction,
+            db=db
+        )
+    
+    return task
+
