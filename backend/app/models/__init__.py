@@ -8,6 +8,13 @@ from .interview import (
     AntiCheatEvent,
     SkillAssessment
 )
+from .questions import (
+    TechQuestion,
+    QuestionCategory,
+    QuestionDifficulty,
+    QuestionPanelType,
+    QuestionEvalMode
+)
 
 __all__ = [
     "Interview",
@@ -16,6 +23,11 @@ __all__ = [
     "ChatMessage",
     "Hint",
     "AntiCheatEvent",
-    "SkillAssessment"
+    "SkillAssessment",
+    "TechQuestion",
+    "QuestionCategory",
+    "QuestionDifficulty",
+    "QuestionPanelType",
+    "QuestionEvalMode"
 ]
 

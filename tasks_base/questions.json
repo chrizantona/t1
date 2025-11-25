@@ -1,0 +1,362 @@
+[
+  {
+    "id": 1,
+    "category": "algorithms",
+    "difficulty": "easy",
+    "question": "Дан массив целых чисел nums и целое число target. Напишите функцию на Python, которая возвращает индексы двух чисел, сумма которых равна target. Если решения нет, вернуть None."
+  },
+  {
+    "id": 2,
+    "category": "algorithms",
+    "difficulty": "easy",
+    "question": "Дана строка s. Напишите функцию, которая проверяет, является ли строка палиндромом, учитывая только буквенно-цифровые символы и игнорируя регистр."
+  },
+  {
+    "id": 3,
+    "category": "algorithms",
+    "difficulty": "easy",
+    "question": "Дан отсортированный массив целых чисел nums без дубликатов и число target. Реализуйте бинарный поиск, который возвращает индекс target или -1, если элемент не найден."
+  },
+  {
+    "id": 4,
+    "category": "algorithms",
+    "difficulty": "easy",
+    "question": "Реализуйте функцию, которая разворачивает односвязный список."
+  },
+  {
+    "id": 5,
+    "category": "algorithms",
+    "difficulty": "easy",
+    "question": "Дан массив целых чисел. Напишите функцию, которая возвращает максимальную сумму подмассива (Kadane)."
+  },
+  {
+    "id": 6,
+    "category": "algorithms",
+    "difficulty": "medium",
+    "question": "Дан массив чисел и k. Найдите длину самого длинного подмассива с суммой k."
+  },
+  {
+    "id": 7,
+    "category": "algorithms",
+    "difficulty": "medium",
+    "question": "Слейте два отсортированных списка без создания новых узлов."
+  },
+  {
+    "id": 8,
+    "category": "algorithms",
+    "difficulty": "medium",
+    "question": "Проверьте, сбалансировано ли бинарное дерево."
+  },
+  {
+    "id": 9,
+    "category": "algorithms",
+    "difficulty": "medium",
+    "question": "Объедините пересекающиеся интервалы."
+  },
+  {
+    "id": 10,
+    "category": "algorithms",
+    "difficulty": "medium",
+    "question": "Реализуйте LRU-кэш за O(1)."
+  },
+  {
+    "id": 11,
+    "category": "algorithms",
+    "difficulty": "hard",
+    "question": "Найдите LIS сначала O(n^2), затем оптимизацию O(n log n)."
+  },
+  {
+    "id": 12,
+    "category": "algorithms",
+    "difficulty": "hard",
+    "question": "Сериализация/десериализация бинарного дерева."
+  },
+  {
+    "id": 13,
+    "category": "algorithms",
+    "difficulty": "hard",
+    "question": "Реализуйте KMP для поиска подстроки."
+  },
+  {
+    "id": 14,
+    "category": "algorithms",
+    "difficulty": "hard",
+    "question": "Реализуйте Union-Find и проверку циклов."
+  },
+  {
+    "id": 15,
+    "category": "algorithms",
+    "difficulty": "hard",
+    "question": "Реализуйте алгоритм Дейкстры."
+  },
+  {
+    "id": 16,
+    "category": "frontend",
+    "difficulty": "easy",
+    "question": "Создайте React-компонент title+subtitle."
+  },
+  {
+    "id": 17,
+    "category": "frontend",
+    "difficulty": "easy",
+    "question": "Список todos с toggling completed."
+  },
+  {
+    "id": 18,
+    "category": "frontend",
+    "difficulty": "easy",
+    "question": "Разница между let, const и var."
+  },
+  {
+    "id": 19,
+    "category": "frontend",
+    "difficulty": "easy",
+    "question": "Реализуйте debounce."
+  },
+  {
+    "id": 20,
+    "category": "frontend",
+    "difficulty": "easy",
+    "question": "Уникальные элементы массива JS."
+  },
+  {
+    "id": 21,
+    "category": "frontend",
+    "difficulty": "medium",
+    "question": "Форма логина на React с валидацией."
+  },
+  {
+    "id": 22,
+    "category": "frontend",
+    "difficulty": "medium",
+    "question": "Интерфейс User в TypeScript."
+  },
+  {
+    "id": 23,
+    "category": "frontend",
+    "difficulty": "medium",
+    "question": "Объясните Event Loop + пример."
+  },
+  {
+    "id": 24,
+    "category": "frontend",
+    "difficulty": "medium",
+    "question": "Реализуйте hash-based роутинг без библиотек."
+  },
+  {
+    "id": 25,
+    "category": "frontend",
+    "difficulty": "medium",
+    "question": "Адаптивная сетка карточек (HTML+CSS)."
+  },
+  {
+    "id": 26,
+    "category": "frontend",
+    "difficulty": "hard",
+    "question": "Виртуализация списка в React."
+  },
+  {
+    "id": 27,
+    "category": "frontend",
+    "difficulty": "hard",
+    "question": "Реализуйте мини-Redux."
+  },
+  {
+    "id": 28,
+    "category": "frontend",
+    "difficulty": "hard",
+    "question": "Добавьте SSR в React SPA."
+  },
+  {
+    "id": 29,
+    "category": "frontend",
+    "difficulty": "hard",
+    "question": "Объясните Virtual DOM и проблемы с key."
+  },
+  {
+    "id": 30,
+    "category": "frontend",
+    "difficulty": "hard",
+    "question": "Реализуйте систему модулей AMD-подобную."
+  },
+  {
+    "id": 31,
+    "category": "backend",
+    "difficulty": "easy",
+    "question": "Создайте GET /health в Flask/FastAPI."
+  },
+  {
+    "id": 32,
+    "category": "backend",
+    "difficulty": "easy",
+    "question": "Разница между GET и POST."
+  },
+  {
+    "id": 33,
+    "category": "backend",
+    "difficulty": "easy",
+    "question": "Прочесть переменную окружения DATABASE_URL."
+  },
+  {
+    "id": 34,
+    "category": "backend",
+    "difficulty": "easy",
+    "question": "Объясните HTTP-коды 200–500."
+  },
+  {
+    "id": 35,
+    "category": "backend",
+    "difficulty": "easy",
+    "question": "SQL: пользователи за последние 7 дней."
+  },
+  {
+    "id": 36,
+    "category": "backend",
+    "difficulty": "medium",
+    "question": "REST-API для Task."
+  },
+  {
+    "id": 37,
+    "category": "backend",
+    "difficulty": "medium",
+    "question": "Middleware для логирования времени."
+  },
+  {
+    "id": 38,
+    "category": "backend",
+    "difficulty": "medium",
+    "question": "Eventual vs transactional consistency."
+  },
+  {
+    "id": 39,
+    "category": "backend",
+    "difficulty": "medium",
+    "question": "SQL join orders/users суммарные заказы > 1000."
+  },
+  {
+    "id": 40,
+    "category": "backend",
+    "difficulty": "medium",
+    "question": "Реализуйте пагинацию limit/offset."
+  },
+  {
+    "id": 41,
+    "category": "backend",
+    "difficulty": "hard",
+    "question": "JWT-аутентификация + refresh."
+  },
+  {
+    "id": 42,
+    "category": "backend",
+    "difficulty": "hard",
+    "question": "Архитектура сервиса коротких ссылок."
+  },
+  {
+    "id": 43,
+    "category": "backend",
+    "difficulty": "hard",
+    "question": "Optimistic locking."
+  },
+  {
+    "id": 44,
+    "category": "backend",
+    "difficulty": "hard",
+    "question": "Вертикальное vs горизонтальное масштабирование."
+  },
+  {
+    "id": 45,
+    "category": "backend",
+    "difficulty": "hard",
+    "question": "Система очередей задач (job queue)."
+  },
+  {
+    "id": 46,
+    "category": "data-science",
+    "difficulty": "easy",
+    "question": "Разница обучения с учителем и без."
+  },
+  {
+    "id": 47,
+    "category": "data-science",
+    "difficulty": "easy",
+    "question": "Pandas: средний возраст по городам."
+  },
+  {
+    "id": 48,
+    "category": "data-science",
+    "difficulty": "easy",
+    "question": "train/test split + логрег."
+  },
+  {
+    "id": 49,
+    "category": "data-science",
+    "difficulty": "easy",
+    "question": "Overfitting vs underfitting."
+  },
+  {
+    "id": 50,
+    "category": "data-science",
+    "difficulty": "easy",
+    "question": "StandardScaler vs MinMaxScaler."
+  },
+  {
+    "id": 51,
+    "category": "data-science",
+    "difficulty": "medium",
+    "question": "Несбалансированные классы, метрики."
+  },
+  {
+    "id": 52,
+    "category": "data-science",
+    "difficulty": "medium",
+    "question": "KFold cross-validation."
+  },
+  {
+    "id": 53,
+    "category": "data-science",
+    "difficulty": "medium",
+    "question": "Градиентный спуск + реализация."
+  },
+  {
+    "id": 54,
+    "category": "data-science",
+    "difficulty": "medium",
+    "question": "KMeans: подготовка, выбор k, код."
+  },
+  {
+    "id": 55,
+    "category": "data-science",
+    "difficulty": "medium",
+    "question": "Пайплайн scikit-learn."
+  },
+  {
+    "id": 56,
+    "category": "data-science",
+    "difficulty": "hard",
+    "question": "Bagging vs boosting."
+  },
+  {
+    "id": 57,
+    "category": "data-science",
+    "difficulty": "hard",
+    "question": "Логрег на NumPy с нуля."
+  },
+  {
+    "id": 58,
+    "category": "data-science",
+    "difficulty": "hard",
+    "question": "Архитектура LSTM + пример."
+  },
+  {
+    "id": 59,
+    "category": "data-science",
+    "difficulty": "hard",
+    "question": "Мониторинг модели в продакшене."
+  },
+  {
+    "id": 60,
+    "category": "data-science",
+    "difficulty": "hard",
+    "question": "Спроектируйте ML-пайплайн end-to-end."
+  }
+]

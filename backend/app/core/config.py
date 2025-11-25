@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL_RPS: int = 7
     
     class Config:
-        env_file = ".env"
+        env_file = "../.env"
         case_sensitive = True
 
 

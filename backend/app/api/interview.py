@@ -25,6 +25,9 @@ from ..services.adaptive import generate_first_task, generate_next_task as adapt
 from ..services.code_runner import run_code
 from ..services.anti_cheat import calculate_trust_score
 from ..services.reporting import generate_final_report
+from ..services.grading_service import calculate_start_grade, calculate_final_grade_for_interview
+from ..services.task_pool import generate_or_select_task
+from ..adaptive.engine import DifficultyLevel
 
 router = APIRouter()
 
@@ -53,7 +56,7 @@ async def start_interview(
     
     # Generate first task using LLM
     try:
-        task = generate_first_task(
+        task = await generate_first_task(
             interview_id=interview.id,
             level=interview.selected_level,
             direction=interview.direction,
@@ -187,7 +190,7 @@ async def send_chat_message(
     
     # Get AI response
     try:
-        ai_response = scibox_client.chat_completion(llm_messages, temperature=0.7, max_tokens=512)
+        ai_response = await scibox_client.chat_completion(llm_messages, temperature=0.7, max_tokens=512)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI response failed: {str(e)}")
     
@@ -229,7 +232,7 @@ async def request_hint(
     ]
     
     try:
-        hint_content = scibox_client.chat_completion(messages, temperature=0.5, max_tokens=256)
+        hint_content = await scibox_client.chat_completion(messages, temperature=0.5, max_tokens=256)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Hint generation failed: {str(e)}")
     
@@ -257,18 +260,28 @@ async def request_hint(
 async def get_final_report(interview_id: int, db: Session = Depends(get_db)):
     """
     Generate and return final interview report.
-    Includes skill assessment and recommendations.
+    Uses deterministic grading logic + LLM for skill assessment.
     """
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
     
     try:
-        report = generate_final_report(interview_id, db)
+        # Calculate deterministic grade
+        grade_data = calculate_final_grade_for_interview(interview_id, db)
+        
+        # Generate LLM-based skill assessment
+        report = await generate_final_report(interview_id, db)
+        
+        # Merge deterministic grade with LLM report
+        # The deterministic grade takes precedence
+        if hasattr(report, 'interview'):
+            report.interview.overall_grade = grade_data['final_grade']
+            report.interview.overall_score = grade_data['overall_score']
+        
+        return report
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
-    
-    return report
 
 
 @router.post("/{interview_id}/complete")
@@ -300,7 +313,7 @@ async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
     
     if not previous_tasks:
         # If no previous tasks, generate first one
-        task = generate_first_task(interview_id, interview.selected_level, interview.direction, db)
+        task = await generate_first_task(interview_id, interview.selected_level, interview.direction, db)
     else:
         # Calculate average performance
         completed_tasks = [t for t in previous_tasks if t.actual_score is not None]
@@ -310,7 +323,7 @@ async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
             avg_score = 50  # Default if no completed tasks
         
         # Generate next task based on performance
-        task = adaptive_generate_next_task(
+        task = await adaptive_generate_next_task(
             interview_id=interview_id,
             previous_performance=avg_score,
             current_level=interview.selected_level,

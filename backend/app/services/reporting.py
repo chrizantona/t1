@@ -12,7 +12,7 @@ from .scibox_client import scibox_client
 from .anti_cheat import calculate_trust_score
 
 
-def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessmentResponse:
+async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessmentResponse:
     """
     Generate skill assessment using LLM analysis.
     Killer feature #2: Skill Radar Chart.
@@ -85,7 +85,7 @@ def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessment
     ]
     
     try:
-        response = scibox_client.chat_completion(messages, temperature=0.3, max_tokens=1024)
+        response = await scibox_client.chat_completion(messages, temperature=0.3, max_tokens=1024)
         
         if "```json" in response:
             response = response.split("```json")[1].split("```")[0]
@@ -141,7 +141,7 @@ def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessment
     )
 
 
-def generate_final_report(interview_id: int, db: Session) -> FinalReportResponse:
+async def generate_final_report(interview_id: int, db: Session) -> FinalReportResponse:
     """
     Generate complete final report.
     
@@ -155,12 +155,13 @@ def generate_final_report(interview_id: int, db: Session) -> FinalReportResponse
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
     
-    # Calculate trust score
-    trust_score = calculate_trust_score(interview_id, db)
-    interview.trust_score = trust_score
+    # Calculate trust score using advanced system
+    from .anti_cheat_advanced import calculate_full_trust_score
+    trust_data = await calculate_full_trust_score(interview_id, db)
+    interview.trust_score = trust_data["trust_score"]
     
     # Generate skill assessment if not exists
-    skill_assessment = generate_skill_assessment(interview_id, db)
+    skill_assessment = await generate_skill_assessment(interview_id, db)
     
     # Calculate overall score
     avg_skill = (

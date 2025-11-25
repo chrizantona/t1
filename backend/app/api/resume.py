@@ -1,6 +1,6 @@
 """
 Resume analysis API endpoints.
-CV-based level suggestion feature.
+CV-based level suggestion feature with deterministic grading logic.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from ..core.db import get_db
 from ..schemas.interview import CVAnalysisRequest, CVAnalysisResponse
 from ..services.scibox_client import scibox_client
+from ..grading.tracks import determine_track
+from ..services.grading_service import calculate_start_grade
 
 router = APIRouter()
 
@@ -39,35 +41,53 @@ async def analyze_resume(
     ]
     
     try:
-        response = scibox_client.chat_completion(messages, temperature=0.3, max_tokens=512)
+        # Use LLM as parser only (not decision maker)
+        response = await scibox_client.analyze_resume(cv_data.cv_text)
         
-        # Parse JSON response
-        import json
-        # Try to extract JSON from response
-        if "```json" in response:
-            response = response.split("```json")[1].split("```")[0]
-        elif "```" in response:
-            response = response.split("```")[1].split("```")[0]
+        # Extract data from LLM
+        years_exp = response.get("years_of_experience", 2.0)
+        resume_tracks = response.get("tracks", [])
+        key_techs = response.get("key_technologies", [])
+        resume_grade = response.get("recommended_grade")
         
-        result = json.loads(response.strip())
+        # Deterministic track determination
+        suggested_direction = determine_track(
+            self_claimed_track=None,  # User hasn't claimed yet
+            resume_text=cv_data.cv_text,
+            resume_tracks=resume_tracks
+        )
+        
+        # Deterministic grade calculation
+        # Assume user will claim "middle" if not specified
+        grade_calc = calculate_start_grade(
+            years_of_experience=years_exp,
+            self_claimed_grade="middle",  # Default assumption
+            resume_grade=resume_grade
+        )
+        
+        suggested_level = grade_calc["start_grade"]
+        
+        reasoning = (
+            f"На основе {years_exp:.1f} лет опыта и анализа технологий "
+            f"({', '.join(key_techs[:3])}) рекомендуем начать с уровня {suggested_level}. "
+            f"Направление: {suggested_direction}."
+        )
         
         return CVAnalysisResponse(
-            suggested_level=result.get("suggested_level", "middle"),
-            suggested_direction=result.get("suggested_direction", "backend"),
-            years_of_experience=result.get("years_of_experience"),
-            key_technologies=result.get("key_technologies", []),
-            reasoning=result.get("reasoning", "")
+            suggested_level=suggested_level,
+            suggested_direction=suggested_direction,
+            years_of_experience=years_exp,
+            key_technologies=key_techs,
+            reasoning=reasoning
         )
     
-    except json.JSONDecodeError:
-        # Fallback if JSON parsing fails
+    except Exception as e:
+        # Fallback with deterministic defaults
         return CVAnalysisResponse(
             suggested_level="middle",
             suggested_direction="backend",
-            years_of_experience=None,
+            years_of_experience=2.0,
             key_technologies=[],
-            reasoning="Не удалось полностью проанализировать резюме, рекомендую начать с уровня Middle."
+            reasoning="Рекомендуем начать с уровня Middle по направлению Backend."
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"CV analysis failed: {str(e)}")
 

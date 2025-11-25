@@ -10,7 +10,7 @@ from ..models.interview import Task
 from .scibox_client import scibox_client
 
 
-def generate_first_task(interview_id: int, level: str, direction: str, db: Session) -> Task:
+async def generate_first_task(interview_id: int, level: str, direction: str, db: Session) -> Task:
     """
     Generate first task for interview using LLM.
     
@@ -83,7 +83,7 @@ def generate_first_task(interview_id: int, level: str, direction: str, db: Sessi
         {"role": "user", "content": f"Создай новую уникальную задачу для {level} разработчика по направлению {direction}. Сделай её интересной и практичной!"}
     ]
     
-    response = scibox_client.code_completion(messages, temperature=0.7, max_tokens=1024)
+    response = await scibox_client.code_completion(messages, temperature=0.7, max_tokens=1024)
     
     # Parse response
     try:
@@ -130,7 +130,7 @@ def generate_first_task(interview_id: int, level: str, direction: str, db: Sessi
     return task
 
 
-def generate_next_task(
+async def generate_next_task(
     interview_id: int,
     previous_performance: float,
     current_level: str,
@@ -232,7 +232,7 @@ def generate_next_task(
         {"role": "user", "content": f"Создай НОВУЮ задачу категории '{selected_category}' для {adjusted_level} разработчика. Прошлая производительность: {previous_performance}%. Будь креативным!"}
     ]
     
-    response = scibox_client.code_completion(messages, temperature=0.8, max_tokens=1536)
+    response = await scibox_client.code_completion(messages, temperature=0.8, max_tokens=1536)
     
     # Parse response
     try:
