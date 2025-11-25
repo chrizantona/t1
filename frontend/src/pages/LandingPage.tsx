@@ -49,21 +49,28 @@ function LandingPage() {
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>VibeCode</h1>
-      <p style={{ fontSize: '1.2rem', color: '#888', marginBottom: '40px' }}>
-        AI-платформа для технических собеседований
-      </p>
+    <div style={{ padding: '60px 40px', maxWidth: '900px', margin: '0 auto', background: 'white' }}>
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <h1 style={{ fontSize: '3rem', marginBottom: '16px', color: 'var(--color-text-primary)' }}>VibeCode</h1>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '400', color: 'var(--color-text-blue)' }}>
+          AI-платформа для технических собеседований
+        </h2>
+        <p style={{ fontSize: '1.1rem', color: 'var(--color-text-light)', marginTop: '16px' }}>
+          Powered by T1 SciBox LLM
+        </p>
+      </div>
 
-      <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Информация о кандидате</h2>
+      <div className="card" style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', color: 'var(--color-text-blue)' }}>
+          Информация о кандидате
+        </h3>
         
         <input
           type="text"
           placeholder="Имя (опционально)"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', padding: '12px', marginBottom: '15px', fontSize: '1rem', borderRadius: '8px', border: '1px solid #333' }}
+          style={{ width: '100%', marginBottom: '16px' }}
         />
         
         <input
@@ -71,52 +78,65 @@ function LandingPage() {
           placeholder="Email (опционально)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '12px', marginBottom: '15px', fontSize: '1rem', borderRadius: '8px', border: '1px solid #333' }}
+          style={{ width: '100%' }}
         />
       </div>
 
-      <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>
-          Загрузить резюме (CV-based Level Suggestion)
-        </h2>
+      <div className="card card-blue" style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--color-primary)' }}>
+          🤖 CV-based Level Suggestion
+        </h3>
+        <p className="light" style={{ marginBottom: '24px', fontSize: '0.95rem' }}>
+          Загрузите резюме, и AI порекомендует оптимальный уровень
+        </p>
         
         <textarea
           placeholder="Вставьте текст резюме здесь..."
           value={cvText}
           onChange={(e) => setCvText(e.target.value)}
           rows={6}
-          style={{ width: '100%', padding: '12px', marginBottom: '15px', fontSize: '1rem', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace' }}
+          style={{ width: '100%', marginBottom: '16px', fontFamily: 'monospace', background: 'white' }}
         />
         
         <button onClick={analyzeCV} disabled={loading || !cvText.trim()}>
-          {loading ? 'Анализ...' : 'Проанализировать резюме'}
+          {loading ? '⏳ Анализ...' : '✨ Проанализировать резюме'}
         </button>
         
         {suggestion && (
-          <div style={{ marginTop: '20px', padding: '20px', background: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
-            <h3 style={{ marginBottom: '10px' }}>Рекомендация AI</h3>
-            <p><strong>Уровень:</strong> {suggestion.suggested_level}</p>
-            <p><strong>Направление:</strong> {suggestion.suggested_direction}</p>
-            {suggestion.years_of_experience && (
-              <p><strong>Опыт:</strong> {suggestion.years_of_experience} лет</p>
-            )}
-            {suggestion.key_technologies.length > 0 && (
-              <p><strong>Технологии:</strong> {suggestion.key_technologies.join(', ')}</p>
-            )}
-            <p style={{ marginTop: '10px', color: '#888' }}>{suggestion.reasoning}</p>
+          <div className="card" style={{ marginTop: '24px', background: 'white', border: '2px solid var(--color-primary)' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--color-primary)', fontSize: '1.1rem' }}>
+              💡 Рекомендация AI
+            </h3>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <p><strong style={{ color: 'var(--color-text-blue)' }}>Уровень:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{suggestion.suggested_level}</span></p>
+              <p><strong style={{ color: 'var(--color-text-blue)' }}>Направление:</strong> {suggestion.suggested_direction}</p>
+              {suggestion.years_of_experience && (
+                <p><strong style={{ color: 'var(--color-text-blue)' }}>Опыт:</strong> {suggestion.years_of_experience} лет</p>
+              )}
+              {suggestion.key_technologies.length > 0 && (
+                <p><strong style={{ color: 'var(--color-text-blue)' }}>Технологии:</strong> {suggestion.key_technologies.join(', ')}</p>
+              )}
+              <p style={{ marginTop: '8px', padding: '12px', background: 'var(--color-bg-light)', borderRadius: '8px', fontSize: '0.95rem' }}>
+                {suggestion.reasoning}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
-      <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Выбор уровня и направления</h2>
+      <div className="card" style={{ marginBottom: '40px' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', color: 'var(--color-text-blue)' }}>
+          Выбор уровня и направления
+        </h3>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '8px' }}>Уровень:</label>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '12px', color: 'var(--color-text-grey)', fontWeight: 600 }}>
+            Уровень:
+          </label>
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            style={{ width: '100%', padding: '12px', fontSize: '1rem', borderRadius: '8px', border: '1px solid #333', background: '#1a1a1a' }}
+            style={{ width: '100%' }}
           >
             <option value="junior">Junior</option>
             <option value="middle">Middle</option>
@@ -125,12 +145,14 @@ function LandingPage() {
           </select>
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '8px' }}>Направление:</label>
+        <div>
+          <label style={{ display: 'block', marginBottom: '12px', color: 'var(--color-text-grey)', fontWeight: 600 }}>
+            Направление:
+          </label>
           <select
             value={selectedDirection}
             onChange={(e) => setSelectedDirection(e.target.value)}
-            style={{ width: '100%', padding: '12px', fontSize: '1rem', borderRadius: '8px', border: '1px solid #333', background: '#1a1a1a' }}
+            style={{ width: '100%' }}
           >
             <option value="backend">Backend</option>
             <option value="frontend">Frontend</option>
@@ -143,9 +165,9 @@ function LandingPage() {
       <button
         onClick={startInterview}
         disabled={loading}
-        style={{ width: '100%', padding: '16px', fontSize: '1.2rem', background: '#646cff', color: 'white', border: 'none' }}
+        style={{ width: '100%', padding: '18px', fontSize: '1.2rem', fontWeight: 700 }}
       >
-        {loading ? 'Запуск...' : 'Начать интервью'}
+        {loading ? '⏳ Запуск...' : '🚀 Начать интервью'}
       </button>
     </div>
   )

@@ -1,0 +1,54 @@
+/* ALS Hauss Font - T1 Brand Font */
+
+/* 
+  Инструкция по добавлению шрифта ALS Hauss:
+  
+  1. Получите файлы шрифта ALS Hauss (.woff2, .woff, .ttf)
+  2. Разместите их в папке /public/fonts/
+  3. Раскомментируйте секции @font-face ниже
+  4. Убедитесь, что пути к файлам корректны
+*/
+
+/* Regular */
+/*
+@font-face {
+  font-family: 'ALS Hauss';
+  src: url('/fonts/ALSHauss-Regular.woff2') format('woff2'),
+       url('/fonts/ALSHauss-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+/* Medium */
+/*
+@font-face {
+  font-family: 'ALS Hauss';
+  src: url('/fonts/ALSHauss-Medium.woff2') format('woff2'),
+       url('/fonts/ALSHauss-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+/* Bold */
+/*
+@font-face {
+  font-family: 'ALS Hauss';
+  src: url('/fonts/ALSHauss-Bold.woff2') format('woff2'),
+       url('/fonts/ALSHauss-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+/* 
+  После добавления файлов шрифта:
+  - Раскомментируйте нужные @font-face секции
+  - Шрифт уже подключен в index.css через font-family: 'ALS Hauss'
+  - Если файлы шрифта недоступны, будет использован fallback: -apple-system, BlinkMacSystemFont
+*/
+
