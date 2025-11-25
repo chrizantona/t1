@@ -76,6 +76,12 @@ export const interviewAPI = {
     const response = await api.post(`/api/interview/${interviewId}/complete`)
     return response.data
   },
+
+  // Generate next task
+  generateNextTask: async (interviewId: number) => {
+    const response = await api.post(`/api/interview/${interviewId}/next-task`)
+    return response.data
+  },
 }
 
 // Resume API

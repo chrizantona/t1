@@ -17,6 +17,12 @@ function InterviewPage() {
   const [messages, setMessages] = useState<any[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  const [showHintPanel, setShowHintPanel] = useState(false)
+  const [hintLoading, setHintLoading] = useState(false)
+  const [currentHint, setCurrentHint] = useState<any>(null)
+  const [showHints, setShowHints] = useState(false)
+  const [hint, setHint] = useState<any>(null)
+  const [hintLoading, setHintLoading] = useState(false)
 
   useEffect(() => {
     loadInterview()
@@ -68,12 +74,41 @@ function InterviewPage() {
       setCurrentTaskIndex(currentTaskIndex + 1)
       setCode('')
       setResult(null)
+      setCurrentHint(null)
     } else {
-      // Генерируем новую задачу через API (если нужно)
-      // TODO: Добавить генерацию следующей задачи
-      if (confirm('Вы решили все задачи! Завершить интервью?')) {
-        completeInterview()
+      // Генерируем новую задачу через API
+      try {
+        const newTask = await interviewAPI.generateNextTask(Number(interviewId))
+        setTasks([...tasks, newTask])
+        setCurrentTaskIndex(tasks.length)
+        setCode('')
+        setResult(null)
+        setCurrentHint(null)
+      } catch (error) {
+        console.error('Failed to generate next task:', error)
+        if (confirm('Не удалось сгенерировать новую задачу. Завершить интервью?')) {
+          completeInterview()
+        }
       }
+    }
+  }
+
+  const requestHint = async (level: string) => {
+    if (!currentTask) return
+    
+    setHintLoading(true)
+    try {
+      const hint = await interviewAPI.requestHint({
+        task_id: currentTask.id,
+        hint_level: level,
+        current_code: code || undefined
+      })
+      setCurrentHint(hint)
+    } catch (error) {
+      console.error('Failed to get hint:', error)
+      alert('Не удалось получить подсказку')
+    } finally {
+      setHintLoading(false)
     }
   }
 
@@ -124,6 +159,25 @@ function InterviewPage() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
+    }
+  }
+
+  const requestHint = async (level: string) => {
+    if (!currentTask) return
+    
+    setHintLoading(true)
+    try {
+      const response = await interviewAPI.requestHint({
+        task_id: currentTask.id,
+        hint_level: level,
+        current_code: code
+      })
+      setHint(response)
+    } catch (error) {
+      console.error('Failed to get hint:', error)
+      alert('Ошибка при получении подсказки')
+    } finally {
+      setHintLoading(false)
     }
   }
 
@@ -224,13 +278,18 @@ function InterviewPage() {
               </div>
               
               <div className="editor-actions">
-                <button className="btn-hint">💡 Подсказка</button>
+                <button 
+                  className="btn-hint" 
+                  onClick={() => setShowHints(!showHints)}
+                >
+                  💡 Подсказка
+                </button>
                 <button 
                   className="btn-submit" 
                   onClick={submitCode}
                   disabled={loading || !code.trim()}
                 >
-                  {loading ? '⏳ Проверка...' : '▶️ Запустить'}
+                  {loading ? '⏳ Проверка...' : '▶️ Запустить код'}
                 </button>
               </div>
             </div>
@@ -242,6 +301,150 @@ function InterviewPage() {
               placeholder={`# Напишите решение на ${language}...\n\ndef solution():\n    pass`}
               spellCheck={false}
             />
+
+            {/* Hint Panel */}
+            {showHintPanel && (
+              <div style={{
+                position: 'absolute',
+                top: '60px',
+                right: '24px',
+                width: '400px',
+                background: 'white',
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                padding: '24px',
+                zIndex: 100,
+                border: '2px solid var(--color-primary)',
+                animation: 'slideIn 0.3s ease'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ margin: 0, color: 'var(--color-primary)' }}>💡 Подсказки</h3>
+                  <button 
+                    onClick={() => setShowHintPanel(false)}
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      fontSize: '1.5rem', 
+                      cursor: 'pointer',
+                      padding: '4px 8px'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {!currentHint ? (
+                  <div>
+                    <p style={{ color: 'var(--color-text-grey)', marginBottom: '16px', fontSize: '0.95rem' }}>
+                      Выберите уровень подсказки. Каждая подсказка уменьшает максимальный балл за задачу.
+                    </p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <button
+                        onClick={() => requestHint('light')}
+                        disabled={hintLoading}
+                        style={{
+                          padding: '16px',
+                          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          fontWeight: 600,
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        🟢 Лёгкая подсказка (-10%)
+                      </button>
+
+                      <button
+                        onClick={() => requestHint('medium')}
+                        disabled={hintLoading}
+                        style={{
+                          padding: '16px',
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        🟡 Средняя подсказка (-20%)
+                      </button>
+
+                      <button
+                        onClick={() => requestHint('heavy')}
+                        disabled={hintLoading}
+                        style={{
+                          padding: '16px',
+                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        🔴 Жёсткая подсказка (-35%)
+                      </button>
+                    </div>
+
+                    {hintLoading && (
+                      <p style={{ textAlign: 'center', marginTop: '16px', color: 'var(--color-text-light)' }}>
+                        ⏳ Генерация подсказки...
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{
+                      padding: '16px',
+                      background: '#fee2e2',
+                      borderRadius: '12px',
+                      marginBottom: '16px',
+                      border: '2px solid #ef4444',
+                      color: '#991b1b',
+                      fontWeight: 600
+                    }}>
+                      ⚠️ Штраф: -{currentHint.score_penalty}%
+                      <br />
+                      Новый максимум: {currentHint.new_max_score}/100
+                    </div>
+
+                    <div style={{
+                      padding: '20px',
+                      background: 'var(--color-bg-light)',
+                      borderRadius: '12px',
+                      lineHeight: '1.6',
+                      color: 'var(--color-text-primary)'
+                    }}>
+                      {currentHint.hint_content}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentHint(null)}
+                      style={{
+                        width: '100%',
+                        marginTop: '16px',
+                        padding: '12px',
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      Получить ещё подсказку
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Results */}
@@ -289,14 +492,30 @@ function InterviewPage() {
                 </div>
               )}
 
-              {passedTests === totalTests && (
-                <button className="next-task-btn" onClick={moveToNextTask}>
-                  {currentTaskIndex < tasks.length - 1 ? 
-                    '➡️ Следующая задача' : 
-                    '🏁 Завершить интервью'
-                  }
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+                <button 
+                  className="next-task-btn" 
+                  onClick={moveToNextTask}
+                  style={{ margin: 0 }}
+                >
+                  ➡️ Следующая задача
                 </button>
-              )}
+                <button 
+                  className="next-task-btn" 
+                  onClick={() => {
+                    if (confirm('Вы уверены что хотите завершить интервью?')) {
+                      completeInterview()
+                    }
+                  }}
+                  style={{ 
+                    margin: 0,
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                  }}
+                >
+                  🏁 Завершить
+                </button>
+              </div>
             </div>
           )}
         </div>
