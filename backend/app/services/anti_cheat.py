@@ -3,7 +3,7 @@ Anti-cheat service.
 Calculates trust score based on suspicious events.
 """
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict, Any
 
 from ..models.interview import AntiCheatEvent
 

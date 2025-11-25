@@ -5,13 +5,13 @@ services:
     image: postgres:15-alpine
     container_name: vibecode-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: vibecode
+      POSTGRES_PASSWORD: vibecode
+      POSTGRES_DB: vibecode
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - vibecode-network
     healthcheck:

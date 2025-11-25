@@ -14,7 +14,7 @@ pydantic-settings==2.1.0
 email-validator==2.1.0
 
 # OpenAI client for SciBox
-openai==1.10.0
+openai==1.55.3
 
 # Environment variables
 python-dotenv==1.0.0
