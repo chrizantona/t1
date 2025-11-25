@@ -159,25 +159,6 @@ function InterviewPage() {
     }
   }
 
-  const requestHint = async (level: string) => {
-    if (!currentTask) return
-    
-    setHintLoading(true)
-    try {
-      const response = await interviewAPI.requestHint({
-        task_id: currentTask.id,
-        hint_level: level,
-        current_code: code
-      })
-      setHint(response)
-    } catch (error) {
-      console.error('Failed to get hint:', error)
-      alert('Ошибка при получении подсказки')
-    } finally {
-      setHintLoading(false)
-    }
-  }
-
   if (!interview || tasks.length === 0) {
     return (
       <div style={{ 
