@@ -20,9 +20,6 @@ function InterviewPage() {
   const [showHintPanel, setShowHintPanel] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
   const [currentHint, setCurrentHint] = useState<any>(null)
-  const [showHints, setShowHints] = useState(false)
-  const [hint, setHint] = useState<any>(null)
-  const [hintLoading, setHintLoading] = useState(false)
 
   useEffect(() => {
     loadInterview()
