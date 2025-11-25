@@ -447,6 +447,39 @@ function InterviewPage() {
             )}
           </div>
 
+          {/* Action Buttons - Always visible */}
+          <div style={{ 
+            padding: '20px 24px', 
+            background: 'white',
+            borderTop: '2px solid var(--color-border)',
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '12px' 
+          }}>
+            <button 
+              className="next-task-btn" 
+              onClick={moveToNextTask}
+              style={{ margin: 0 }}
+            >
+              ➡️ Следующая задача
+            </button>
+            <button 
+              className="next-task-btn" 
+              onClick={() => {
+                if (confirm('Вы уверены что хотите завершить интервью?')) {
+                  completeInterview()
+                }
+              }}
+              style={{ 
+                margin: 0,
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+              }}
+            >
+              🏁 Завершить интервью
+            </button>
+          </div>
+
           {/* Results */}
           {result && (
             <div className="results-panel">
@@ -492,30 +525,6 @@ function InterviewPage() {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
-                <button 
-                  className="next-task-btn" 
-                  onClick={moveToNextTask}
-                  style={{ margin: 0 }}
-                >
-                  ➡️ Следующая задача
-                </button>
-                <button 
-                  className="next-task-btn" 
-                  onClick={() => {
-                    if (confirm('Вы уверены что хотите завершить интервью?')) {
-                      completeInterview()
-                    }
-                  }}
-                  style={{ 
-                    margin: 0,
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-                  }}
-                >
-                  🏁 Завершить
-                </button>
-              </div>
             </div>
           )}
         </div>
