@@ -1,0 +1,2 @@
+"""VibeCode Backend Application."""
+

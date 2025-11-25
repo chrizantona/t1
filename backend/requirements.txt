@@ -1,0 +1,28 @@
+# Web framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.25
+psycopg[binary]==3.1.17
+alembic==1.13.1
+
+# Pydantic and settings
+pydantic==2.5.3
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# OpenAI client for SciBox
+openai==1.10.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# CORS
+starlette==0.35.1
+
+# Utilities
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
