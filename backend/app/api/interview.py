@@ -26,7 +26,6 @@ from ..services.code_runner import run_code
 from ..services.anti_cheat import calculate_trust_score
 from ..services.reporting import generate_final_report
 from ..services.grading_service import calculate_start_grade, calculate_final_grade_for_interview
-from ..services.task_pool import generate_or_select_task
 from ..adaptive.engine import DifficultyLevel
 
 router = APIRouter()
@@ -41,6 +40,27 @@ async def start_interview(
     Start a new interview session.
     Creates interview and generates first task using LLM.
     """
+    # Extract years of experience from CV if available
+    years_exp = None
+    if interview_data.cv_text:
+        try:
+            from ..api.resume import scibox_client as resume_client
+            cv_analysis = await resume_client.analyze_resume(interview_data.cv_text)
+            years_exp = cv_analysis.get("years_of_experience", None)
+        except:
+            pass
+    
+    # If no CV or failed to extract, use default based on level
+    if years_exp is None:
+        level_to_years = {
+            "junior": 1.0,
+            "junior_plus": 1.5,
+            "middle": 3.0,
+            "middle+": 4.5,
+            "senior": 6.0
+        }
+        years_exp = level_to_years.get(interview_data.selected_level, 3.0)
+    
     # Create interview
     interview = Interview(
         candidate_name=interview_data.candidate_name,
@@ -48,6 +68,7 @@ async def start_interview(
         selected_level=interview_data.selected_level,
         direction=interview_data.direction,
         cv_text=interview_data.cv_text,
+        years_of_experience=years_exp,
         status="in_progress"
     )
     db.add(interview)
@@ -183,7 +204,7 @@ async def send_chat_message(
     
     # Build messages for LLM
     llm_messages = [
-        {"role": "system", "content": "Ты опытный технический интервьюер. Задавай вопросы о подходе, сложности, граничных случаях. Будь дружелюбным и конструктивным."}
+        {"role": "system", "content": "/no_think\nТы опытный технический интервьюер. Отвечай кратко и по делу (2-3 предложения)."}
     ]
     for msg in messages:
         llm_messages.append({"role": msg.role, "content": msg.content})
@@ -191,6 +212,9 @@ async def send_chat_message(
     # Get AI response
     try:
         ai_response = await scibox_client.chat_completion(llm_messages, temperature=0.7, max_tokens=512)
+        # Remove <think> tags if present
+        import re
+        ai_response = re.sub(r'<think>.*?</think>', '', ai_response, flags=re.DOTALL).strip()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI response failed: {str(e)}")
     
@@ -226,13 +250,23 @@ async def request_hint(
     penalty = penalties.get(hint_data.hint_level, 10)
     
     # Generate hint using LLM
+    hint_prompts = {
+        "light": "Дай лёгкую подсказку - намекни на алгоритм или подход, но не раскрывай решение.",
+        "medium": "Дай среднюю подсказку - опиши алгоритм решения и ключевые шаги.",
+        "heavy": "Дай сильную подсказку - покажи детальный алгоритм с примером кода."
+    }
+    system_prompt = f"/no_think\nТы - система подсказок. {hint_prompts.get(hint_data.hint_level, hint_prompts['light'])} Отвечай кратко (максимум 2-3 предложения)."
+    
     messages = [
-        {"role": "system", "content": f"Дай {hint_data.hint_level} подсказку для задачи."},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"Задача: {task.description}\n\nТекущий код:\n{hint_data.current_code or 'Нет кода'}"}
     ]
     
     try:
         hint_content = await scibox_client.chat_completion(messages, temperature=0.5, max_tokens=256)
+        # Remove <think> tags if present
+        import re
+        hint_content = re.sub(r'<think>.*?</think>', '', hint_content, flags=re.DOTALL).strip()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Hint generation failed: {str(e)}")
     
@@ -262,16 +296,26 @@ async def get_final_report(interview_id: int, db: Session = Depends(get_db)):
     Generate and return final interview report.
     Uses deterministic grading logic + LLM for skill assessment.
     """
+    import traceback
+    import logging
+    logger = logging.getLogger(__name__)
+    
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
     
     try:
+        logger.info(f"🔍 Generating report for interview {interview_id}")
+        
         # Calculate deterministic grade
+        logger.info("📊 Calculating grade...")
         grade_data = calculate_final_grade_for_interview(interview_id, db)
+        logger.info(f"✅ Grade calculated: {grade_data.get('final_grade')}")
         
         # Generate LLM-based skill assessment
+        logger.info("🤖 Generating skill assessment...")
         report = await generate_final_report(interview_id, db)
+        logger.info("✅ Skill assessment generated")
         
         # Merge deterministic grade with LLM report
         # The deterministic grade takes precedence
@@ -279,8 +323,11 @@ async def get_final_report(interview_id: int, db: Session = Depends(get_db)):
             report.interview.overall_grade = grade_data['final_grade']
             report.interview.overall_score = grade_data['overall_score']
         
+        logger.info("✅ Report ready to return")
         return report
     except Exception as e:
+        logger.error(f"❌ Report generation failed: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
 
 

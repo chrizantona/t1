@@ -63,21 +63,22 @@ async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAsse
             })
     
     # Prompt for skill assessment
-    system_prompt = """Ты эксперт по оценке навыков разработчиков.
+    system_prompt = """/no_think
+Ты эксперт по оценке навыков разработчиков.
 Проанализируй результаты интервью и верни JSON с полями:
 - algorithms_score: 0-100
-- algorithms_comment: краткий комментарий
+- algorithms_comment: краткий комментарий (до 100 символов)
 - architecture_score: 0-100
-- architecture_comment: краткий комментарий
+- architecture_comment: краткий комментарий (до 100 символов)
 - clean_code_score: 0-100
-- clean_code_comment: краткий комментарий
+- clean_code_comment: краткий комментарий (до 100 символов)
 - debugging_score: 0-100
-- debugging_comment: краткий комментарий
+- debugging_comment: краткий комментарий (до 100 символов)
 - communication_score: 0-100
-- communication_comment: краткий комментарий
-- next_grade_tips: список из 3 советов для роста
+- communication_comment: краткий комментарий (до 100 символов)
+- next_grade_tips: список из 3 советов для роста (каждый до 100 символов)
 
-Отвечай ТОЛЬКО валидным JSON."""
+Отвечай ТОЛЬКО валидным JSON без markdown."""
     
     messages = [
         {"role": "system", "content": system_prompt},

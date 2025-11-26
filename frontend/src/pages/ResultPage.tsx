@@ -25,6 +25,32 @@ interface FinalReport {
   total_submissions: number
 }
 
+// Форматирование грейда
+const formatGrade = (grade: string | null | undefined): string => {
+  if (!grade) return 'Не определён'
+  const gradeMap: Record<string, string> = {
+    'intern': 'Intern (Стажёр)',
+    'junior': 'Junior',
+    'junior_plus': 'Junior+',
+    'junior+': 'Junior+',
+    'middle': 'Middle',
+    'middle_plus': 'Middle+',
+    'middle+': 'Middle+',
+    'senior': 'Senior',
+    'senior_plus': 'Senior+',
+  }
+  return gradeMap[grade.toLowerCase()] || grade
+}
+
+const getGradeColor = (grade: string | null | undefined): string => {
+  if (!grade) return '#8C8C8C'
+  const g = grade.toLowerCase()
+  if (g.includes('senior')) return '#722ED1'
+  if (g.includes('middle')) return '#1890FF'
+  if (g.includes('junior')) return '#52C41A'
+  return '#FA8C16'
+}
+
 function ResultPage() {
   const { interviewId } = useParams<{ interviewId: string }>()
   const navigate = useNavigate()
@@ -120,9 +146,11 @@ function ResultPage() {
             <div className="summary-label">Задач решено</div>
           </div>
           
-          <div className="summary-card">
+          <div className="summary-card grade-card">
             <div className="summary-icon">🏆</div>
-            <div className="summary-value">{interview.overall_grade || 'N/A'}</div>
+            <div className="summary-value" style={{ color: getGradeColor(interview.overall_grade) }}>
+              {formatGrade(interview.overall_grade)}
+            </div>
             <div className="summary-label">Итоговый грейд</div>
           </div>
         </div>
@@ -302,16 +330,16 @@ function ResultPage() {
             
             <div className="trust-score-display">
               <div className={`trust-score-value ${
-                interview.trust_score >= 0.8 ? 'high' : 
-                interview.trust_score >= 0.5 ? 'medium' : 'low'
+                interview.trust_score >= 80 ? 'high' : 
+                interview.trust_score >= 50 ? 'medium' : 'low'
               }`}>
-                {(interview.trust_score * 100).toFixed(0)}%
+                {interview.trust_score.toFixed(0)}%
               </div>
               
               <p className="trust-score-description">
-                {interview.trust_score >= 0.8 
+                {interview.trust_score >= 80 
                   ? '✅ Высокий уровень доверия - результаты достоверны'
-                  : interview.trust_score >= 0.5
+                  : interview.trust_score >= 50
                   ? '⚠️ Средний уровень доверия - есть подозрительная активность'
                   : '❌ Низкий уровень доверия - возможное использование AI'
                 }

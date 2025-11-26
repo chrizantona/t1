@@ -1,7 +1,7 @@
 """
 Database models for interview system.
 """
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, ForeignKey, JSON, BigInteger
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -37,6 +37,7 @@ class Interview(Base):
     # CV data
     cv_text = Column(Text, nullable=True)
     cv_analysis = Column(JSON, nullable=True)
+    years_of_experience = Column(Float, nullable=True)  # Extracted from CV or manual input
     
     # Relationships
     tasks = relationship("Task", back_populates="interview", cascade="all, delete-orphan")

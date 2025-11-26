@@ -87,9 +87,16 @@ def run_single_python_test(code: str, test: Dict[str, Any]) -> bool:
         True if test passed, False otherwise
     """
     try:
-        # Create a safe execution environment
+        # Create a safe execution environment with common imports
         local_vars = {}
-        global_vars = {"__builtins__": __builtins__}
+        global_vars = {
+            "__builtins__": __builtins__,
+            "List": list,
+            "Dict": dict,
+            "Set": set,
+            "Tuple": tuple,
+            "Optional": lambda x: x,
+        }
         
         # Execute the code
         exec(code, global_vars, local_vars)
@@ -102,28 +109,60 @@ def run_single_python_test(code: str, test: Dict[str, Any]) -> bool:
                 break
         
         if not solution_func:
+            print(f"⚠️ No solution function found in code")
             return False
         
         # Parse test input
         test_input = test.get("input")
-        expected = test.get("expected_output")
+        expected = test.get("expected_output") or test.get("expected")
+        
+        print(f"🧪 Testing: input={test_input}, expected={expected}")
         
         # Handle different input formats
+        import ast
+        import re
+        
+        args = []
+        kwargs = {}
+        
         if isinstance(test_input, str):
-            # Try to parse as Python literal
+            # Parse string like "[2,7,11,15], target=9" or "[3,2,4], 6"
+            test_input = test_input.strip()
+            
+            # Try to parse as Python call arguments
             try:
-                import ast
-                test_input = ast.literal_eval(test_input)
+                # Create a fake function call and parse it
+                fake_call = f"func({test_input})"
+                tree = ast.parse(fake_call)
+                call_node = tree.body[0].value
+                
+                # Extract args and kwargs
+                args = [ast.literal_eval(arg) for arg in call_node.args]
+                kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords}
             except:
-                pass
+                # Fallback: try simple literal eval
+                try:
+                    test_input = ast.literal_eval(test_input)
+                    if isinstance(test_input, (list, tuple)):
+                        args = list(test_input)
+                    else:
+                        args = [test_input]
+                except:
+                    args = [test_input]
+        else:
+            # Already parsed (list/dict)
+            if isinstance(test_input, (list, tuple)):
+                args = list(test_input)
+            elif isinstance(test_input, dict):
+                kwargs = test_input
+            else:
+                args = [test_input]
         
         # Run the function
-        if isinstance(test_input, (list, tuple)):
-            result = solution_func(*test_input)
-        elif isinstance(test_input, dict):
-            result = solution_func(**test_input)
+        if kwargs:
+            result = solution_func(*args, **kwargs)
         else:
-            result = solution_func(test_input)
+            result = solution_func(*args)
         
         # Parse expected output
         if isinstance(expected, str):
@@ -134,10 +173,17 @@ def run_single_python_test(code: str, test: Dict[str, Any]) -> bool:
                 pass
         
         # Compare result
-        return result == expected
+        passed = result == expected
+        if passed:
+            print(f"✅ Test PASSED: result={result}")
+        else:
+            print(f"❌ Test FAILED: result={result}, expected={expected}")
+        
+        return passed
         
     except Exception as e:
         # Test failed
+        print(f"❌ Test FAILED with exception: {e}")
         return False
 
 

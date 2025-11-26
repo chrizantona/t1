@@ -81,8 +81,15 @@ def get_task_result_from_db(task: Task) -> TaskResult:
     if hidden_total == 0 and task.hidden_tests:
         hidden_total = len(task.hidden_tests)
     
+    # Normalize difficulty (medium -> middle)
+    normalized_difficulty = task.difficulty
+    if normalized_difficulty == "medium":
+        normalized_difficulty = "middle"
+    elif normalized_difficulty not in ["easy", "middle", "hard"]:
+        normalized_difficulty = "middle"  # Default fallback
+    
     return TaskResult(
-        difficulty=task.difficulty,
+        difficulty=normalized_difficulty,
         visible_passed=visible_passed,
         visible_total=visible_total,
         hidden_passed=hidden_passed,

@@ -87,13 +87,26 @@ class SciBoxClient:
         """Helper to parse JSON from LLM response."""
         try:
             response = response.strip()
-            if response.startswith("```"):
-                response = response.split("```")[1]
-                if response.startswith("json"):
-                    response = response[4:]
-                response = response.strip()
-            return json.loads(response)
-        except:
+            # Remove <think> tags if present
+            import re
+            response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
+            
+            # Remove markdown code blocks
+            if "```json" in response:
+                response = response.split("```json")[1].split("```")[0].strip()
+            elif response.startswith("```"):
+                parts = response.split("```")
+                if len(parts) >= 2:
+                    response = parts[1].strip()
+                    if response.startswith("json"):
+                        response = response[4:].strip()
+            
+            parsed = json.loads(response)
+            print(f"✅ Successfully parsed JSON response")
+            return parsed
+        except Exception as e:
+            print(f"⚠️ Failed to parse JSON response: {e}")
+            print(f"Raw response: {response[:200]}")
             return fallback
     
     # ========== PROMPT METHODS (ALL ASYNC) ==========

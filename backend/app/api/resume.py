@@ -25,7 +25,8 @@ async def analyze_resume(
     """
     
     # Prompt for CV analysis
-    system_prompt = """Ты эксперт по оценке резюме разработчиков.
+    system_prompt = """/no_think
+Ты эксперт по оценке резюме разработчиков.
 Проанализируй резюме и верни JSON с полями:
 - suggested_level: junior/middle/middle+/senior
 - suggested_direction: backend/frontend/fullstack/algorithms/data
@@ -33,7 +34,7 @@ async def analyze_resume(
 - key_technologies: список ключевых технологий
 - reasoning: краткое объяснение рекомендации
 
-Отвечай ТОЛЬКО валидным JSON, без дополнительного текста."""
+Отвечай ТОЛЬКО валидным JSON без markdown, без ```json тегов."""
     
     messages = [
         {"role": "system", "content": system_prompt},

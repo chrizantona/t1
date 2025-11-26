@@ -5,7 +5,7 @@ Determines when to increase/decrease task difficulty.
 from typing import Literal
 from pydantic import BaseModel
 
-DifficultyLevel = Literal["easy", "middle", "hard"]
+DifficultyLevel = Literal["easy", "medium", "middle", "hard"]
 
 
 class TaskResult(BaseModel):

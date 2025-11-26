@@ -57,127 +57,87 @@ function LandingPage() {
   }
 
   return (
-    <div className="landing-container">
+    <div className="landing-page">
+      {/* Header */}
+      <header className="header">
+        <div className="header-container">
+          <div className="logo">
+            <span className="logo-icon">+</span>
+            <span className="logo-text">VibeCode</span>
+          </div>
+          <nav className="nav">
+            <a href="#features">Возможности</a>
+            <a href="#start">Начать</a>
+          </nav>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">VibeCode</h1>
-          <h2 className="hero-subtitle">Умное техническое собеседование</h2>
-          <p className="hero-description">
+      <section className="hero">
+        <div className="hero-container">
+          <h1 className="hero-title">Умное техническое собеседование</h1>
+          <p className="hero-subtitle">
             AI-платформа для проведения технических интервью с адаптивными задачами,
-            умным ассистентом и объективной оценкой навыков
+            интеллектуальным ассистентом и объективной оценкой навыков
           </p>
-          <div className="hero-badge">
-            <span>⚡</span>
-            Powered by T1 SciBox LLM
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="features">
+        <div className="container">
+          <div className="features-grid">
+            <div className="feature">
+              <div className="feature-number">01</div>
+              <h3 className="feature-title">CV Analysis</h3>
+              <p className="feature-text">
+                Загрузите резюме, и AI автоматически определит оптимальный уровень сложности
+              </p>
+            </div>
+
+            <div className="feature">
+              <div className="feature-number">02</div>
+              <h3 className="feature-title">AI Interviewer</h3>
+              <p className="feature-text">
+                Умный интервьюер задаёт вопросы, помогает подсказками и анализирует решения
+              </p>
+            </div>
+
+            <div className="feature">
+              <div className="feature-number">03</div>
+              <h3 className="feature-title">Skill Radar</h3>
+              <p className="feature-text">
+                Детальная карта навыков с оценкой по 5 критериям: алгоритмы, архитектура, код
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="main-content">
-        {/* Features */}
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🎯</div>
-            <h3 className="feature-title">CV Analysis</h3>
-            <p className="feature-description">
-              Загрузите резюме, и AI автоматически определит оптимальный уровень сложности
-              и направление собеседования
-            </p>
-          </div>
+      {/* Start Section */}
+      <section id="start" className="start">
+        <div className="container">
+          <div className="start-card">
+            <div className="tabs-header">
+              <button 
+                className={`tab-btn ${activeTab === 'quick' ? 'active' : ''}`}
+                onClick={() => setActiveTab('quick')}
+              >
+                Быстрый старт
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'cv' ? 'active' : ''}`}
+                onClick={() => setActiveTab('cv')}
+              >
+                Анализ резюме
+              </button>
+            </div>
 
-          <div className="feature-card">
-            <div className="feature-icon">🤖</div>
-            <h3 className="feature-title">AI Interviewer</h3>
-            <p className="feature-description">
-              Умный интервьюер на базе нейросети задаёт вопросы, помогает подсказками
-              и анализирует ваши решения
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">📊</div>
-            <h3 className="feature-title">Skill Radar</h3>
-            <p className="feature-description">
-              Детальная карта навыков с оценкой по 5 критериям: алгоритмы, архитектура,
-              код, дебаг, коммуникация
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">🛡️</div>
-            <h3 className="feature-title">Anti-Cheat</h3>
-            <p className="feature-description">
-              Система отслеживания подозрительных действий и оценки похожести кода
-              на AI-генерацию
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">💡</div>
-            <h3 className="feature-title">Hint System</h3>
-            <p className="feature-description">
-              Подсказки разного уровня помогают не застрять, но влияют на итоговый балл
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">📈</div>
-            <h3 className="feature-title">Progress Tracking</h3>
-            <p className="feature-description">
-              Отслеживайте свой прогресс между грейдами и получайте персональные рекомендации
-            </p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="stats-section">
-          <div className="stat-item">
-            <div className="stat-number">30-45</div>
-            <div className="stat-text">минут</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-number">2-3</div>
-            <div className="stat-text">задачи</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-number">5</div>
-            <div className="stat-text">критериев оценки</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-number">100%</div>
-            <div className="stat-text">AI-powered</div>
-          </div>
-        </div>
-
-        {/* Start Interview Section */}
-        <section className="start-section">
-          <h2 className="section-title">Начать собеседование</h2>
-          <p className="section-subtitle">Выберите способ: быстрый старт или анализ резюме</p>
-
-          <div className="tabs">
-            <button 
-              className={`tab ${activeTab === 'quick' ? 'active' : ''}`}
-              onClick={() => setActiveTab('quick')}
-            >
-              ⚡ Быстрый старт
-            </button>
-            <button 
-              className={`tab ${activeTab === 'cv' ? 'active' : ''}`}
-              onClick={() => setActiveTab('cv')}
-            >
-              📄 Анализ резюме
-            </button>
-          </div>
-
-          <div className="tab-content">
-            {activeTab === 'quick' ? (
-              <div>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Имя <span className="form-label-optional">(опционально)</span>
-                    </label>
+            {activeTab === 'quick' && (
+              <div className="form">
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>Имя (опционально)</label>
                     <input
                       type="text"
                       placeholder="Иван Иванов"
@@ -186,10 +146,8 @@ function LandingPage() {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">
-                      Email <span className="form-label-optional">(опционально)</span>
-                    </label>
+                  <div className="form-field">
+                    <label>Email (опционально)</label>
                     <input
                       type="email"
                       placeholder="ivan@example.com"
@@ -197,174 +155,112 @@ function LandingPage() {
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
+                </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Уровень</label>
-                    <select
-                      value={selectedLevel}
-                      onChange={(e) => setSelectedLevel(e.target.value)}
-                    >
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>Уровень</label>
+                    <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)}>
+                      <option value="intern">Intern (Стажёр)</option>
                       <option value="junior">Junior</option>
+                      <option value="junior+">Junior+</option>
                       <option value="middle">Middle</option>
                       <option value="middle+">Middle+</option>
                       <option value="senior">Senior</option>
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Направление</label>
-                    <select
-                      value={selectedDirection}
-                      onChange={(e) => setSelectedDirection(e.target.value)}
-                    >
-                      <option value="backend">Backend</option>
-                      <option value="frontend">Frontend</option>
-                      <option value="algorithms">Algorithms</option>
-                      <option value="fullstack">Fullstack</option>
+                  <div className="form-field">
+                    <label>Направление</label>
+                    <select value={selectedDirection} onChange={(e) => setSelectedDirection(e.target.value)}>
+                      <option value="backend">Backend Developer</option>
+                      <option value="frontend">Frontend Developer</option>
+                      <option value="fullstack">Fullstack Developer</option>
+                      <option value="algorithms">Algorithms & DS</option>
+                      <option value="ml">Machine Learning Engineer</option>
+                      <option value="data-science">Data Scientist</option>
+                      <option value="data-engineer">Data Engineer</option>
+                      <option value="devops">DevOps Engineer</option>
+                      <option value="mobile">Mobile Developer</option>
                     </select>
                   </div>
                 </div>
 
-                <button
-                  className="cta-button"
+                <button 
+                  className="btn-primary-large"
                   onClick={startInterview}
                   disabled={loading}
                 >
-                  {loading ? '⏳ Загрузка...' : '🚀 Начать собеседование'}
+                  {loading ? 'Загрузка...' : 'Начать собеседование →'}
                 </button>
 
-                <div className="time-estimate">
-                  <span>⏱️</span>
-                  Интервью займёт примерно 30-45 минут
-                </div>
+                <p className="form-hint">Интервью займёт примерно 30-45 минут</p>
               </div>
-            ) : (
-              <div>
-                <div className="cv-upload-area">
-                  <div className="cv-upload-icon">📄</div>
-                  <h3 style={{ marginBottom: '12px', color: 'var(--color-text-primary)' }}>
-                    Загрузите текст резюме
-                  </h3>
-                  <p style={{ color: 'var(--color-text-grey)', marginBottom: '24px' }}>
-                    AI проанализирует опыт и автоматически подберёт уровень сложности
-                  </p>
-                  <textarea
-                    placeholder="Вставьте текст резюме сюда...
+            )}
 
-Пример: Senior Backend Developer с 5+ годами опыта в Python, Django, PostgreSQL..."
+            {activeTab === 'cv' && (
+              <div className="form">
+                <div className="form-field">
+                  <label>Текст резюме</label>
+                  <textarea
+                    placeholder="Вставьте текст резюме...
+
+Пример: Алан Халибеков, изучаю ML с 1 курса, сейчас на 3 курсе. В конце 2 курса прошел стажировку в Яндекс, предложили грейд джуна..."
                     value={cvText}
                     onChange={(e) => setCvText(e.target.value)}
-                    rows={8}
-                    style={{ 
-                      width: '100%', 
-                      padding: '20px',
-                      borderRadius: '12px',
-                      border: '2px solid var(--color-border)',
-                      fontSize: '1rem',
-                      fontFamily: 'inherit',
-                      resize: 'vertical'
-                    }}
+                    rows={10}
                   />
                 </div>
 
                 <button
-                  className="cta-button"
+                  className="btn-primary-large"
                   onClick={analyzeCV}
                   disabled={loading || !cvText.trim()}
-                  style={{ marginTop: '24px' }}
                 >
-                  {loading ? '🔄 Анализ резюме...' : '🎯 Проанализировать резюме'}
+                  {loading ? 'Анализ резюме...' : 'Проанализировать резюме →'}
                 </button>
 
                 {suggestion && (
-                  <div className="suggestion-card">
+                  <div className="suggestion">
                     <div className="suggestion-header">
-                      <span className="suggestion-icon">🎯</span>
-                      <div>
-                        <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '1.5rem' }}>
-                          AI рекомендация
-                        </h3>
-                        <p style={{ margin: '4px 0 0', color: 'var(--color-text-grey)' }}>
-                          Анализ завершён успешно
-                        </p>
+                      <h3>Рекомендация AI</h3>
+                      <div className="suggestion-badges">
+                        <span className="badge">{suggestion.suggested_level.toUpperCase()}</span>
+                        <span className="badge">{suggestion.suggested_direction}</span>
                       </div>
                     </div>
-
-                    <div className="suggestion-stats">
-                      <div className="stat-box">
-                        <div className="stat-label">Рекомендуемый уровень</div>
-                        <div className="stat-value">{suggestion.suggested_level.toUpperCase()}</div>
-                      </div>
-
-                      <div className="stat-box">
-                        <div className="stat-label">Направление</div>
-                        <div className="stat-value">{suggestion.suggested_direction}</div>
-                      </div>
-
-                      {suggestion.years_of_experience && (
-                        <div className="stat-box">
-                          <div className="stat-label">Опыт</div>
-                          <div className="stat-value">{suggestion.years_of_experience} лет</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {suggestion.key_technologies?.length > 0 && (
-                      <div>
-                        <div style={{ 
-                          fontSize: '0.9rem', 
-                          color: 'var(--color-text-grey)', 
-                          marginBottom: '12px',
-                          fontWeight: 600
-                        }}>
-                          Ключевые технологии:
-                        </div>
-                        <div className="tech-tags">
-                          {suggestion.key_technologies.map((tech: string, i: number) => (
-                            <span key={i} className="tech-tag">
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
+                    
+                    {suggestion.key_technologies.length > 0 && (
+                      <div className="tech-stack">
+                        {suggestion.key_technologies.slice(0, 5).map((tech: string, i: number) => (
+                          <span key={i} className="tech-badge">{tech}</span>
+                        ))}
                       </div>
                     )}
-
-                    {suggestion.reasoning && (
-                      <div style={{ 
-                        padding: '20px',
-                        background: 'white',
-                        borderRadius: '12px',
-                        borderLeft: '4px solid var(--color-primary)',
-                        marginBottom: '24px'
-                      }}>
-                        <div style={{ 
-                          fontSize: '0.9rem',
-                          fontWeight: 600,
-                          color: 'var(--color-text-grey)',
-                          marginBottom: '8px'
-                        }}>
-                          💡 Обоснование:
-                        </div>
-                        <p style={{ margin: 0, color: 'var(--color-text-grey)', lineHeight: '1.6' }}>
-                          {suggestion.reasoning}
-                        </p>
-                      </div>
-                    )}
-
+                    
+                    <p className="suggestion-text">{suggestion.reasoning}</p>
+                    
                     <button
-                      className="cta-button"
+                      className="btn-primary-large"
                       onClick={startInterview}
                       disabled={loading}
                     >
-                      {loading ? '⏳ Загрузка...' : '🚀 Начать с рекомендованными параметрами'}
+                      Начать с этими настройками →
                     </button>
                   </div>
                 )}
               </div>
             )}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="container">
+          <p>Powered by T1 SciBox LLM</p>
+        </div>
+      </footer>
     </div>
   )
 }

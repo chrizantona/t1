@@ -11,15 +11,12 @@ function InterviewPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0)
   const [code, setCode] = useState('')
-  const [language, setLanguage] = useState('python')
   const [result, setResult] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
-  const [showHintPanel, setShowHintPanel] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
-  const [currentHint, setCurrentHint] = useState<any>(null)
+  const [currentHints, setCurrentHints] = useState<any[]>([])
 
   useEffect(() => {
     loadInterview()
@@ -39,48 +36,51 @@ function InterviewPage() {
     try {
       const data = await interviewAPI.getTasks(Number(interviewId))
       setTasks(data)
+      if (data.length > 0) {
+        setCurrentTaskIndex(0)
+      }
     } catch (error) {
       console.error('Failed to load tasks:', error)
     }
   }
 
+  const currentTask = tasks[currentTaskIndex]
+
   const submitCode = async () => {
     if (!currentTask || !code.trim()) return
-    
-    setLoading(true)
-    setResult(null)
-    
+
     try {
       const submission = await interviewAPI.submitCode({
         task_id: currentTask.id,
-        code,
-        language,
+        code: code,
+        language: 'python'
       })
       setResult(submission)
+      
+      // Reload tasks to get updated scores
+      await loadTasks()
     } catch (error) {
-      console.error('Submission failed:', error)
-      alert('Ошибка при отправке кода')
-    } finally {
-      setLoading(false)
+      console.error('Failed to submit code:', error)
+      alert('Не удалось отправить код')
     }
   }
 
   const moveToNextTask = async () => {
+    // Check if there's already a next task
     if (currentTaskIndex < tasks.length - 1) {
-      // Переход к следующей существующей задаче
       setCurrentTaskIndex(currentTaskIndex + 1)
       setCode('')
       setResult(null)
-      setCurrentHint(null)
+      setCurrentHints([])
     } else {
-      // Генерируем новую задачу через API
+      // Generate new task
       try {
         const newTask = await interviewAPI.generateNextTask(Number(interviewId))
         setTasks([...tasks, newTask])
         setCurrentTaskIndex(tasks.length)
         setCode('')
         setResult(null)
-        setCurrentHint(null)
+        setCurrentHints([])
       } catch (error) {
         console.error('Failed to generate next task:', error)
         if (confirm('Не удалось сгенерировать новую задачу. Завершить интервью?')) {
@@ -100,7 +100,10 @@ function InterviewPage() {
         hint_level: level,
         current_code: code || undefined
       })
-      setCurrentHint(hint)
+      setCurrentHints([...currentHints, { level, ...hint }])
+      
+      // Reload task to get updated max_score
+      await loadTasks()
     } catch (error) {
       console.error('Failed to get hint:', error)
       alert('Не удалось получить подсказку')
@@ -159,409 +162,235 @@ function InterviewPage() {
     }
   }
 
-  if (!interview || tasks.length === 0) {
+  if (!interview || !currentTask) {
     return (
-      <div style={{ 
-        height: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        fontSize: '1.2rem',
-        color: 'var(--color-text-grey)'
-      }}>
-        ⏳ Загрузка интервью...
+      <div className="loading-screen">
+        <div className="loading-spinner"></div>
+        <p>Загрузка интервью...</p>
       </div>
     )
   }
-
-  const currentTask = tasks[currentTaskIndex]
-  const totalTests = result ? result.total_visible + result.total_hidden : 0
-  const passedTests = result ? result.passed_visible + result.passed_hidden : 0
 
   return (
     <div className="interview-container">
       {/* Header */}
       <header className="interview-header">
-        <div className="header-info">
-          <h1>🎯 Техническое интервью</h1>
-          <div className="header-meta">
-            <span>📂 {interview.direction}</span>
-            <span>🎓 {interview.selected_level}</span>
-            <span>⏱️ {new Date(interview.created_at).toLocaleDateString('ru-RU')}</span>
-          </div>
+        <div className="header-left">
+          <h1>VibeCode</h1>
+          <span className="header-divider">|</span>
+          <span className="interview-direction">{interview.direction}</span>
+          <span className="interview-level">{interview.selected_level}</span>
         </div>
         
-        <div className="progress-indicator">
-          <span>Задача {currentTaskIndex + 1} из {tasks.length}</span>
-          <div className="progress-dots">
+        <div className="header-center">
+          <div className="task-nav">
             {tasks.map((_, index) => (
-              <div
+              <button
                 key={index}
-                className={`progress-dot ${
-                  index < currentTaskIndex ? 'completed' : 
-                  index === currentTaskIndex ? 'active' : ''
-                }`}
-              />
+                className={`task-dot ${index === currentTaskIndex ? 'active' : ''} ${tasks[index].status === 'completed' ? 'completed' : ''}`}
+                onClick={() => {
+                  setCurrentTaskIndex(index)
+                  setCode('')
+                  setResult(null)
+                  setCurrentHints([])
+                }}
+              >
+                {index + 1}
+              </button>
             ))}
           </div>
         </div>
+        
+        <div className="header-right">
+          <button className="btn-complete" onClick={completeInterview}>
+            Завершить интервью
+          </button>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <div className="interview-main">
-        {/* Task & Editor Section */}
-        <div className="task-section">
-          {/* Task Description */}
-          <div className="task-panel">
-            <div className="task-header">
-              <div className="task-title-group">
-                <h2>{currentTask.title}</h2>
-                <span className={`task-difficulty ${currentTask.difficulty}`}>
-                  {currentTask.difficulty}
-                </span>
-              </div>
-              
-              <div className="task-score">
-                <div className="score-label">Максимальный балл</div>
-                <div className="score-value">{currentTask.max_score}/100</div>
-              </div>
+      {/* Main Layout */}
+      <div className="interview-layout">
+        {/* Left Panel - Task */}
+        <div className="task-panel">
+          <div className="task-header">
+            <h2>{currentTask.title}</h2>
+            <div className="task-meta">
+              <span className={`difficulty-badge ${currentTask.difficulty}`}>
+                {currentTask.difficulty}
+              </span>
+              <span className="category-badge">{currentTask.category}</span>
+              <span className="score-badge">💯 {currentTask.max_score}pts</span>
+            </div>
+          </div>
+
+          <div className="task-content">
+            <div className="task-description">
+              {currentTask.description}
             </div>
 
-            <p className="task-description">{currentTask.description}</p>
-
             {currentTask.visible_tests && currentTask.visible_tests.length > 0 && (
-              <div className="test-cases">
-                <div className="test-cases-title">📝 Примеры тестов</div>
-                {currentTask.visible_tests.slice(0, 3).map((test: any, index: number) => (
-                  <div key={index} className="test-case">
-                    <div>Вход: {JSON.stringify(test.input)}</div>
-                    <div>Выход: {JSON.stringify(test.expected_output)}</div>
+              <div className="test-examples">
+                <h3>Примеры тестов:</h3>
+                {currentTask.visible_tests.map((test: any, i: number) => (
+                  <div key={i} className="test-example">
+                    <div className="test-label">Тест {i + 1}:</div>
+                    <div className="test-io">
+                      <div><strong>Вход:</strong> {JSON.stringify(test.input)}</div>
+                      <div><strong>Выход:</strong> {JSON.stringify(test.expected_output)}</div>
+                    </div>
+                    {test.description && (
+                      <div className="test-desc">{test.description}</div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Code Editor */}
-          <div className="editor-section">
-            <div className="editor-toolbar">
-              <div className="language-selector">
-                <span>💻</span>
-                <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                  <option value="python">Python</option>
-                  <option value="javascript">JavaScript</option>
-                  <option value="java">Java</option>
-                  <option value="cpp">C++</option>
-                </select>
+            {/* Hints Section */}
+            {currentHints.length > 0 && (
+              <div className="hints-section">
+                <h3>💡 Полученные подсказки:</h3>
+                {currentHints.map((hint, i) => (
+                  <div key={i} className={`hint-card hint-${hint.level}`}>
+                    <div className="hint-header">
+                      <span className="hint-level">
+                        {hint.level === 'light' ? '🟢 Лёгкая' : hint.level === 'medium' ? '🟡 Средняя' : '🔴 Жёсткая'}
+                      </span>
+                      <span className="hint-penalty">-{hint.score_penalty}pts</span>
+                    </div>
+                    <div className="hint-content">{hint.hint_content}</div>
+                  </div>
+                ))}
               </div>
-              
-              <div className="editor-actions">
-                <button 
-                  className="btn-hint" 
-                  onClick={() => setShowHintPanel(!showHintPanel)}
-                  title="Открыть панель подсказок"
+            )}
+
+            {/* Hint Buttons */}
+            <div className="hint-actions">
+              <h3>Нужна подсказка?</h3>
+              <div className="hint-buttons">
+                <button
+                  className="hint-btn hint-light"
+                  onClick={() => requestHint('light')}
+                  disabled={hintLoading}
                 >
-                  💡 Подсказка
+                  🟢 Лёгкая (-10pts)
                 </button>
-                <button 
-                  className="btn-submit" 
-                  onClick={submitCode}
-                  disabled={loading || !code.trim()}
+                <button
+                  className="hint-btn hint-medium"
+                  onClick={() => requestHint('medium')}
+                  disabled={hintLoading}
                 >
-                  {loading ? '⏳ Проверка...' : '▶️ Запустить код'}
+                  🟡 Средняя (-20pts)
+                </button>
+                <button
+                  className="hint-btn hint-heavy"
+                  onClick={() => requestHint('heavy')}
+                  disabled={hintLoading}
+                >
+                  🔴 Жёсткая (-35pts)
                 </button>
               </div>
             </div>
+          </div>
+        </div>
 
+        {/* Right Panel - Code & Chat */}
+        <div className="code-panel">
+          {/* Code Editor */}
+          <div className="editor-section">
+            <div className="editor-header">
+              <span>Python 3</span>
+              <button className="btn-run" onClick={submitCode}>
+                ▶️ Запустить
+              </button>
+            </div>
+            
             <textarea
               className="code-editor"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder={`# Напишите решение на ${language}...\n\ndef solution():\n    pass`}
+              placeholder="def solution(...):\n    # Ваш код здесь\n    pass"
               spellCheck={false}
             />
-
-            {/* Hint Panel */}
-            {showHintPanel && (
-              <div style={{
-                position: 'absolute',
-                top: '60px',
-                right: '24px',
-                width: '400px',
-                background: 'white',
-                borderRadius: '16px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                padding: '24px',
-                zIndex: 100,
-                border: '2px solid var(--color-primary)',
-                animation: 'slideIn 0.3s ease'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ margin: 0, color: 'var(--color-primary)' }}>💡 Подсказки</h3>
-                  <button 
-                    onClick={() => setShowHintPanel(false)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      fontSize: '1.5rem', 
-                      cursor: 'pointer',
-                      padding: '4px 8px'
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {!currentHint ? (
-                  <div>
-                    <p style={{ color: 'var(--color-text-grey)', marginBottom: '16px', fontSize: '0.95rem' }}>
-                      Выберите уровень подсказки. Каждая подсказка уменьшает максимальный балл за задачу.
-                    </p>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <button
-                        onClick={() => requestHint('light')}
-                        disabled={hintLoading}
-                        style={{
-                          padding: '16px',
-                          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          fontSize: '1rem',
-                          fontWeight: 600,
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        🟢 Лёгкая подсказка (-10%)
-                      </button>
-
-                      <button
-                        onClick={() => requestHint('medium')}
-                        disabled={hintLoading}
-                        style={{
-                          padding: '16px',
-                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          fontSize: '1rem',
-                          fontWeight: 600
-                        }}
-                      >
-                        🟡 Средняя подсказка (-20%)
-                      </button>
-
-                      <button
-                        onClick={() => requestHint('heavy')}
-                        disabled={hintLoading}
-                        style={{
-                          padding: '16px',
-                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          fontSize: '1rem',
-                          fontWeight: 600
-                        }}
-                      >
-                        🔴 Жёсткая подсказка (-35%)
-                      </button>
-                    </div>
-
-                    {hintLoading && (
-                      <p style={{ textAlign: 'center', marginTop: '16px', color: 'var(--color-text-light)' }}>
-                        ⏳ Генерация подсказки...
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{
-                      padding: '16px',
-                      background: '#fee2e2',
-                      borderRadius: '12px',
-                      marginBottom: '16px',
-                      border: '2px solid #ef4444',
-                      color: '#991b1b',
-                      fontWeight: 600
-                    }}>
-                      ⚠️ Штраф: -{currentHint.score_penalty}%
-                      <br />
-                      Новый максимум: {currentHint.new_max_score}/100
-                    </div>
-
-                    <div style={{
-                      padding: '20px',
-                      background: 'var(--color-bg-light)',
-                      borderRadius: '12px',
-                      lineHeight: '1.6',
-                      color: 'var(--color-text-primary)'
-                    }}>
-                      {currentHint.hint_content}
-                    </div>
-
-                    <button
-                      onClick={() => setCurrentHint(null)}
-                      style={{
-                        width: '100%',
-                        marginTop: '16px',
-                        padding: '12px',
-                        background: 'var(--color-primary)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        fontWeight: 600
-                      }}
-                    >
-                      Получить ещё подсказку
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Action Buttons - Always visible */}
-          <div style={{ 
-            padding: '20px 24px', 
-            background: 'white',
-            borderTop: '2px solid var(--color-border)',
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: '12px' 
-          }}>
-            <button 
-              className="next-task-btn" 
-              onClick={moveToNextTask}
-              style={{ margin: 0 }}
-            >
-              ➡️ Следующая задача
-            </button>
-            <button 
-              className="next-task-btn" 
-              onClick={() => {
-                if (confirm('Вы уверены что хотите завершить интервью?')) {
-                  completeInterview()
-                }
-              }}
-              style={{ 
-                margin: 0,
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-              }}
-            >
-              🏁 Завершить интервью
-            </button>
-          </div>
-
-          {/* Results */}
+          {/* Result */}
           {result && (
-            <div className="results-panel">
-              <div className="results-header">
-                <span className="results-icon">
-                  {passedTests === totalTests ? '✅' : '⚠️'}
-                </span>
-                <span>Результаты тестирования</span>
-              </div>
-
-              <div className="results-grid">
-                <div className="result-box">
-                  <div className="result-label">Видимые тесты</div>
-                  <div className={`result-value ${
-                    result.passed_visible === result.total_visible ? 'success' : 
-                    result.passed_visible > 0 ? 'partial' : 'failed'
-                  }`}>
+            <div className="result-section">
+              <h3>✅ Результаты:</h3>
+              <div className="result-stats">
+                <div className="stat">
+                  <span>Видимые тесты:</span>
+                  <strong className={result.passed_visible === result.total_visible ? 'success' : 'warning'}>
                     {result.passed_visible}/{result.total_visible}
-                  </div>
+                  </strong>
                 </div>
-
-                <div className="result-box">
-                  <div className="result-label">Скрытые тесты</div>
-                  <div className={`result-value ${
-                    result.passed_hidden === result.total_hidden ? 'success' : 
-                    result.passed_hidden > 0 ? 'partial' : 'failed'
-                  }`}>
+                <div className="stat">
+                  <span>Скрытые тесты:</span>
+                  <strong className={result.passed_hidden === result.total_hidden ? 'success' : 'warning'}>
                     {result.passed_hidden}/{result.total_hidden}
-                  </div>
+                  </strong>
                 </div>
-
-                {result.execution_time_ms && (
-                  <div className="result-box">
-                    <div className="result-label">Время выполнения</div>
-                    <div className="result-value">{result.execution_time_ms}ms</div>
-                  </div>
-                )}
+                <div className="stat">
+                  <span>Время:</span>
+                  <strong className="score">{result.execution_time_ms ? result.execution_time_ms.toFixed(0) + 'ms' : '-'}</strong>
+                </div>
               </div>
 
               {result.error_message && (
-                <div className="error-message">
-                  ❌ Ошибка: {result.error_message}
+                <div className="error-section">
+                  <h4>⚠️ Ошибка:</h4>
+                  <pre>{result.error_message}</pre>
                 </div>
               )}
 
+              {!result.error_message && result.passed_visible === result.total_visible && result.passed_hidden === result.total_hidden && (
+                <div className="success-section">
+                  <h4>🎉 Все тесты пройдены!</h4>
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        {/* Chat Section */}
-        <div className="chat-section">
-          <div className="chat-header">
-            <h2>🤖 AI Интервьюер</h2>
-            <p className="chat-subtitle">
-              Задавайте вопросы о задаче и получайте советы
-            </p>
+          {/* Actions */}
+          <div className="task-actions">
+            <button className="btn-next" onClick={moveToNextTask}>
+              Следующая задача →
+            </button>
           </div>
 
-          <div className="chat-messages">
-            {messages.length === 0 ? (
-              <div className="chat-empty">
-                <div className="chat-empty-icon">💬</div>
-                <p>Начните диалог с AI интервьюером</p>
-                <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>
-                  Спросите о подходе к решению или попросите разъяснить условие
-                </p>
-              </div>
-            ) : (
-              messages.map((msg, index) => (
-                <div key={index} className={`message ${msg.role}`}>
-                  <div className="message-header">
-                    <div className="message-avatar">
-                      {msg.role === 'user' ? '👤' : '🤖'}
-                    </div>
-                    <span className="message-author">
-                      {msg.role === 'user' ? 'Вы' : 'AI Интервьюер'}
-                    </span>
+          {/* Chat */}
+          <div className="chat-section">
+            <h3>💬 AI Ассистент</h3>
+            <div className="chat-messages">
+              {messages.map((msg, i) => (
+                <div key={i} className={`chat-message ${msg.role}`}>
+                  <div className="message-avatar">
+                    {msg.role === 'user' ? '👤' : '🤖'}
                   </div>
                   <div className="message-content">{msg.content}</div>
                 </div>
-              ))
-            )}
+              ))}
+              {chatLoading && (
+                <div className="chat-message assistant">
+                  <div className="message-avatar">🤖</div>
+                  <div className="message-content">Печатает...</div>
+                </div>
+              )}
+            </div>
             
-            {chatLoading && (
-              <div className="chat-loading">AI думает...</div>
-            )}
-          </div>
-
-          <div className="chat-input">
-            <textarea
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Напишите сообщение..."
-              rows={3}
-            />
-            <button 
-              className="chat-send-btn"
-              onClick={sendMessage}
-              disabled={chatLoading || !chatInput.trim()}
-            >
-              {chatLoading ? '⏳ Отправка...' : '📤 Отправить'}
-            </button>
+            <div className="chat-input">
+              <input
+                type="text"
+                placeholder="Задайте вопрос ассистенту..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <button onClick={sendMessage} disabled={chatLoading}>
+                📤
+              </button>
+            </div>
           </div>
         </div>
       </div>

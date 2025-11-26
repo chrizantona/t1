@@ -44,7 +44,7 @@ def build_signals(interview_id: int, db: Session) -> AntiCheatSignals:
     # Get all events for this interview
     events = db.query(AntiCheatEvent).filter(
         AntiCheatEvent.interview_id == interview_id
-    ).order_by(AntiCheatEvent.timestamp_ms).all()
+    ).order_by(AntiCheatEvent.created_at).all()
     
     if not events:
         return signals
@@ -67,7 +67,7 @@ def build_signals(interview_id: int, db: Session) -> AntiCheatSignals:
         if event.event_type == "blur" or (
             event.event_type == "visibility_change" and not meta.get("visible", True)
         ):
-            last_blur_time = event.timestamp_ms
+            last_blur_time = int(event.created_at.timestamp() * 1000) if event.created_at else 0
         
         if event.event_type == "focus" or (
             event.event_type == "visibility_change" and meta.get("visible", False)
@@ -76,7 +76,8 @@ def build_signals(interview_id: int, db: Session) -> AntiCheatSignals:
         
         # 3. Paste after long blur
         if event.event_type == "paste" and last_blur_time:
-            blur_duration = event.timestamp_ms - last_blur_time
+            current_time_ms = int(event.created_at.timestamp() * 1000) if event.created_at else 0
+            blur_duration = current_time_ms - last_blur_time
             if blur_duration >= LONG_BLUR_MS:
                 signals.pastes_after_long_blur += 1
         
