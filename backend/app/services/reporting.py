@@ -193,9 +193,13 @@ async def generate_final_report(interview_id: int, db: Session) -> FinalReportRe
     
     from ..schemas.interview import InterviewResponse, TaskResponse
     
+    # Convert models to schemas
+    interview_response = InterviewResponse.model_validate(interview)
+    task_responses = [TaskResponse.model_validate(task) for task in tasks]
+    
     return FinalReportResponse(
-        interview=InterviewResponse.from_orm(interview),
-        tasks=[TaskResponse.from_orm(task) for task in tasks],
+        interview=interview_response,
+        tasks=task_responses,
         skill_assessment=skill_assessment,
         total_hints_used=total_hints,
         total_submissions=total_submissions,
