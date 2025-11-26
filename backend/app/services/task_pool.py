@@ -312,23 +312,135 @@ def fizzBuzz(n: int) -> List[str]:""",
             {"input": "1", "expected_output": "['1']", "description": "Минимум"},
             {"input": "15", "expected_output": "['1','2','Fizz','4','Buzz','Fizz','7','8','Fizz','Buzz','11','Fizz','13','14','FizzBuzz']", "description": "До 15"}
         ]
+    },
+    
+    # HARD TASKS
+    "longest_substring": {
+        "title": "Longest Substring Without Repeating",
+        "description": """Найдите длину самой длинной подстроки без повторяющихся символов.
+
+Пример 1:
+Вход: s = "abcabcbb"
+Выход: 3
+Объяснение: Ответ - "abc", длина 3.
+
+Пример 2:
+Вход: s = "bbbbb"
+Выход: 1
+Объяснение: Ответ - "b", длина 1.
+
+Пример 3:
+Вход: s = "pwwkew"
+Выход: 3
+Объяснение: Ответ - "wke", длина 3.
+
+Ограничения:
+- 0 <= s.length <= 5 * 10^4
+- s состоит из английских букв, цифр, символов и пробелов
+
+Сигнатура функции:
+def lengthOfLongestSubstring(s: str) -> int:""",
+        "difficulty": "hard",
+        "category": "sliding_window",
+        "visible_tests": [
+            {"input": "'abcabcbb'", "expected_output": "3", "description": "Базовый случай"},
+            {"input": "'bbbbb'", "expected_output": "1", "description": "Все одинаковые"},
+            {"input": "'pwwkew'", "expected_output": "3", "description": "Повтор в середине"}
+        ],
+        "hidden_tests": [
+            {"input": "''", "expected_output": "0", "description": "Пустая строка"},
+            {"input": "' '", "expected_output": "1", "description": "Пробел"},
+            {"input": "'dvdf'", "expected_output": "3", "description": "Сложный случай"}
+        ]
+    },
+    "merge_intervals": {
+        "title": "Merge Intervals",
+        "description": """Дан массив интервалов, объедините все пересекающиеся интервалы и верните массив непересекающихся интервалов.
+
+Пример 1:
+Вход: intervals = [[1,3],[2,6],[8,10],[15,18]]
+Выход: [[1,6],[8,10],[15,18]]
+Объяснение: Интервалы [1,3] и [2,6] пересекаются, объединяем в [1,6].
+
+Пример 2:
+Вход: intervals = [[1,4],[4,5]]
+Выход: [[1,5]]
+Объяснение: Интервалы [1,4] и [4,5] касаются, объединяем.
+
+Ограничения:
+- 1 <= intervals.length <= 10^4
+- intervals[i].length == 2
+- 0 <= start <= end <= 10^4
+
+Сигнатура функции:
+def merge(intervals: List[List[int]]) -> List[List[int]]:""",
+        "difficulty": "hard",
+        "category": "arrays",
+        "visible_tests": [
+            {"input": "[[1,3],[2,6],[8,10],[15,18]]", "expected_output": "[[1,6],[8,10],[15,18]]", "description": "Базовый случай"},
+            {"input": "[[1,4],[4,5]]", "expected_output": "[[1,5]]", "description": "Касающиеся интервалы"}
+        ],
+        "hidden_tests": [
+            {"input": "[[1,4],[0,4]]", "expected_output": "[[0,4]]", "description": "Полное перекрытие"},
+            {"input": "[[1,4],[2,3]]", "expected_output": "[[1,4]]", "description": "Вложенный интервал"}
+        ]
+    },
+    "lru_cache": {
+        "title": "LRU Cache Design",
+        "description": """Реализуйте структуру данных LRU (Least Recently Used) Cache с операциями get и put.
+
+get(key) - получить значение ключа или -1 если не найден.
+put(key, value) - добавить или обновить значение. Если кэш переполнен, удалить наименее используемый элемент.
+
+Все операции должны выполняться за O(1).
+
+Пример:
+cache = LRUCache(2)
+cache.put(1, 1)
+cache.put(2, 2)
+cache.get(1)      # вернёт 1
+cache.put(3, 3)   # вытеснит ключ 2
+cache.get(2)      # вернёт -1 (не найден)
+cache.put(4, 4)   # вытеснит ключ 1
+cache.get(1)      # вернёт -1
+cache.get(3)      # вернёт 3
+cache.get(4)      # вернёт 4
+
+Сигнатура функции:
+def lruCacheOps(capacity: int, operations: List[List]) -> List[int]:
+
+operations - список операций: ["get", key] или ["put", key, value]
+Вернуть список результатов get операций.""",
+        "difficulty": "hard",
+        "category": "design",
+        "visible_tests": [
+            {"input": "2, [['put',1,1],['put',2,2],['get',1],['put',3,3],['get',2]]", "expected_output": "[1,-1]", "description": "Базовый LRU"}
+        ],
+        "hidden_tests": [
+            {"input": "1, [['put',1,1],['put',2,2],['get',1],['get',2]]", "expected_output": "[-1,2]", "description": "Вместимость 1"},
+            {"input": "2, [['get',1],['put',1,1],['get',1]]", "expected_output": "[-1,1]", "description": "Get пустого"}
+        ]
     }
 }
 
-def get_task_by_difficulty(difficulty: str) -> Dict[str, Any]:
-    """Get a random task by difficulty level."""
-    import random
+def get_task_by_difficulty(difficulty: str, task_order: int = 1) -> Dict[str, Any]:
+    """
+    Get a task by difficulty level.
+    Uses task_order to get different tasks for sequential requests.
+    """
+    actual_difficulty = difficulty
     
-    matching_tasks = {
-        key: task for key, task in TASK_POOL.items()
-        if task["difficulty"] == difficulty
-    }
+    matching_tasks = [
+        task for key, task in TASK_POOL.items()
+        if task["difficulty"] == actual_difficulty
+    ]
     
     if not matching_tasks:
-        matching_tasks = TASK_POOL
+        matching_tasks = list(TASK_POOL.values())
     
-    task_key = random.choice(list(matching_tasks.keys()))
-    return matching_tasks[task_key]
+    # Use task_order to pick different tasks
+    idx = (task_order - 1) % len(matching_tasks)
+    return matching_tasks[idx]
 
 
 def get_task_sequence(level: str, count: int = 3) -> List[Dict[str, Any]]:

@@ -135,29 +135,29 @@ async def _analyze_cv_text(cv_text: str) -> CVAnalysisResponse:
         
         suggested_level = grade_calc["start_grade"]
         
-        # Build rich reasoning
+        # Build reasoning without emojis
         tech_str = ", ".join(key_techs[:5]) if key_techs else "не определены"
         tracks_str = ", ".join(resume_tracks[:3]) if resume_tracks else suggested_direction
         
         reasoning = (
-            f"📊 Анализ резюме (уверенность: {confidence}%)\n\n"
-            f"🎯 Рекомендуемый грейд: {suggested_level.upper()}\n"
-            f"📁 Направление: {suggested_direction} (обнаружены: {tracks_str})\n"
-            f"⏳ Опыт: {years_exp:.1f} лет\n"
-            f"🛠️ Ключевые технологии: {tech_str}\n\n"
+            f"Анализ резюме (уверенность: {confidence}%)\n\n"
+            f"Рекомендуемый грейд: {suggested_level.upper()}\n"
+            f"Направление: {suggested_direction} (обнаружены: {tracks_str})\n"
+            f"Опыт: {years_exp:.1f} лет\n"
+            f"Ключевые технологии: {tech_str}\n\n"
         )
         
         if justification:
-            reasoning += f"💡 {justification}\n\n"
+            reasoning += f"{justification}\n\n"
         
         if strengths:
-            reasoning += f"✅ Сильные стороны: {', '.join(strengths[:3])}\n"
+            reasoning += f"Сильные стороны: {', '.join(strengths[:3])}\n"
         
         if weaknesses:
-            reasoning += f"📈 Зоны роста: {', '.join(weaknesses[:3])}\n"
+            reasoning += f"Зоны роста: {', '.join(weaknesses[:3])}\n"
         
         if risk_factors:
-            reasoning += f"⚠️ Обратить внимание: {', '.join(risk_factors[:2])}\n"
+            reasoning += f"Обратить внимание: {', '.join(risk_factors[:2])}\n"
         
         return CVAnalysisResponse(
             suggested_level=suggested_level,
@@ -174,7 +174,7 @@ async def _analyze_cv_text(cv_text: str) -> CVAnalysisResponse:
         )
     
     except Exception as e:
-        print(f"❌ CV analysis error: {e}")
+        print(f"CV analysis error: {e}")
         import traceback
         traceback.print_exc()
         
@@ -185,9 +185,9 @@ async def _analyze_cv_text(cv_text: str) -> CVAnalysisResponse:
             years_of_experience=2.0,
             key_technologies=[],
             reasoning=(
-                "📊 Не удалось полностью проанализировать резюме.\n"
-                "🎯 Рекомендуем начать с уровня MIDDLE по направлению Backend.\n"
-                "💡 На собеседовании уточним ваш опыт и подберём задачи."
+                "Не удалось полностью проанализировать резюме.\n"
+                "Рекомендуем начать с уровня MIDDLE по направлению Backend.\n"
+                "На собеседовании уточним ваш опыт и подберём задачи."
             ),
             confidence=50,
             all_tracks=["backend"],

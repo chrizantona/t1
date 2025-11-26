@@ -115,6 +115,43 @@ def _fallback_task_selection(questions: List[Dict], level: str) -> List[Dict]:
     return selected
 
 
+async def generate_adaptive_task(
+    interview_id: int,
+    direction: str,
+    difficulty: str,
+    task_order: int,
+    db: Session
+) -> Task:
+    """
+    Generate a SINGLE task adaptively based on difficulty.
+    Used for real-time task generation after each completion.
+    """
+    from .task_pool import get_task_by_difficulty
+    
+    # Get task from pool based on difficulty
+    task_data = get_task_by_difficulty(difficulty, task_order)
+    
+    task = Task(
+        interview_id=interview_id,
+        task_order=task_order,
+        title=task_data["title"],
+        description=task_data["description"],
+        difficulty=task_data["difficulty"],
+        category=task_data.get("category", "algorithms"),
+        visible_tests=task_data.get("visible_tests", []),
+        hidden_tests=task_data.get("hidden_tests", []),
+        max_score=100.0,
+        status="active"
+    )
+    
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    
+    logger.info(f"Generated adaptive task #{task_order} (difficulty={difficulty}) for interview {interview_id}")
+    return task
+
+
 async def create_interview_tasks(
     interview_id: int,
     direction: str,
@@ -122,40 +159,27 @@ async def create_interview_tasks(
     db: Session
 ) -> List[Task]:
     """
-    Create 3 tasks for the interview based on direction and level.
-    Uses predefined tests from TASK_TESTS or simple defaults.
+    Create 3 tasks for the interview using TASK_POOL for reliable tests.
     """
-    # Select tasks using LLM (or fallback)
-    selected_tasks = await select_three_tasks(direction, level, db)
-    questions = load_questions_db()
-    questions_map = {q["id"]: q for q in questions}
+    from .task_pool import get_task_sequence
+    
+    # Get 3 tasks from the pool based on level
+    pool_tasks = get_task_sequence(level, count=3)
     
     created_tasks = []
     
-    for task_info in selected_tasks:
-        question_id = task_info["question_id"]
-        question = questions_map.get(question_id)
-        
-        if not question:
-            logger.warning(f"Question {question_id} not found")
-            continue
-        
-        # Get predefined tests or use defaults
-        visible_tests, hidden_tests = get_tests_for_question(question_id, question)
-        
-        # Create task from question
+    for i, task_data in enumerate(pool_tasks, 1):
         task = Task(
             interview_id=interview_id,
-            task_order=task_info["order"],
-            source_question_id=question_id,
-            title=question.get("question", "")[:100],
-            description=question.get("question", ""),
-            difficulty=task_info["difficulty_label"],
-            category=question.get("category", "algorithms"),
-            visible_tests=visible_tests,
-            hidden_tests=hidden_tests,
+            task_order=i,
+            title=task_data["title"],
+            description=task_data["description"],
+            difficulty=task_data["difficulty"],
+            category=task_data.get("category", "algorithms"),
+            visible_tests=task_data.get("visible_tests", []),
+            hidden_tests=task_data.get("hidden_tests", []),
             max_score=100.0,
-            status="active"
+            status="active" if i == 1 else "pending"
         )
         
         db.add(task)
@@ -165,6 +189,7 @@ async def create_interview_tasks(
     for task in created_tasks:
         db.refresh(task)
     
+    logger.info(f"Created {len(created_tasks)} tasks for interview {interview_id}")
     return created_tasks
 
 

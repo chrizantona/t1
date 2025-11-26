@@ -75,14 +75,14 @@ class FinalGradeCalculation:
     def get_grade_progress(self) -> dict:
         """Get progress towards next grade."""
         current_idx = self.final_grade_index
-        next_idx = min(4, current_idx + 1)
+        next_idx = min(3, current_idx + 1)
         
-        # Calculate score needed for next grade
-        score_thresholds = [0, 40, 55, 70, 85, 100]
+        # Score thresholds: intern(0-30), junior(30-50), middle(50-75), senior(75+)
+        score_thresholds = [0, 30, 50, 75, 100]
         current_threshold = score_thresholds[current_idx]
         next_threshold = score_thresholds[next_idx]
         
-        if current_idx == 4:  # Already senior
+        if current_idx == 3:  # Already senior
             progress = 100.0
             points_to_next = 0
         else:
@@ -93,7 +93,7 @@ class FinalGradeCalculation:
         
         return {
             "current_grade": self.final_grade,
-            "next_grade": index_to_grade(next_idx) if current_idx < 4 else "senior",
+            "next_grade": index_to_grade(next_idx) if current_idx < 3 else "senior",
             "progress_percent": round(progress, 1),
             "points_to_next_grade": round(points_to_next, 1),
             "current_score": round(self.overall_score, 2)

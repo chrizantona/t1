@@ -40,6 +40,7 @@ from ..services.reporting import generate_final_report
 from ..services.grading_service import calculate_start_grade, calculate_final_grade_for_interview
 from ..services.interview_flow import (
     create_interview_tasks,
+    generate_adaptive_task,
     generate_solution_questions,
     get_next_theory_question,
     evaluate_theory_answer,
@@ -57,7 +58,7 @@ async def start_interview(
 ):
     """
     Start a new interview session.
-    Creates interview and generates first task using LLM.
+    Creates interview and generates FIRST task only (adaptive flow).
     """
     # Extract years of experience from CV if available
     years_exp = None
@@ -72,13 +73,21 @@ async def start_interview(
     # If no CV or failed to extract, use default based on level
     if years_exp is None:
         level_to_years = {
+            "intern": 0.5,
             "junior": 1.0,
-            "junior_plus": 1.5,
-            "middle": 3.0,
-            "middle+": 4.5,
-            "senior": 6.0
+            "middle": 2.5,
+            "senior": 5.0
         }
-        years_exp = level_to_years.get(interview_data.selected_level, 3.0)
+        years_exp = level_to_years.get(interview_data.selected_level, 2.5)
+    
+    # Determine starting difficulty based on level
+    level_to_difficulty = {
+        "intern": "easy",
+        "junior": "easy", 
+        "middle": "medium",
+        "senior": "hard"
+    }
+    start_difficulty = level_to_difficulty.get(interview_data.selected_level, "medium")
     
     # Create interview
     interview = Interview(
@@ -88,21 +97,28 @@ async def start_interview(
         direction=interview_data.direction,
         cv_text=interview_data.cv_text,
         years_of_experience=years_exp,
-        status="in_progress"
+        status="in_progress",
+        current_stage="coding",
+        effective_level=interview_data.selected_level  # Track adaptive level
     )
     db.add(interview)
     db.commit()
     db.refresh(interview)
     
-    # Generate first task using LLM
+    # Generate FIRST task only (adaptive: more tasks generated after solving)
     try:
-        task = await generate_first_task(
+        task = await generate_adaptive_task(
             interview_id=interview.id,
-            level=interview.selected_level,
             direction=interview.direction,
+            difficulty=start_difficulty,
+            task_order=1,
             db=db
         )
+        print(f"Created first task (difficulty={start_difficulty}) for interview {interview.id}")
     except Exception as e:
+        print(f"Failed to generate first task: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate task: {str(e)}")
     
     return interview
@@ -185,7 +201,8 @@ async def submit_code(
     # Update task with actual score if this is the best submission
     if task.actual_score is None or score > task.actual_score:
         task.actual_score = score
-        if result["passed_visible"] == result["total_visible"] and result["passed_hidden"] == result["total_hidden"]:
+        # Task is completed if ALL visible tests pass (hidden tests are bonus)
+        if result["passed_visible"] == result["total_visible"] and result["total_visible"] > 0:
             task.status = "completed"
     
     db.commit()
@@ -318,8 +335,8 @@ async def request_hint(
     test_results = "Тесты еще не запускались"
     if latest_submission:
         test_results = (
-            f"Видимые: {latest_submission.visible_passed or 0}/{latest_submission.total_visible or 0}, "
-            f"Скрытые: {latest_submission.hidden_passed or 0}/{latest_submission.total_hidden or 0}"
+            f"Видимые: {latest_submission.passed_visible or 0}/{latest_submission.total_visible or 0}, "
+            f"Скрытые: {latest_submission.passed_hidden or 0}/{latest_submission.total_hidden or 0}"
         )
         if latest_submission.error_message:
             test_results += f"\nОшибка: {latest_submission.error_message}"
@@ -429,35 +446,78 @@ async def complete_interview(interview_id: int, db: Session = Depends(get_db)):
 @router.post("/{interview_id}/next-task", response_model=TaskResponse)
 async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
     """
-    Generate next adaptive task based on previous performance.
+    Generate next ADAPTIVE task based on previous performance.
+    This is the core of real-time task generation.
     """
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
     
-    # Get previous tasks to calculate performance
-    previous_tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
+    # Get previous tasks
+    previous_tasks = db.query(Task).filter(
+        Task.interview_id == interview_id
+    ).order_by(Task.task_order).all()
+    
+    # Max 3 tasks per interview
+    if len(previous_tasks) >= 3:
+        raise HTTPException(status_code=400, detail="Maximum tasks reached. Complete the interview.")
+    
+    # Calculate next difficulty based on performance
+    next_order = len(previous_tasks) + 1
     
     if not previous_tasks:
-        # If no previous tasks, generate first one
-        task = await generate_first_task(interview_id, interview.selected_level, interview.direction, db)
+        # First task - use level-based difficulty
+        level_to_difficulty = {
+            "intern": "easy",
+            "junior": "easy",
+            "middle": "medium",
+            "senior": "hard"
+        }
+        next_difficulty = level_to_difficulty.get(interview.selected_level, "medium")
     else:
-        # Calculate average performance
-        completed_tasks = [t for t in previous_tasks if t.actual_score is not None]
-        if completed_tasks:
-            avg_score = sum([t.actual_score for t in completed_tasks]) / len(completed_tasks)
-        else:
-            avg_score = 50  # Default if no completed tasks
+        # Calculate average performance from completed tasks
+        completed = [t for t in previous_tasks if t.actual_score is not None and t.actual_score > 0]
         
-        # Generate next task based on performance
-        task = await adaptive_generate_next_task(
-            interview_id=interview_id,
-            previous_performance=avg_score,
-            current_level=interview.selected_level,
-            direction=interview.direction,
-            db=db
-        )
+        if completed:
+            avg_score = sum(t.actual_score for t in completed) / len(completed)
+            last_difficulty = previous_tasks[-1].difficulty
+            
+            # Adaptive logic: increase difficulty if score > 70, decrease if < 40
+            difficulty_order = ["easy", "medium", "hard"]
+            current_idx = difficulty_order.index(last_difficulty) if last_difficulty in difficulty_order else 1
+            
+            if avg_score >= 70:
+                # Good performance - increase difficulty
+                next_idx = min(current_idx + 1, 2)
+                # Update effective level if upgraded
+                if next_idx > current_idx:
+                    levels = ["intern", "junior", "middle", "senior"]
+                    current_level_idx = levels.index(interview.effective_level or interview.selected_level)
+                    if current_level_idx < len(levels) - 1:
+                        interview.effective_level = levels[current_level_idx + 1]
+                        db.commit()
+            elif avg_score < 40:
+                # Poor performance - decrease difficulty
+                next_idx = max(current_idx - 1, 0)
+            else:
+                # Keep same difficulty
+                next_idx = current_idx
+            
+            next_difficulty = difficulty_order[next_idx]
+        else:
+            # No completed tasks yet, use medium
+            next_difficulty = "medium"
     
+    # Generate the new task
+    task = await generate_adaptive_task(
+        interview_id=interview_id,
+        direction=interview.direction,
+        difficulty=next_difficulty,
+        task_order=next_order,
+        db=db
+    )
+    
+    print(f"Generated adaptive task #{next_order} (difficulty={next_difficulty}) for interview {interview_id}")
     return task
 
 
@@ -573,7 +633,8 @@ async def submit_code_with_edge_cases(
     # Update task score
     if task.actual_score is None or score > task.actual_score:
         task.actual_score = score
-        if result["passed_visible"] == result["total_visible"] and result["passed_hidden"] == result["total_hidden"]:
+        # Task is completed if ALL visible tests pass (hidden tests are bonus)
+        if result["passed_visible"] == result["total_visible"] and result["total_visible"] > 0:
             task.status = "completed"
     
     db.commit()

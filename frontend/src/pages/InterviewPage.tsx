@@ -22,7 +22,8 @@ function InterviewPage() {
   const [hintLoading, setHintLoading] = useState(false)
   const [currentHints, setCurrentHints] = useState<any[]>([])
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [progress, setProgress] = useState<any>(null)
+  const [generatingTask, setGeneratingTask] = useState(false)
+  const [taskCompleted, setTaskCompleted] = useState(false)
 
   // Get current code for current task
   const currentTask = tasks[currentTaskIndex]
@@ -41,18 +42,16 @@ function InterviewPage() {
   useEffect(() => {
     loadInterview()
     loadTasks()
-    loadProgress()
   }, [interviewId])
 
   const loadInterview = async () => {
     try {
-      const data = await interviewAPI.getInterviewV2(Number(interviewId))
+      // Try V1 API (more reliable)
+      const data = await interviewAPI.getInterview(Number(interviewId))
       setInterview(data)
       
-      // If interview is in theory stage, redirect
-      if (data.current_stage === 'theory') {
-        navigate(`/theory/${interviewId}`)
-      } else if (data.current_stage === 'completed') {
+      // Check if interview is completed
+      if (data.status === 'completed') {
         navigate(`/result/${interviewId}`)
       }
     } catch (error) {
@@ -62,22 +61,16 @@ function InterviewPage() {
 
   const loadTasks = async () => {
     try {
-      const data = await interviewAPI.getAllTasks(Number(interviewId))
-      setTasks(data.tasks || [])
-      if (data.tasks && data.tasks.length > 0) {
+      // Use V1 API to get tasks
+      const tasksData = await interviewAPI.getTasks(Number(interviewId))
+      const tasksList = Array.isArray(tasksData) ? tasksData : (tasksData.tasks || [])
+      setTasks(tasksList)
+      
+      if (tasksList.length > 0) {
         setCurrentTaskIndex(0)
       }
     } catch (error) {
       console.error('Failed to load tasks:', error)
-    }
-  }
-
-  const loadProgress = async () => {
-    try {
-      const data = await interviewAPI.getProgress(Number(interviewId))
-      setProgress(data)
-    } catch (error) {
-      console.error('Failed to load progress:', error)
     }
   }
 
@@ -86,6 +79,7 @@ function InterviewPage() {
     
     setSubmitLoading(true)
     setTestDetails([])
+    setTaskCompleted(false)
 
     try {
       const submission = await interviewAPI.submitCode({
@@ -93,6 +87,9 @@ function InterviewPage() {
         code: code,
         language: 'python'
       })
+      console.log('Submission result:', submission)
+      console.log('Visible:', submission.passed_visible, '/', submission.total_visible)
+      console.log('Hidden:', submission.passed_hidden, '/', submission.total_hidden)
       setResult(submission)
       
       // Use test details from API response
@@ -100,9 +97,17 @@ function InterviewPage() {
         setTestDetails(submission.visible_test_details)
       }
       
-      // Reload tasks and progress to get updated scores
+      // Check if task is completed (all tests passed)
+      const allPassed = submission.passed_visible === submission.total_visible && 
+                       submission.passed_hidden === submission.total_hidden &&
+                       !submission.error_message
+      
+      if (allPassed) {
+        setTaskCompleted(true)
+      }
+      
+      // Reload tasks to get updated scores
       await loadTasks()
-      await loadProgress()
     } catch (error: any) {
       console.error('Failed to submit code:', error)
       setResult({
@@ -114,6 +119,36 @@ function InterviewPage() {
       })
     } finally {
       setSubmitLoading(false)
+    }
+  }
+
+  // Generate next task adaptively
+  const generateNextTask = async () => {
+    if (tasks.length >= 3) {
+      alert('Все задачи пройдены! Можете завершить интервью.')
+      return
+    }
+    
+    setGeneratingTask(true)
+    setTaskCompleted(false)
+    
+    try {
+      const newTask = await interviewAPI.generateNextTask(Number(interviewId))
+      
+      // Reload tasks and switch to the new one
+      await loadTasks()
+      
+      // Switch to new task
+      setCurrentTaskIndex(tasks.length) // Will be the index of new task
+      setResult(null)
+      setTestDetails([])
+      setCurrentHints([])
+      
+    } catch (error: any) {
+      console.error('Failed to generate next task:', error)
+      alert(error.response?.data?.detail || 'Не удалось сгенерировать задачу')
+    } finally {
+      setGeneratingTask(false)
     }
   }
 
@@ -148,17 +183,23 @@ function InterviewPage() {
     }
   }
 
-  const proceedToTheoryStage = async () => {
-    if (!progress?.can_proceed_to_theory) {
-      alert('Сначала попробуйте решить хотя бы одну задачу')
+  const finishInterview = async () => {
+    // Check if at least one task is attempted
+    const attemptedTasks = tasks.filter(t => t.status === 'completed' || taskCodes[t.id])
+    if (attemptedTasks.length === 0) {
+      alert('Попробуйте решить хотя бы одну задачу перед завершением')
+      return
+    }
+
+    if (!confirm('Вы уверены, что хотите завершить собеседование?')) {
       return
     }
 
     try {
-      await interviewAPI.proceedToTheory(Number(interviewId))
-      navigate(`/theory/${interviewId}`)
+      await interviewAPI.completeInterview(Number(interviewId))
+      navigate(`/result/${interviewId}`)
     } catch (error: any) {
-      console.error('Failed to proceed to theory:', error)
+      console.error('Failed to complete interview:', error)
       alert(`Ошибка: ${error.response?.data?.detail || error.message}`)
     }
   }
@@ -249,31 +290,25 @@ function InterviewPage() {
         <div className="header-right">
           <button 
             className="btn-proceed"
-            onClick={proceedToTheoryStage}
-            disabled={!progress?.can_proceed_to_theory}
-            title={progress?.can_proceed_to_theory ? 'Перейти к теоретическим вопросам' : 'Сначала попробуйте решить задачи'}
+            onClick={finishInterview}
+            title="Завершить собеседование и получить результаты"
           >
-            Перейти к вопросам →
+            Завершить →
           </button>
         </div>
       </header>
 
-      {/* Stage Indicator */}
-      <div className="stage-indicator">
-        <div className="stage active">
-          <span className="stage-number">1</span>
-          <span className="stage-name">Задачи</span>
+      {/* Progress Bar */}
+      <div className="progress-bar-container">
+        <div className="progress-bar">
+          <div 
+            className="progress-fill" 
+            style={{ width: `${(completedTasks / tasks.length) * 100}%` }}
+          ></div>
         </div>
-        <div className="stage-connector"></div>
-        <div className="stage">
-          <span className="stage-number">2</span>
-          <span className="stage-name">Вопросы</span>
-        </div>
-        <div className="stage-connector"></div>
-        <div className="stage">
-          <span className="stage-number">3</span>
-          <span className="stage-name">Результат</span>
-        </div>
+        <span className="progress-label">
+          Решено {completedTasks} из {tasks.length} задач
+        </span>
       </div>
 
       {/* Main Layout */}
@@ -469,9 +504,34 @@ function InterviewPage() {
                 </div>
               )}
 
-              {!result.error_message && result.passed_visible === result.total_visible && result.passed_hidden === result.total_hidden && (
+              {/* Success if ALL visible tests passed (hidden tests optional) */}
+              {!result.error_message && result.passed_visible === result.total_visible && result.total_visible > 0 && (
                 <div className="success-section">
-                  <h4>🎉 Все тесты пройдены!</h4>
+                  <h4>
+                    {result.passed_hidden === result.total_hidden 
+                      ? '🎉 Все тесты пройдены!' 
+                      : `✅ Публичные тесты пройдены! (скрытые: ${result.passed_hidden}/${result.total_hidden})`
+                    }
+                  </h4>
+                  {tasks.length < 3 && (
+                    <button 
+                      className="btn-next-task"
+                      onClick={generateNextTask}
+                      disabled={generatingTask}
+                    >
+                      {generatingTask ? (
+                        <>
+                          <span className="generating-spinner"></span>
+                          Генерация следующей задачи...
+                        </>
+                      ) : (
+                        <>Следующая задача →</>
+                      )}
+                    </button>
+                  )}
+                  {tasks.length >= 3 && (
+                    <p className="all-tasks-done">Все задачи пройдены! Можете завершить интервью.</p>
+                  )}
                 </div>
               )}
             </div>
