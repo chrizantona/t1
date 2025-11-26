@@ -20,6 +20,12 @@ from .prompts import (
     AI_DETECTION_SYSTEM, AI_DETECTION_USER,
     FINAL_REPORT_SYSTEM, FINAL_REPORT_USER
 )
+from ..prompts.task_selection_explainer import (
+    TASK_SELECTION_EXPLAINER_SYSTEM, TASK_SELECTION_EXPLAINER_USER,
+    TASK_OPENING_QUESTION_SYSTEM, TASK_OPENING_QUESTION_USER,
+    SOLUTION_FOLLOWUP_SYSTEM, SOLUTION_FOLLOWUP_USER,
+    SOLUTION_ANSWER_EVAL_SYSTEM, SOLUTION_ANSWER_EVAL_USER
+)
 
 
 class SciBoxClient:
@@ -46,6 +52,19 @@ class SciBoxClient:
         self._coder_interval = 1.0 / settings.CODER_MODEL_RPS
         self._embedding_interval = 1.0 / settings.EMBEDDING_MODEL_RPS
     
+    def _clean_think_tags(self, text: str) -> str:
+        """Remove <think> tags and ALL internal reasoning from response."""
+        if not text:
+            return text
+        # Remove <think>...</think> blocks (greedy and non-greedy)
+        text = re.sub(r'<think>[\s\S]*?</think>', '', text, flags=re.DOTALL).strip()
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+        # Remove partial or malformed tags
+        text = re.sub(r'</?think[^>]*>', '', text).strip()
+        # Remove any remaining <think> without closing
+        text = re.sub(r'<think>[\s\S]*$', '', text, flags=re.DOTALL).strip()
+        return text
+    
     async def _rate_limit(self, last_request_time: float, interval: float) -> None:
         """Async rate limiting - wait if needed without blocking."""
         elapsed = time.time() - last_request_time
@@ -59,7 +78,7 @@ class SciBoxClient:
         max_tokens: int = 512,
         model: Optional[str] = None
     ) -> str:
-        """Send chat completion request (async)."""
+        """Send chat completion request (async). Auto-cleans <think> tags."""
         async with self._chat_lock:
             await self._rate_limit(self._last_chat_request, self._chat_interval)
             self._last_chat_request = time.time()
@@ -71,7 +90,10 @@ class SciBoxClient:
                     temperature=temperature,
                     max_tokens=max_tokens
                 )
-                return response.choices[0].message.content
+                content = response.choices[0].message.content or ""
+                # ALWAYS clean think tags from ALL responses
+                content = self._clean_think_tags(content)
+                return content
             except Exception as e:
                 print(f"⚠️ Chat completion error: {e}")
                 return ""
@@ -413,6 +435,177 @@ class SciBoxClient:
             "candidate_feedback": "Хорошая работа! Рекомендуем подтянуть алгоритмы и структуры данных.",
             "hiring_manager_notes": "Требуется дополнительная оценка",
             "next_steps": ["Техническое интервью с командой"]
+        })
+    
+    async def generate_task_selection_reason(
+        self,
+        task_payload: Dict[str, Any],
+        track: str,
+        difficulty: str,
+        target_skills: List[str],
+        candidate_level: str,
+        direction: str,
+        block_type: str = "algo",
+        vacancy_info: str = "",
+        candidate_additional_info: str = ""
+    ) -> str:
+        """
+        🎯 Task Selection Explainer - Explain WHY this task was selected
+        Returns human-readable explanation (3-5 sentences)
+        """
+        import json as json_module
+        
+        user_prompt = TASK_SELECTION_EXPLAINER_USER.format(
+            vacancy_info=vacancy_info or "Прямое интервью без привязки к вакансии",
+            candidate_level=candidate_level,
+            direction=direction,
+            candidate_additional_info=candidate_additional_info or "Дополнительная информация отсутствует",
+            block_type=block_type,
+            track=track,
+            difficulty=difficulty,
+            target_skills=json_module.dumps(target_skills, ensure_ascii=False),
+            task_payload=json_module.dumps(task_payload, ensure_ascii=False, indent=2)
+        )
+        
+        messages = [
+            {"role": "system", "content": TASK_SELECTION_EXPLAINER_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.3, max_tokens=512)
+        
+        result = self._parse_json_response(response, {
+            "selection_reason": f"Задача подобрана для проверки навыков {', '.join(target_skills)} на уровне {difficulty} для {direction}-разработчика уровня {candidate_level}."
+        })
+        
+        return result.get("selection_reason", "Задача подобрана автоматически под ваш профиль.")
+    
+    async def generate_opening_question(
+        self,
+        task_description: str,
+        block_type: str,
+        track: str,
+        candidate_grade: str,
+        difficulty: str
+    ) -> str:
+        """
+        💬 Opening Question - Generate first smart question for the task
+        Returns single question to start dialogue with candidate
+        """
+        user_prompt = TASK_OPENING_QUESTION_USER.format(
+            task_description=task_description,
+            block_type=block_type,
+            track=track,
+            candidate_grade=candidate_grade,
+            difficulty=difficulty
+        )
+        
+        messages = [
+            {"role": "system", "content": TASK_OPENING_QUESTION_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.7, max_tokens=256)
+        
+        # Clean response
+        if response:
+            response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
+            response = response.strip('"').strip("'")
+        
+        if not response:
+            # Fallback questions based on track
+            fallback_questions = {
+                "backend": "🤔 Какую асимптотическую сложность ты планируешь достичь в своём решении?",
+                "algorithms": "🤔 Какую асимптотическую сложность ты планируешь достичь в своём решении?",
+                "ml": "📊 С чего бы ты начал работу с данными в этой задаче?",
+                "data-science": "📊 Какие шаги предобработки данных ты бы сделал в первую очередь?",
+                "frontend": "🎨 Какие компоненты тебе понадобятся для решения этой задачи?",
+                "devops": "🔧 Какие инструменты и подходы ты бы использовал?",
+                "data": "📊 Как бы ты проверил корректность результатов?"
+            }
+            response = fallback_questions.get(track, "🤔 Какой подход ты планируешь использовать для решения этой задачи?")
+        
+        return response
+    
+    async def generate_solution_followup_question(
+        self,
+        task_title: str,
+        task_description: str,
+        candidate_code: str,
+        candidate_level: str,
+        difficulty: str
+    ) -> str:
+        """
+        🎯 Solution Follow-up Question - Ask about the solution after task completion
+        Returns single question about complexity, algorithm, optimization etc.
+        """
+        user_prompt = SOLUTION_FOLLOWUP_USER.format(
+            task_title=task_title,
+            task_description=task_description,
+            candidate_code=candidate_code,
+            candidate_level=candidate_level,
+            difficulty=difficulty
+        )
+        
+        messages = [
+            {"role": "system", "content": SOLUTION_FOLLOWUP_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.6, max_tokens=256)
+        
+        # Clean response - remove any <think> tags
+        response = self._clean_think_tags(response)
+        
+        if not response:
+            # Fallback questions
+            fallback = [
+                f"🤔 Какова временная сложность твоего решения? А пространственная?",
+                f"🤔 Можешь объяснить, почему ты выбрал именно такой подход?",
+                f"🤔 Можно ли оптимизировать это решение? Как?",
+            ]
+            import random
+            response = random.choice(fallback)
+        
+        return response
+    
+    async def evaluate_solution_answer(
+        self,
+        task_title: str,
+        candidate_code: str,
+        question: str,
+        candidate_answer: str,
+        candidate_level: str
+    ) -> Dict[str, Any]:
+        """
+        📝 Evaluate Solution Answer - Score candidate's answer about their solution
+        Returns score (0-100) with feedback
+        """
+        user_prompt = SOLUTION_ANSWER_EVAL_USER.format(
+            task_title=task_title,
+            candidate_code=candidate_code,
+            question=question,
+            candidate_answer=candidate_answer,
+            candidate_level=candidate_level
+        )
+        
+        messages = [
+            {"role": "system", "content": SOLUTION_ANSWER_EVAL_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.2, max_tokens=512)
+        
+        # Clean response
+        response = self._clean_think_tags(response)
+        
+        return self._parse_json_response(response, {
+            "score": 50,
+            "correctness": 50,
+            "completeness": 50,
+            "understanding": 50,
+            "feedback": "Ответ учтён в оценке.",
+            "correct_answer": None
         })
     
     # ========== LEGACY METHODS (for backward compatibility) ==========

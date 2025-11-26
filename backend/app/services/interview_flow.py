@@ -120,16 +120,71 @@ async def generate_adaptive_task(
     direction: str,
     difficulty: str,
     task_order: int,
-    db: Session
+    db: Session,
+    generate_opening_question: bool = True
 ) -> Task:
     """
     Generate a SINGLE task adaptively based on difficulty.
     Used for real-time task generation after each completion.
+    
+    NEW: Also generates generation_meta with selection_reason and opening_question.
     """
     from .task_pool import get_task_by_difficulty
+    from datetime import datetime
+    
+    # Get interview for candidate info
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
+    candidate_level = interview.selected_level if interview else "middle"
     
     # Get task from pool based on difficulty
     task_data = get_task_by_difficulty(difficulty, task_order)
+    
+    # Determine target skills based on direction and task
+    direction_skills = {
+        "backend": ["python", "algorithms", "data structures"],
+        "frontend": ["javascript", "algorithms", "ui/ux"],
+        "algorithms": ["algorithms", "data structures", "problem solving"],
+        "ml": ["python", "ml", "data analysis"],
+        "data-science": ["python", "pandas", "statistics"],
+        "devops": ["linux", "docker", "scripting"],
+        "fullstack": ["python", "javascript", "sql"],
+    }
+    target_skills = direction_skills.get(direction, ["algorithms", "problem solving"])
+    
+    # Generate selection reason using LLM
+    task_payload = {
+        "title": task_data["title"],
+        "description": task_data["description"],
+        "difficulty": task_data["difficulty"],
+        "category": task_data.get("category", "algorithms")
+    }
+    
+    try:
+        selection_reason = await scibox_client.generate_task_selection_reason(
+            task_payload=task_payload,
+            track=direction,
+            difficulty=difficulty,
+            target_skills=target_skills,
+            candidate_level=candidate_level,
+            direction=direction,
+            block_type="algo",
+            vacancy_info="",
+            candidate_additional_info=""
+        )
+    except Exception as e:
+        logger.warning(f"Failed to generate selection reason: {e}")
+        selection_reason = f"Задача подобрана для проверки навыков на уровне {difficulty} для {direction}-разработчика."
+    
+    # Build generation_meta
+    generation_meta = {
+        "llm_model": "qwen3-32b-awq",
+        "track": direction,
+        "difficulty": difficulty,
+        "target_skills": target_skills,
+        "candidate_level": candidate_level,
+        "selection_reason": selection_reason,
+        "generation_timestamp": datetime.utcnow().isoformat() + "Z"
+    }
     
     task = Task(
         interview_id=interview_id,
@@ -141,12 +196,44 @@ async def generate_adaptive_task(
         visible_tests=task_data.get("visible_tests", []),
         hidden_tests=task_data.get("hidden_tests", []),
         max_score=100.0,
-        status="active"
+        status="active",
+        generation_meta=generation_meta,
+        source_type="from_pool"
     )
     
     db.add(task)
     db.commit()
     db.refresh(task)
+    
+    # Generate opening question and save as first chat message
+    if generate_opening_question:
+        try:
+            opening_question = await scibox_client.generate_opening_question(
+                task_description=task_data["description"],
+                block_type="algo",
+                track=direction,
+                candidate_grade=candidate_level,
+                difficulty=difficulty
+            )
+            
+            # Clean any remaining <think> tags
+            import re
+            opening_question = re.sub(r'<think>.*?</think>', '', opening_question, flags=re.DOTALL).strip()
+            
+            # Save as first chat message from bot
+            from ..models.interview import ChatMessage
+            chat_message = ChatMessage(
+                interview_id=interview_id,
+                role="assistant",
+                content=opening_question,
+                task_id=task.id
+            )
+            db.add(chat_message)
+            db.commit()
+            
+            logger.info(f"Created opening question for task {task.id}")
+        except Exception as e:
+            logger.warning(f"Failed to generate opening question: {e}")
     
     logger.info(f"Generated adaptive task #{task_order} (difficulty={difficulty}) for interview {interview_id}")
     return task
@@ -156,19 +243,52 @@ async def create_interview_tasks(
     interview_id: int,
     direction: str,
     level: str,
-    db: Session
+    db: Session,
+    generate_opening_for_first: bool = True
 ) -> List[Task]:
     """
     Create 3 tasks for the interview using TASK_POOL for reliable tests.
+    
+    NEW: Also generates generation_meta for each task and opening question for first task.
     """
     from .task_pool import get_task_sequence
+    from datetime import datetime
+    from ..models.interview import ChatMessage
+    
+    # Get interview for context
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
     
     # Get 3 tasks from the pool based on level
     pool_tasks = get_task_sequence(level, count=3)
     
+    # Determine target skills based on direction
+    direction_skills = {
+        "backend": ["python", "algorithms", "data structures"],
+        "frontend": ["javascript", "algorithms", "ui/ux"],
+        "algorithms": ["algorithms", "data structures", "problem solving"],
+        "ml": ["python", "ml", "data analysis"],
+        "data-science": ["python", "pandas", "statistics"],
+        "devops": ["linux", "docker", "scripting"],
+        "fullstack": ["python", "javascript", "sql"],
+    }
+    target_skills = direction_skills.get(direction, ["algorithms", "problem solving"])
+    
     created_tasks = []
     
     for i, task_data in enumerate(pool_tasks, 1):
+        difficulty = task_data["difficulty"]
+        
+        # Build generation_meta for each task
+        generation_meta = {
+            "llm_model": "qwen3-32b-awq",
+            "track": direction,
+            "difficulty": difficulty,
+            "target_skills": target_skills,
+            "candidate_level": level,
+            "selection_reason": f"Задача #{i} подобрана для проверки {', '.join(target_skills[:2])} на уровне {difficulty}.",
+            "generation_timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+        
         task = Task(
             interview_id=interview_id,
             task_order=i,
@@ -179,7 +299,9 @@ async def create_interview_tasks(
             visible_tests=task_data.get("visible_tests", []),
             hidden_tests=task_data.get("hidden_tests", []),
             max_score=100.0,
-            status="active" if i == 1 else "pending"
+            status="active" if i == 1 else "pending",
+            generation_meta=generation_meta,
+            source_type="from_pool"
         )
         
         db.add(task)
@@ -188,6 +310,54 @@ async def create_interview_tasks(
     db.commit()
     for task in created_tasks:
         db.refresh(task)
+    
+    # Generate opening question for the first task only
+    if generate_opening_for_first and created_tasks:
+        first_task = created_tasks[0]
+        try:
+            # Generate selection reason using LLM
+            task_payload = {
+                "title": first_task.title,
+                "description": first_task.description,
+                "difficulty": first_task.difficulty,
+                "category": first_task.category
+            }
+            
+            selection_reason = await scibox_client.generate_task_selection_reason(
+                task_payload=task_payload,
+                track=direction,
+                difficulty=first_task.difficulty,
+                target_skills=target_skills,
+                candidate_level=level,
+                direction=direction
+            )
+            
+            # Update first task's generation_meta with proper selection_reason
+            first_task.generation_meta["selection_reason"] = selection_reason
+            db.commit()
+            
+            # Generate opening question
+            opening_question = await scibox_client.generate_opening_question(
+                task_description=first_task.description,
+                block_type="algo",
+                track=direction,
+                candidate_grade=level,
+                difficulty=first_task.difficulty
+            )
+            
+            # Save as first chat message from bot
+            chat_message = ChatMessage(
+                interview_id=interview_id,
+                role="assistant",
+                content=opening_question,
+                task_id=first_task.id
+            )
+            db.add(chat_message)
+            db.commit()
+            
+            logger.info(f"Created opening question for first task {first_task.id}")
+        except Exception as e:
+            logger.warning(f"Failed to generate opening question for first task: {e}")
     
     logger.info(f"Created {len(created_tasks)} tasks for interview {interview_id}")
     return created_tasks

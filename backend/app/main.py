@@ -8,7 +8,7 @@ import uvicorn
 
 from app.core.config import settings
 from app.core.db import init_db
-from app.api import interview, admin, resume, anti_cheat, questions, claude, vacancy
+from app.api import interview, admin, resume, anti_cheat, questions, claude, vacancy, auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -48,6 +48,7 @@ async def health_check():
 
 
 # API routes
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(interview.router, prefix="/api/interview", tags=["Interview"])
 app.include_router(vacancy.router, prefix="/api/vacancy", tags=["Vacancy"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])

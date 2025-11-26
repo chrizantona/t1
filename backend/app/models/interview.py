@@ -122,6 +122,10 @@ class Task(Base):
     # Candidate's final code (for theory questions about solution)
     final_code = Column(Text, nullable=True)
     
+    # Task generation metadata (NEW: for showing how LLM selected/generated the task)
+    generation_meta = Column(JSON, nullable=True)  # {llm_model, track, difficulty, target_skills, selection_reason, ...}
+    source_type = Column(String, default="from_pool")  # "from_pool" | "llm_generated"
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -252,6 +256,37 @@ class SkillAssessment(Base):
     
     # Relationships
     interview = relationship("Interview", back_populates="skill_assessment")
+
+
+class SolutionFollowup(Base):
+    """Follow-up question about candidate's solution after task completion."""
+    __tablename__ = "solution_followups"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    interview_id = Column(Integer, ForeignKey("interviews.id"), nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    
+    # Question
+    question_text = Column(Text, nullable=False)
+    question_type = Column(String, default="complexity")  # complexity/algorithm/optimization/edge_cases
+    
+    # Answer
+    candidate_answer = Column(Text, nullable=True)
+    
+    # Evaluation
+    score = Column(Float, nullable=True)  # 0-100
+    correctness = Column(Float, nullable=True)
+    completeness = Column(Float, nullable=True)
+    understanding = Column(Float, nullable=True)
+    feedback = Column(Text, nullable=True)
+    correct_answer = Column(Text, nullable=True)
+    
+    # Status
+    status = Column(String, default="pending")  # pending/answered
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    answered_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class TheoryAnswer(Base):

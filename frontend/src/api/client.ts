@@ -83,6 +83,38 @@ export const interviewAPI = {
     return response.data
   },
 
+  // Generate next task with metadata and opening question
+  generateNextTaskWithMeta: async (interviewId: number) => {
+    const response = await api.post(`/api/interview/${interviewId}/next-task/with-meta`)
+    return response.data
+  },
+
+  // Get chat messages for a specific task (including opening question)
+  getTaskChatMessages: async (interviewId: number, taskId: number) => {
+    const response = await api.get(`/api/interview/${interviewId}/tasks/${taskId}/chat-messages`)
+    return response.data
+  },
+
+  // Get solution follow-up question after task completion
+  getSolutionFollowup: async (taskId: number) => {
+    const response = await api.post(`/api/interview/tasks/${taskId}/solution-followup`)
+    return response.data
+  },
+
+  // Get existing solution follow-up for a task
+  getExistingFollowup: async (taskId: number) => {
+    const response = await api.get(`/api/interview/tasks/${taskId}/solution-followup`)
+    return response.data
+  },
+
+  // Submit answer to solution follow-up question
+  submitFollowupAnswer: async (followupId: number, answerText: string) => {
+    const response = await api.post(`/api/interview/solution-followup/${followupId}/answer`, null, {
+      params: { answer_text: answerText }
+    })
+    return response.data
+  },
+
   // ============ V2 API Methods ============
 
   // Start new interview with V2 flow (3 tasks at once)
@@ -207,6 +239,86 @@ export const vacancyAPI = {
     const response = await api.get(`/api/vacancy/skills/${vacancyId}`)
     return response.data
   },
+
+  // Create vacancy
+  createVacancy: async (data: {
+    title: string
+    description?: string
+    company?: string
+    direction: string
+    grade_required: string
+    skills?: any[]
+  }) => {
+    const response = await api.post('/api/vacancy/', data)
+    return response.data
+  },
+
+  // Update vacancy
+  updateVacancy: async (vacancyId: string, data: any) => {
+    const response = await api.put(`/api/vacancy/${vacancyId}`, data)
+    return response.data
+  },
+
+  // Delete vacancy
+  deleteVacancy: async (vacancyId: string) => {
+    const response = await api.delete(`/api/vacancy/${vacancyId}`)
+    return response.data
+  },
+}
+
+// Auth API
+export const authAPI = {
+  // Register new user
+  register: async (data: {
+    email: string
+    password: string
+    full_name?: string
+    role: 'candidate' | 'admin'
+  }) => {
+    const response = await api.post('/api/auth/register', data)
+    return response.data
+  },
+
+  // Login
+  login: async (email: string, password: string) => {
+    const response = await api.post('/api/auth/login', { email, password })
+    return response.data
+  },
+
+  // Get current user
+  getMe: async () => {
+    const response = await api.get('/api/auth/me')
+    return response.data
+  },
+
+  // Demo login as candidate
+  demoCandidate: async () => {
+    const response = await api.post('/api/auth/demo/candidate')
+    return response.data
+  },
+
+  // Demo login as admin
+  demoAdmin: async () => {
+    const response = await api.post('/api/auth/demo/admin')
+    return response.data
+  },
+}
+
+// Set auth token for all requests
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    localStorage.setItem('vibecode_token', token)
+  } else {
+    delete api.defaults.headers.common['Authorization']
+    localStorage.removeItem('vibecode_token')
+  }
+}
+
+// Load token from localStorage on init
+const savedToken = localStorage.getItem('vibecode_token')
+if (savedToken) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
 }
 
 export default api

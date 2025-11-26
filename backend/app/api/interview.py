@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from ..core.db import get_db
-from ..models.interview import Interview, Task, Submission, ChatMessage, Hint, TheoryAnswer
+from ..models.interview import Interview, Task, Submission, ChatMessage, Hint, TheoryAnswer, SolutionFollowup
 from ..schemas.interview import (
     InterviewCreate,
     InterviewResponse,
@@ -30,7 +30,9 @@ from ..schemas.interview import (
     TheoryAnswerEvaluation,
     TheoryAnswerResponse,
     InterviewProgressResponse,
-    FinalScoresResponse
+    FinalScoresResponse,
+    TaskWithOpeningQuestion,
+    InitialChatMessage
 )
 from ..services.scibox_client import scibox_client
 from ..services.adaptive import generate_first_task, generate_next_task as adaptive_generate_next_task
@@ -285,9 +287,10 @@ async def send_chat_message(
             chat_history=history_for_llm
         )
         
-        # Clean response just in case
+        # Clean response - remove ALL <think> tags and their content
         import re
         ai_response = re.sub(r'<think>.*?</think>', '', ai_response, flags=re.DOTALL).strip()
+        ai_response = re.sub(r'</?think>', '', ai_response).strip()
         
         if not ai_response:
             ai_response = "Интересный вопрос! Давай разберёмся вместе. 🤔"
@@ -508,17 +511,342 @@ async def generate_next_task(interview_id: int, db: Session = Depends(get_db)):
             # No completed tasks yet, use medium
             next_difficulty = "medium"
     
+    # Generate the new task with generation_meta and opening question
+    task = await generate_adaptive_task(
+        interview_id=interview_id,
+        direction=interview.direction,
+        difficulty=next_difficulty,
+        task_order=next_order,
+        db=db,
+        generate_opening_question=True
+    )
+    
+    print(f"Generated adaptive task #{next_order} (difficulty={next_difficulty}) for interview {interview_id}")
+    return task
+
+
+@router.post("/{interview_id}/next-task/with-meta")
+async def generate_next_task_with_meta(interview_id: int, db: Session = Depends(get_db)):
+    """
+    Generate next ADAPTIVE task with full metadata and opening question.
+    Returns task, generation_meta, and initial chat messages.
+    """
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    
+    # Get previous tasks
+    previous_tasks = db.query(Task).filter(
+        Task.interview_id == interview_id
+    ).order_by(Task.task_order).all()
+    
+    # Max 3 tasks per interview
+    if len(previous_tasks) >= 3:
+        raise HTTPException(status_code=400, detail="Maximum tasks reached. Complete the interview.")
+    
+    # Calculate next difficulty
+    next_order = len(previous_tasks) + 1
+    
+    if not previous_tasks:
+        level_to_difficulty = {
+            "intern": "easy",
+            "junior": "easy",
+            "middle": "medium",
+            "senior": "hard"
+        }
+        next_difficulty = level_to_difficulty.get(interview.selected_level, "medium")
+    else:
+        completed = [t for t in previous_tasks if t.actual_score is not None and t.actual_score > 0]
+        
+        if completed:
+            avg_score = sum(t.actual_score for t in completed) / len(completed)
+            last_difficulty = previous_tasks[-1].difficulty
+            difficulty_order = ["easy", "medium", "hard"]
+            current_idx = difficulty_order.index(last_difficulty) if last_difficulty in difficulty_order else 1
+            
+            if avg_score >= 70:
+                next_idx = min(current_idx + 1, 2)
+            elif avg_score < 40:
+                next_idx = max(current_idx - 1, 0)
+            else:
+                next_idx = current_idx
+            
+            next_difficulty = difficulty_order[next_idx]
+        else:
+            next_difficulty = "medium"
+    
     # Generate the new task
     task = await generate_adaptive_task(
         interview_id=interview_id,
         direction=interview.direction,
         difficulty=next_difficulty,
         task_order=next_order,
-        db=db
+        db=db,
+        generate_opening_question=True
     )
     
-    print(f"Generated adaptive task #{next_order} (difficulty={next_difficulty}) for interview {interview_id}")
-    return task
+    # Get initial messages (opening question)
+    initial_messages = db.query(ChatMessage).filter(
+        ChatMessage.interview_id == interview_id,
+        ChatMessage.task_id == task.id,
+        ChatMessage.role == "assistant"
+    ).order_by(ChatMessage.created_at).all()
+    
+    return {
+        "task": TaskResponseV2.model_validate(task),
+        "generation_meta": task.generation_meta or {},
+        "initial_messages": [
+            {
+                "sender_type": "bot",
+                "sender_name": "VibeCode AI",
+                "message_text": msg.content
+            }
+            for msg in initial_messages
+        ]
+    }
+
+
+@router.get("/{interview_id}/tasks/{task_id}/chat-messages")
+async def get_task_chat_messages(
+    interview_id: int, 
+    task_id: int, 
+    db: Session = Depends(get_db)
+):
+    """
+    Get all chat messages for a specific task (including opening question).
+    """
+    import re
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.interview_id == interview_id,
+        ChatMessage.task_id == task_id
+    ).order_by(ChatMessage.created_at).all()
+    
+    def clean_think_tags(text: str) -> str:
+        """Remove <think> tags from text."""
+        if not text:
+            return text
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+        text = re.sub(r'</?think>', '', text).strip()
+        return text
+    
+    return [
+        {
+            "id": msg.id,
+            "role": msg.role,
+            "content": clean_think_tags(msg.content),
+            "created_at": msg.created_at.isoformat()
+        }
+        for msg in messages
+    ]
+
+
+# ============ Solution Follow-up Endpoints ============
+
+@router.post("/tasks/{task_id}/solution-followup")
+async def get_solution_followup_question(
+    task_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate a follow-up question about candidate's solution after task completion.
+    Called after successful code submission.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    interview = db.query(Interview).filter(Interview.id == task.interview_id).first()
+    
+    # Check if there's already a pending followup question
+    existing = db.query(SolutionFollowup).filter(
+        SolutionFollowup.task_id == task_id,
+        SolutionFollowup.status == "pending"
+    ).first()
+    
+    if existing:
+        return {
+            "followup_id": existing.id,
+            "question": existing.question_text,
+            "status": "pending"
+        }
+    
+    # Get best submission code
+    best_submission = db.query(Submission).filter(
+        Submission.task_id == task_id
+    ).order_by(Submission.passed_visible.desc(), Submission.passed_hidden.desc()).first()
+    
+    if not best_submission:
+        raise HTTPException(status_code=400, detail="No submission found for this task")
+    
+    # Generate follow-up question
+    try:
+        question = await scibox_client.generate_solution_followup_question(
+            task_title=task.title,
+            task_description=task.description,
+            candidate_code=best_submission.code,
+            candidate_level=interview.selected_level if interview else "middle",
+            difficulty=task.difficulty
+        )
+    except Exception as e:
+        print(f"Failed to generate followup question: {e}")
+        question = "🤔 Какова временная и пространственная сложность твоего решения?"
+    
+    # Save followup question
+    followup = SolutionFollowup(
+        interview_id=task.interview_id,
+        task_id=task_id,
+        question_text=question,
+        question_type="complexity",
+        status="pending"
+    )
+    db.add(followup)
+    db.commit()
+    db.refresh(followup)
+    
+    # Also add as chat message
+    chat_message = ChatMessage(
+        interview_id=task.interview_id,
+        role="assistant",
+        content=question,
+        task_id=task_id
+    )
+    db.add(chat_message)
+    db.commit()
+    
+    return {
+        "followup_id": followup.id,
+        "question": question,
+        "status": "pending"
+    }
+
+
+@router.post("/solution-followup/{followup_id}/answer")
+async def submit_solution_followup_answer(
+    followup_id: int,
+    answer_text: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Submit answer to a solution follow-up question.
+    Evaluates the answer and updates the task score.
+    """
+    from pydantic import BaseModel
+    
+    followup = db.query(SolutionFollowup).filter(SolutionFollowup.id == followup_id).first()
+    if not followup:
+        raise HTTPException(status_code=404, detail="Follow-up question not found")
+    
+    if followup.status != "pending":
+        raise HTTPException(status_code=400, detail="Question already answered")
+    
+    task = db.query(Task).filter(Task.id == followup.task_id).first()
+    interview = db.query(Interview).filter(Interview.id == followup.interview_id).first()
+    
+    # Get best submission code
+    best_submission = db.query(Submission).filter(
+        Submission.task_id == followup.task_id
+    ).order_by(Submission.passed_visible.desc()).first()
+    
+    candidate_code = best_submission.code if best_submission else ""
+    
+    # Evaluate answer
+    try:
+        evaluation = await scibox_client.evaluate_solution_answer(
+            task_title=task.title,
+            candidate_code=candidate_code,
+            question=followup.question_text,
+            candidate_answer=answer_text,
+            candidate_level=interview.selected_level if interview else "middle"
+        )
+    except Exception as e:
+        print(f"Failed to evaluate answer: {e}")
+        evaluation = {
+            "score": 50,
+            "feedback": "Ответ учтён.",
+            "correct_answer": None
+        }
+    
+    # Update followup record
+    from datetime import datetime
+    followup.candidate_answer = answer_text
+    followup.score = evaluation.get("score", 50)
+    followup.correctness = evaluation.get("correctness")
+    followup.completeness = evaluation.get("completeness")
+    followup.understanding = evaluation.get("understanding")
+    followup.feedback = evaluation.get("feedback")
+    followup.correct_answer = evaluation.get("correct_answer")
+    followup.status = "answered"
+    followup.answered_at = datetime.utcnow()
+    
+    # Update task score with bonus/penalty based on followup answer
+    if task.actual_score is not None:
+        followup_bonus = (evaluation.get("score", 50) - 50) / 10  # -5 to +5 points
+        task.actual_score = max(0, min(100, task.actual_score + followup_bonus))
+    
+    # Save candidate answer as chat message
+    user_message = ChatMessage(
+        interview_id=followup.interview_id,
+        role="user",
+        content=answer_text,
+        task_id=followup.task_id
+    )
+    db.add(user_message)
+    
+    # Add feedback as bot response
+    feedback_content = evaluation.get("feedback", "Ответ учтён.")
+    if evaluation.get("correct_answer"):
+        feedback_content += f"\n\n📚 Правильный ответ: {evaluation['correct_answer']}"
+    
+    bot_response = ChatMessage(
+        interview_id=followup.interview_id,
+        role="assistant",
+        content=feedback_content,
+        task_id=followup.task_id
+    )
+    db.add(bot_response)
+    
+    db.commit()
+    
+    return {
+        "followup_id": followup_id,
+        "score": followup.score,
+        "feedback": followup.feedback,
+        "correct_answer": followup.correct_answer,
+        "task_score_updated": task.actual_score
+    }
+
+
+@router.get("/tasks/{task_id}/solution-followup")
+async def get_task_solution_followup(
+    task_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get solution follow-up question for a task if exists.
+    """
+    followup = db.query(SolutionFollowup).filter(
+        SolutionFollowup.task_id == task_id
+    ).order_by(SolutionFollowup.created_at.desc()).first()
+    
+    if not followup:
+        return None
+    
+    import re
+    def clean_think_tags(text: str) -> str:
+        if not text:
+            return text
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+        text = re.sub(r'</?think>', '', text).strip()
+        return text
+    
+    return {
+        "followup_id": followup.id,
+        "question": clean_think_tags(followup.question_text),
+        "status": followup.status,
+        "score": followup.score,
+        "feedback": clean_think_tags(followup.feedback) if followup.feedback else None,
+        "correct_answer": followup.correct_answer
+    }
 
 
 @router.post("/submit/enhanced")

@@ -198,3 +198,27 @@ def get_vacancies_by_grade(grade: str) -> List[Dict[str, Any]]:
         if value["grade_required"].lower() == grade.lower()
     ]
 
+
+def add_vacancy_to_pool(vacancy: Dict[str, Any]) -> None:
+    """Add a new vacancy to the pool."""
+    vacancy_id = vacancy.get("id")
+    if vacancy_id:
+        # Remove 'id' from the dict since we use it as key
+        vacancy_copy = {k: v for k, v in vacancy.items() if k != "id"}
+        VACANCY_POOL[vacancy_id] = vacancy_copy
+
+
+def remove_vacancy_from_pool(vacancy_id: str) -> bool:
+    """Remove a vacancy from the pool."""
+    if vacancy_id in VACANCY_POOL:
+        del VACANCY_POOL[vacancy_id]
+        return True
+    return False
+
+
+def update_vacancy_in_pool(vacancy_id: str, updates: Dict[str, Any]) -> bool:
+    """Update a vacancy in the pool."""
+    if vacancy_id in VACANCY_POOL:
+        VACANCY_POOL[vacancy_id].update(updates)
+        return True
+    return False

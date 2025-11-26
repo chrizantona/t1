@@ -216,7 +216,7 @@ class InterviewResponseV2(BaseModel):
 
 
 class TaskResponseV2(BaseModel):
-    """Extended task response with order info."""
+    """Extended task response with order info and generation metadata."""
     id: int
     task_order: int
     title: str
@@ -228,9 +228,26 @@ class TaskResponseV2(BaseModel):
     actual_score: Optional[float] = None
     status: str
     created_at: datetime
+    # NEW: Generation metadata showing how task was selected
+    generation_meta: Optional[Dict[str, Any]] = None
+    source_type: Optional[str] = None
     
     class Config:
         from_attributes = True
+
+
+class InitialChatMessage(BaseModel):
+    """Initial chat message from bot."""
+    sender_type: str = "bot"
+    sender_name: str = "VibeCode AI"
+    message_text: str
+
+
+class TaskWithOpeningQuestion(BaseModel):
+    """Task with generation metadata and opening question."""
+    task: TaskResponseV2
+    generation_meta: Dict[str, Any]
+    initial_messages: List[InitialChatMessage] = []
 
 
 class AllTasksResponse(BaseModel):

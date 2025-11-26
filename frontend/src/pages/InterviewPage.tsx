@@ -24,6 +24,15 @@ function InterviewPage() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [generatingTask, setGeneratingTask] = useState(false)
   const [taskCompleted, setTaskCompleted] = useState(false)
+  const [generationMeta, setGenerationMeta] = useState<any>(null)
+  const [showGenerationInfo, setShowGenerationInfo] = useState(false)
+  const [generationSteps, setGenerationSteps] = useState<{ step: number; text: string; done: boolean }[]>([])
+  
+  // Solution follow-up state
+  const [followupQuestion, setFollowupQuestion] = useState<any>(null)
+  const [followupAnswer, setFollowupAnswer] = useState('')
+  const [followupLoading, setFollowupLoading] = useState(false)
+  const [followupResult, setFollowupResult] = useState<any>(null)
 
   // Get current code for current task
   const currentTask = tasks[currentTaskIndex]
@@ -43,6 +52,17 @@ function InterviewPage() {
     loadInterview()
     loadTasks()
   }, [interviewId])
+
+  // Load chat messages when switching tasks
+  useEffect(() => {
+    if (currentTask?.id && interviewId) {
+      loadTaskChatMessages(currentTask.id)
+      // Update generation meta for current task
+      if (currentTask.generation_meta) {
+        setGenerationMeta(currentTask.generation_meta)
+      }
+    }
+  }, [currentTask?.id, interviewId])
 
   const loadInterview = async () => {
     try {
@@ -68,9 +88,28 @@ function InterviewPage() {
       
       if (tasksList.length > 0) {
         setCurrentTaskIndex(0)
+        // Load chat messages for first task
+        if (tasksList[0]?.id) {
+          loadTaskChatMessages(tasksList[0].id)
+          if (tasksList[0].generation_meta) {
+            setGenerationMeta(tasksList[0].generation_meta)
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load tasks:', error)
+    }
+  }
+
+  const loadTaskChatMessages = async (taskId: number) => {
+    try {
+      const messages = await interviewAPI.getTaskChatMessages(Number(interviewId), taskId)
+      if (messages && messages.length > 0) {
+        setMessages(messages)
+      }
+    } catch (error) {
+      console.error('Failed to load task chat messages:', error)
+      // Keep existing messages if load fails
     }
   }
 
@@ -80,6 +119,8 @@ function InterviewPage() {
     setSubmitLoading(true)
     setTestDetails([])
     setTaskCompleted(false)
+    setFollowupQuestion(null)
+    setFollowupResult(null)
 
     try {
       const submission = await interviewAPI.submitCode({
@@ -104,6 +145,21 @@ function InterviewPage() {
       
       if (allPassed) {
         setTaskCompleted(true)
+        // Generate follow-up question about the solution
+        try {
+          const followup = await interviewAPI.getSolutionFollowup(currentTask.id)
+          if (followup && followup.question) {
+            setFollowupQuestion(followup)
+            // Add to chat messages
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: followup.question,
+              created_at: new Date().toISOString()
+            }])
+          }
+        } catch (e) {
+          console.error('Failed to get followup question:', e)
+        }
       }
       
       // Reload tasks to get updated scores
@@ -122,7 +178,47 @@ function InterviewPage() {
     }
   }
 
-  // Generate next task adaptively
+  // Submit answer to followup question
+  const submitFollowupAnswer = async () => {
+    if (!followupQuestion || !followupAnswer.trim()) return
+    
+    setFollowupLoading(true)
+    
+    // Add user message to chat
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: followupAnswer,
+      created_at: new Date().toISOString()
+    }])
+    
+    try {
+      const result = await interviewAPI.submitFollowupAnswer(followupQuestion.followup_id, followupAnswer)
+      setFollowupResult(result)
+      
+      // Add feedback to chat
+      let feedbackContent = result.feedback || 'Ответ учтён.'
+      if (result.correct_answer) {
+        feedbackContent += `\n\n📚 Правильный ответ: ${result.correct_answer}`
+      }
+      
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: feedbackContent,
+        created_at: new Date().toISOString()
+      }])
+      
+      setFollowupAnswer('')
+      
+      // Reload tasks to see updated score
+      await loadTasks()
+    } catch (error) {
+      console.error('Failed to submit followup answer:', error)
+    } finally {
+      setFollowupLoading(false)
+    }
+  }
+
+  // Generate next task adaptively with generation animation
   const generateNextTask = async () => {
     if (tasks.length >= 3) {
       alert('Все задачи пройдены! Можете завершить интервью.')
@@ -131,9 +227,43 @@ function InterviewPage() {
     
     setGeneratingTask(true)
     setTaskCompleted(false)
+    setShowGenerationInfo(true)
+    
+    // Show generation steps animation
+    const steps = [
+      { step: 1, text: '📊 Анализ вакансии и вашего профиля...', done: false },
+      { step: 2, text: '🎯 Выбор трека и сложности...', done: false },
+      { step: 3, text: '🧩 Подбор задачи под ваш уровень...', done: false },
+      { step: 4, text: '💬 Формирование первого вопроса...', done: false },
+    ]
+    setGenerationSteps(steps)
+    
+    // Animate steps
+    for (let i = 0; i < steps.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      setGenerationSteps(prev => prev.map((s, idx) => 
+        idx <= i ? { ...s, done: true } : s
+      ))
+    }
     
     try {
-      const newTask = await interviewAPI.generateNextTask(Number(interviewId))
+      // Use new API with metadata
+      const response = await interviewAPI.generateNextTaskWithMeta(Number(interviewId))
+      
+      // Set generation metadata
+      if (response.generation_meta) {
+        setGenerationMeta(response.generation_meta)
+      }
+      
+      // Set initial messages (opening question)
+      if (response.initial_messages && response.initial_messages.length > 0) {
+        const openingMessages = response.initial_messages.map((msg: any) => ({
+          role: 'assistant',
+          content: msg.message_text,
+          created_at: new Date().toISOString()
+        }))
+        setMessages(openingMessages)
+      }
       
       // Reload tasks and switch to the new one
       await loadTasks()
@@ -149,16 +279,26 @@ function InterviewPage() {
       alert(error.response?.data?.detail || 'Не удалось сгенерировать задачу')
     } finally {
       setGeneratingTask(false)
+      setTimeout(() => setShowGenerationInfo(false), 2000)
     }
   }
 
   // Switch to specific task (from navigation)
-  const switchToTask = (index: number) => {
+  const switchToTask = async (index: number) => {
     setCurrentTaskIndex(index)
     // Don't reset code - it's stored per task in taskCodes
     setResult(null)
     setTestDetails([])
     setCurrentHints([])
+    
+    // Load chat messages for the task
+    const task = tasks[index]
+    if (task?.id) {
+      await loadTaskChatMessages(task.id)
+      if (task.generation_meta) {
+        setGenerationMeta(task.generation_meta)
+      }
+    }
   }
 
   const requestHint = async (level: string) => {
@@ -330,7 +470,57 @@ function InterviewPage() {
                 {currentTask.status === 'completed' ? '✅' : '💯'} {currentTask.actual_score || 0}/{currentTask.max_score}pts
               </span>
             </div>
+            
+            {/* Generation Info Badge */}
+            {generationMeta && (
+              <div className="generation-info-badge" onClick={() => setShowGenerationInfo(!showGenerationInfo)}>
+                <span className="llm-badge">🤖 LLM-подбор</span>
+                <span className="toggle-info">{showGenerationInfo ? '▲' : '▼'}</span>
+              </div>
+            )}
           </div>
+          
+          {/* Generation Info Panel */}
+          {showGenerationInfo && generationMeta && (
+            <div className="generation-info-panel">
+              <h4>📋 Как была подобрана задача:</h4>
+              <div className="generation-meta-details">
+                <div className="meta-row">
+                  <span className="meta-label">Трек:</span>
+                  <span className="meta-value">{generationMeta.track}</span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-label">Сложность:</span>
+                  <span className="meta-value">{generationMeta.difficulty}</span>
+                </div>
+                {generationMeta.target_skills && (
+                  <div className="meta-row">
+                    <span className="meta-label">Навыки:</span>
+                    <span className="meta-value">{generationMeta.target_skills.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+              {generationMeta.selection_reason && (
+                <div className="selection-reason">
+                  <h5>💡 Почему именно она:</h5>
+                  <p>{generationMeta.selection_reason}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Generation Steps Animation */}
+          {generatingTask && generationSteps.length > 0 && (
+            <div className="generation-steps">
+              <h4>🔄 Подбор задачи...</h4>
+              {generationSteps.map((step) => (
+                <div key={step.step} className={`generation-step ${step.done ? 'done' : 'pending'}`}>
+                  <span className="step-icon">{step.done ? '✓' : '○'}</span>
+                  <span className="step-text">{step.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="task-content">
             <div className="task-description">
@@ -513,7 +703,51 @@ function InterviewPage() {
                       : `✅ Публичные тесты пройдены! (скрытые: ${result.passed_hidden}/${result.total_hidden})`
                     }
                   </h4>
-                  {tasks.length < 3 && (
+                  
+                  {/* Follow-up question section */}
+                  {followupQuestion && followupQuestion.status === 'pending' && !followupResult && (
+                    <div className="followup-section">
+                      <div className="followup-question">
+                        <span className="followup-label">🤖 Вопрос по решению:</span>
+                        <p>{followupQuestion.question}</p>
+                      </div>
+                      <div className="followup-input">
+                        <textarea
+                          placeholder="Введите ваш ответ..."
+                          value={followupAnswer}
+                          onChange={(e) => setFollowupAnswer(e.target.value)}
+                          rows={3}
+                        />
+                        <button 
+                          className="btn-followup-submit"
+                          onClick={submitFollowupAnswer}
+                          disabled={followupLoading || !followupAnswer.trim()}
+                        >
+                          {followupLoading ? 'Отправка...' : 'Ответить'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Follow-up result */}
+                  {followupResult && (
+                    <div className={`followup-result ${followupResult.score >= 70 ? 'good' : followupResult.score >= 40 ? 'medium' : 'poor'}`}>
+                      <div className="followup-score">
+                        <span className="score-label">Оценка ответа:</span>
+                        <span className="score-value">{followupResult.score}/100</span>
+                      </div>
+                      <p className="followup-feedback">{followupResult.feedback}</p>
+                      {followupResult.correct_answer && (
+                        <div className="correct-answer">
+                          <span>📚 Правильный ответ:</span>
+                          <p>{followupResult.correct_answer}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Show next task button only after answering followup or if no followup */}
+                  {(!followupQuestion || followupResult || followupQuestion.status === 'answered') && tasks.length < 3 && (
                     <button 
                       className="btn-next-task"
                       onClick={generateNextTask}
