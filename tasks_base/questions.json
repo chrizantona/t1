@@ -3,360 +3,2501 @@
     "id": 1,
     "category": "algorithms",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Дан массив целых чисел nums и целое число target. Напишите функцию на Python, которая возвращает индексы двух чисел, сумма которых равна target. Если решения нет, вернуть None."
   },
   {
     "id": 2,
     "category": "algorithms",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Дана строка s. Напишите функцию, которая проверяет, является ли строка палиндромом, учитывая только буквенно-цифровые символы и игнорируя регистр."
   },
   {
     "id": 3,
     "category": "algorithms",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Дан отсортированный массив целых чисел nums без дубликатов и число target. Реализуйте бинарный поиск, который возвращает индекс target или -1, если элемент не найден."
   },
   {
     "id": 4,
     "category": "algorithms",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Реализуйте функцию, которая разворачивает односвязный список."
   },
   {
     "id": 5,
     "category": "algorithms",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Дан массив целых чисел. Напишите функцию, которая возвращает максимальную сумму подмассива (Kadane)."
   },
   {
     "id": 6,
     "category": "algorithms",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Дан массив чисел и k. Найдите длину самого длинного подмассива с суммой k."
   },
   {
     "id": 7,
     "category": "algorithms",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Слейте два отсортированных списка без создания новых узлов."
   },
   {
     "id": 8,
     "category": "algorithms",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Проверьте, сбалансировано ли бинарное дерево."
   },
   {
     "id": 9,
     "category": "algorithms",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Объедините пересекающиеся интервалы."
   },
   {
     "id": 10,
     "category": "algorithms",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Реализуйте LRU-кэш за O(1)."
   },
   {
     "id": 11,
     "category": "algorithms",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Найдите LIS сначала O(n^2), затем оптимизацию O(n log n)."
   },
   {
     "id": 12,
     "category": "algorithms",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Сериализация/десериализация бинарного дерева."
   },
   {
     "id": 13,
     "category": "algorithms",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Реализуйте KMP для поиска подстроки."
   },
   {
     "id": 14,
     "category": "algorithms",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Реализуйте Union-Find и проверку циклов."
   },
   {
     "id": 15,
     "category": "algorithms",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Реализуйте алгоритм Дейкстры."
   },
   {
     "id": 16,
     "category": "frontend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Создайте React-компонент title+subtitle."
   },
   {
     "id": 17,
     "category": "frontend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Список todos с toggling completed."
   },
   {
     "id": 18,
     "category": "frontend",
     "difficulty": "easy",
+    "type": "theory",
     "question": "Разница между let, const и var."
   },
   {
     "id": 19,
     "category": "frontend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Реализуйте debounce."
   },
   {
     "id": 20,
     "category": "frontend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Уникальные элементы массива JS."
   },
   {
     "id": 21,
     "category": "frontend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Форма логина на React с валидацией."
   },
   {
     "id": 22,
     "category": "frontend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Интерфейс User в TypeScript."
   },
   {
     "id": 23,
     "category": "frontend",
     "difficulty": "medium",
+    "type": "theory",
     "question": "Объясните Event Loop + пример."
   },
   {
     "id": 24,
     "category": "frontend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Реализуйте hash-based роутинг без библиотек."
   },
   {
     "id": 25,
     "category": "frontend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Адаптивная сетка карточек (HTML+CSS)."
   },
   {
     "id": 26,
     "category": "frontend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Виртуализация списка в React."
   },
   {
     "id": 27,
     "category": "frontend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Реализуйте мини-Redux."
   },
   {
     "id": 28,
     "category": "frontend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Добавьте SSR в React SPA."
   },
   {
     "id": 29,
     "category": "frontend",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Объясните Virtual DOM и проблемы с key."
   },
   {
     "id": 30,
     "category": "frontend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Реализуйте систему модулей AMD-подобную."
   },
   {
     "id": 31,
     "category": "backend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Создайте GET /health в Flask/FastAPI."
   },
   {
     "id": 32,
     "category": "backend",
     "difficulty": "easy",
+    "type": "theory",
     "question": "Разница между GET и POST."
   },
   {
     "id": 33,
     "category": "backend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Прочесть переменную окружения DATABASE_URL."
   },
   {
     "id": 34,
     "category": "backend",
     "difficulty": "easy",
+    "type": "theory",
     "question": "Объясните HTTP-коды 200–500."
   },
   {
     "id": 35,
     "category": "backend",
     "difficulty": "easy",
+    "type": "coding",
     "question": "SQL: пользователи за последние 7 дней."
   },
   {
     "id": 36,
     "category": "backend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "REST-API для Task."
   },
   {
     "id": 37,
     "category": "backend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Middleware для логирования времени."
   },
   {
     "id": 38,
     "category": "backend",
     "difficulty": "medium",
+    "type": "theory",
     "question": "Eventual vs transactional consistency."
   },
   {
     "id": 39,
     "category": "backend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "SQL join orders/users суммарные заказы > 1000."
   },
   {
     "id": 40,
     "category": "backend",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Реализуйте пагинацию limit/offset."
   },
   {
     "id": 41,
     "category": "backend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "JWT-аутентификация + refresh."
   },
   {
     "id": 42,
     "category": "backend",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Архитектура сервиса коротких ссылок."
   },
   {
     "id": 43,
     "category": "backend",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Optimistic locking."
   },
   {
     "id": 44,
     "category": "backend",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Вертикальное vs горизонтальное масштабирование."
   },
   {
     "id": 45,
     "category": "backend",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Система очередей задач (job queue)."
   },
   {
     "id": 46,
     "category": "data-science",
     "difficulty": "easy",
+    "type": "theory",
     "question": "Разница обучения с учителем и без."
   },
   {
     "id": 47,
     "category": "data-science",
     "difficulty": "easy",
+    "type": "coding",
     "question": "Pandas: средний возраст по городам."
   },
   {
     "id": 48,
     "category": "data-science",
     "difficulty": "easy",
+    "type": "coding",
     "question": "train/test split + логрег."
   },
   {
     "id": 49,
     "category": "data-science",
     "difficulty": "easy",
+    "type": "theory",
     "question": "Overfitting vs underfitting."
   },
   {
     "id": 50,
     "category": "data-science",
     "difficulty": "easy",
+    "type": "theory",
     "question": "StandardScaler vs MinMaxScaler."
   },
   {
     "id": 51,
     "category": "data-science",
     "difficulty": "medium",
+    "type": "theory",
     "question": "Несбалансированные классы, метрики."
   },
   {
     "id": 52,
     "category": "data-science",
     "difficulty": "medium",
+    "type": "coding",
     "question": "KFold cross-validation."
   },
   {
     "id": 53,
     "category": "data-science",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Градиентный спуск + реализация."
   },
   {
     "id": 54,
     "category": "data-science",
     "difficulty": "medium",
+    "type": "coding",
     "question": "KMeans: подготовка, выбор k, код."
   },
   {
     "id": 55,
     "category": "data-science",
     "difficulty": "medium",
+    "type": "coding",
     "question": "Пайплайн scikit-learn."
   },
   {
     "id": 56,
     "category": "data-science",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Bagging vs boosting."
   },
   {
     "id": 57,
     "category": "data-science",
     "difficulty": "hard",
+    "type": "coding",
     "question": "Логрег на NumPy с нуля."
   },
   {
     "id": 58,
     "category": "data-science",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Архитектура LSTM + пример."
   },
   {
     "id": 59,
     "category": "data-science",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Мониторинг модели в продакшене."
   },
   {
     "id": 60,
     "category": "data-science",
     "difficulty": "hard",
+    "type": "theory",
     "question": "Спроектируйте ML-пайплайн end-to-end."
+  },
+  {
+    "id": 101,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Goroutine? Объясните, как создать горутину и чем она отличается от обычного вызова функции."
+  },
+  {
+    "id": 102,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Slice в Go? Как он устроен внутри (указатель, длина, ёмкость)?"
+  },
+  {
+    "id": 103,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Map в Go? Как создать и использовать map?"
+  },
+  {
+    "id": 104,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Какие примитивы синхронизации есть в Go? Перечислите основные из пакета sync."
+  },
+  {
+    "id": 105,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чём разница между массивом и слайсом в Go?"
+  },
+  {
+    "id": 106,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое канал (channel) в Go? Как создать и использовать канал?"
+  },
+  {
+    "id": 107,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое интерфейс в Go? Приведите пример объявления и реализации интерфейса."
+  },
+  {
+    "id": 108,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое контекст (context) в Go? Когда его следует использовать?"
+  },
+  {
+    "id": 109,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что происходит при записи в закрытый канал в Go?"
+  },
+  {
+    "id": 110,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что происходит при чтении из закрытого канала в Go?"
+  },
+  {
+    "id": 111,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Defer в Go? В каком порядке выполняются отложенные вызовы?"
+  },
+  {
+    "id": 112,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Какие есть типы каналов в Go? Чем отличаются буферизованные от небуферизованных?"
+  },
+  {
+    "id": 113,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое строка в Go? Как она устроена под капотом?"
+  },
+  {
+    "id": 114,
+    "category": "go",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Какие плюсы и минусы языка Go вы можете назвать?"
+  },
+  {
+    "id": 115,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "В чём разница между Mutex и RWMutex в Go? Когда использовать каждый?"
+  },
+  {
+    "id": 116,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "В чём разница между горутиной и потоком операционной системы?"
+  },
+  {
+    "id": 117,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как устроена map в Go под капотом? Расскажите про bucket, overflow и рехеширование."
+  },
+  {
+    "id": 118,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Зачем нужен интерфейс в Go? Приведите примеры паттернов использования."
+  },
+  {
+    "id": 119,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает Garbage Collector в Go? Какой алгоритм используется?"
+  },
+  {
+    "id": 120,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое утиная типизация (duck typing)? Как она реализована в Go?"
+  },
+  {
+    "id": 121,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как реализовано ООП в Go? Какие концепции поддерживаются, а какие нет?"
+  },
+  {
+    "id": 122,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое пустой интерфейс (interface{}) в Go? Когда его стоит использовать?"
+  },
+  {
+    "id": 123,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое планировщик (scheduler) в Go? Опишите модель M:N."
+  },
+  {
+    "id": 124,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое Race Condition? Как обнаружить и предотвратить в Go?"
+  },
+  {
+    "id": 125,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое Data Race в Go? Чем отличается от Race Condition?"
+  },
+  {
+    "id": 126,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое select в Go? Приведите примеры использования."
+  },
+  {
+    "id": 127,
+    "category": "go",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Что такое паттерн GMP (Goroutine, M, P) в планировщике Go? Объясните детально."
+  },
+  {
+    "id": 128,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает обработка ошибок в Go? Паттерны error wrapping и sentinel errors."
+  },
+  {
+    "id": 129,
+    "category": "go",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое замыкание (closure) в Go? Приведите пример с горутиной."
+  },
+  {
+    "id": 130,
+    "category": "go",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Что такое DeadLock в Go? Приведите пример и способы избежания."
+  },
+  {
+    "id": 201,
+    "category": "git",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что делает git merge? Какие типы merge существуют?"
+  },
+  {
+    "id": 202,
+    "category": "git",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое git branch и как создать/удалить ветку?"
+  },
+  {
+    "id": 203,
+    "category": "git",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как откатить коммит? Объясните разницу между git reset и git revert."
+  },
+  {
+    "id": 204,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое git rebase и когда его лучше использовать вместо merge?"
+  },
+  {
+    "id": 205,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает cherry-pick? Когда его использовать?"
+  },
+  {
+    "id": 206,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое git squash и зачем он нужен?"
+  },
+  {
+    "id": 207,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Git stash: как использовать и зачем нужен?"
+  },
+  {
+    "id": 208,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Разница между fast-forward и no-ff merge. Когда использовать каждый?"
+  },
+  {
+    "id": 209,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Работа с удалёнными репозиториями: объясните разницу между git fetch, git pull, git push."
+  },
+  {
+    "id": 210,
+    "category": "git",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "В чем разница между git rebase и git merge? Когда что использовать?"
+  },
+  {
+    "id": 211,
+    "category": "git",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Стратегии ветвления в больших проектах: Git Flow vs trunk-based development."
+  },
+  {
+    "id": 212,
+    "category": "git",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Оптимизация истории коммитов через interactive rebase. Приведите примеры команд."
+  },
+  {
+    "id": 213,
+    "category": "git",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Как решать сложные конфликты слияния? Инструменты и стратегии."
+  },
+  {
+    "id": 214,
+    "category": "git",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "CI/CD интеграция с Git: хуки, автоматизация, best practices."
+  },
+  {
+    "id": 215,
+    "category": "git",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Git LFS: что это и когда использовать для управления большими файлами?"
+  },
+  {
+    "id": 301,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "List, tuple, dict, set: в чём отличия и когда применять каждый?"
+  },
+  {
+    "id": 302,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Почему нельзя использовать def func(lst=[])? Что произойдёт?"
+  },
+  {
+    "id": 303,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Области видимости в Python: объясните global и nonlocal."
+  },
+  {
+    "id": 304,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое декораторы и замыкания в Python? Приведите примеры."
+  },
+  {
+    "id": 305,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Разница между is и == в Python."
+  },
+  {
+    "id": 306,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое генераторы (yield)? Чем отличаются от списков и списковых включений?"
+  },
+  {
+    "id": 307,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Контекстные менеджеры (with): как работают и как написать свой?"
+  },
+  {
+    "id": 308,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Исключения в Python: try/except/finally. Как правильно обрабатывать?"
+  },
+  {
+    "id": 309,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как устроен dict в Python под капотом? Основы хеш-таблицы."
+  },
+  {
+    "id": 310,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое GIL? Как он влияет на CPU-bound и IO-bound задачи?"
+  },
+  {
+    "id": 311,
+    "category": "python",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Модули и пакеты в Python: import, relative vs absolute imports."
+  },
+  {
+    "id": 312,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Разница между __new__ и __init__ в Python."
+  },
+  {
+    "id": 313,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое MRO (Method Resolution Order) и C3 linearization?"
+  },
+  {
+    "id": 314,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает super() при множественном наследовании?"
+  },
+  {
+    "id": 315,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое метаклассы в Python? Как использовать type и __metaclass__?"
+  },
+  {
+    "id": 316,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как устроены хеш-таблицы в Python? Коллизии и разрешение."
+  },
+  {
+    "id": 317,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое weakref и где применяется?"
+  },
+  {
+    "id": 318,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Разница между bytes, bytearray и memoryview."
+  },
+  {
+    "id": 319,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "ABC (abc.ABC) vs обычный класс: когда использовать абстрактные классы?"
+  },
+  {
+    "id": 320,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Сборка мусора в Python: reference counting и cyclic GC."
+  },
+  {
+    "id": 321,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Pass by reference vs pass by value vs pass by sharing в Python."
+  },
+  {
+    "id": 322,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое __slots__? Как влияет на память и производительность?"
+  },
+  {
+    "id": 323,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Когда использовать threading vs multiprocessing в Python?"
+  },
+  {
+    "id": 324,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Race condition: что это и как избежать (Lock, Semaphore)?"
+  },
+  {
+    "id": 325,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Asyncio: что такое EventLoop, Task, Future?"
+  },
+  {
+    "id": 326,
+    "category": "python",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "GIL и async: нюансы для CPU-bound и IO-bound задач."
+  },
+  {
+    "id": 327,
+    "category": "python",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Оптимизация памяти и производительности для больших Python-проектов."
+  },
+  {
+    "id": 328,
+    "category": "python",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Профилирование Python-кода: инструменты и методы поиска bottleneck."
+  },
+  {
+    "id": 329,
+    "category": "python",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Расширение Python через Cython и C-extensions: когда и как?"
+  },
+  {
+    "id": 330,
+    "category": "python",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Security best practices в Python: защита от уязвимостей."
+  },
+  {
+    "id": 401,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое FastAPI? Какие преимущества перед Flask/Django?"
+  },
+  {
+    "id": 402,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "coding",
+    "question": "Как создать простой endpoint в FastAPI? Напишите GET /hello."
+  },
+  {
+    "id": 403,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Pydantic-схемы в FastAPI: зачем нужны и как использовать?"
+  },
+  {
+    "id": 404,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Middleware в FastAPI?"
+  },
+  {
+    "id": 405,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "BackgroundTasks в FastAPI: как использовать?"
+  },
+  {
+    "id": 406,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Dependency injection в FastAPI: что это и как работает?"
+  },
+  {
+    "id": 407,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Валидация запросов и ответов в FastAPI."
+  },
+  {
+    "id": 408,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Path, Query, Body параметры в FastAPI: разница и использование."
+  },
+  {
+    "id": 409,
+    "category": "fastapi",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Exception handlers в FastAPI: как обрабатывать ошибки?"
+  },
+  {
+    "id": 410,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает FastAPI под капотом? Starlette + Pydantic + ASGI."
+  },
+  {
+    "id": 411,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "ASGI vs WSGI: в чём разница?"
+  },
+  {
+    "id": 412,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Middleware vs Depends в FastAPI: разница и когда что использовать?"
+  },
+  {
+    "id": 413,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Фоновые задачи: BackgroundTasks vs Celery vs asyncio — когда что?"
+  },
+  {
+    "id": 414,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Rate limiting в FastAPI с Redis: как реализовать?"
+  },
+  {
+    "id": 415,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Идемпотентность запросов: что это и как обеспечить в API?"
+  },
+  {
+    "id": 416,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Авторизация и аутентификация в FastAPI: JWT, OAuth2."
+  },
+  {
+    "id": 417,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Тестирование FastAPI: TestClient и pytest."
+  },
+  {
+    "id": 418,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Dependency overrides в FastAPI: как использовать для тестов?"
+  },
+  {
+    "id": 419,
+    "category": "fastapi",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Response models vs ORM models: разница и best practices."
+  },
+  {
+    "id": 420,
+    "category": "fastapi",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Масштабирование FastAPI: Uvicorn workers, Gunicorn, ASGI tuning."
+  },
+  {
+    "id": 421,
+    "category": "fastapi",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Rate limiting, circuit breaker, resilient API design."
+  },
+  {
+    "id": 422,
+    "category": "fastapi",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Оптимизация Pydantic моделей и сериализации."
+  },
+  {
+    "id": 501,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое SQL? Основные операции SELECT, INSERT, UPDATE, DELETE."
+  },
+  {
+    "id": 502,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Транзакции в SQL: что это и зачем нужны?"
+  },
+  {
+    "id": 503,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "DELETE vs TRUNCATE: в чём разница? Транзакционность."
+  },
+  {
+    "id": 504,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Индексы в SQL: зачем нужны и как создать?"
+  },
+  {
+    "id": 505,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "JOIN: виды INNER, LEFT, RIGHT, FULL. Объясните с примерами."
+  },
+  {
+    "id": 506,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Основы нормализации БД: 1NF, 2NF, 3NF."
+  },
+  {
+    "id": 507,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Ограничения в SQL: PRIMARY KEY, UNIQUE, FOREIGN KEY, NOT NULL."
+  },
+  {
+    "id": 508,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "coding",
+    "question": "SELECT с WHERE, GROUP BY, ORDER BY: напишите запрос, который группирует пользователей по городу и сортирует по количеству."
+  },
+  {
+    "id": 509,
+    "category": "sql",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чем разница между WHERE и HAVING в SQL?"
+  },
+  {
+    "id": 510,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "ACID свойства транзакций: расшифруйте и объясните каждое."
+  },
+  {
+    "id": 511,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Уровни изоляции транзакций: Read Uncommitted, Read Committed, Repeatable Read, Serializable."
+  },
+  {
+    "id": 512,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "N+1 проблема: что это и как избежать?"
+  },
+  {
+    "id": 513,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Репликация БД: master/replica, синхронная vs асинхронная."
+  },
+  {
+    "id": 514,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Шардирование в БД: что это, стратегии, плюсы и минусы."
+  },
+  {
+    "id": 515,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "EXPLAIN / EXPLAIN ANALYZE: как читать план выполнения запроса?"
+  },
+  {
+    "id": 516,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Плюсы и минусы индексов в БД. Когда индексы вредят?"
+  },
+  {
+    "id": 517,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "coding",
+    "question": "Сложные подзапросы и CTE (WITH): напишите запрос с рекурсивным CTE."
+  },
+  {
+    "id": 518,
+    "category": "sql",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое триггер в SQL? Приведите пример использования."
+  },
+  {
+    "id": 519,
+    "category": "sql",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Оптимизация SQL-запросов для больших данных: стратегии и инструменты."
+  },
+  {
+    "id": 520,
+    "category": "sql",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Partitioning в PostgreSQL: типы и когда использовать."
+  },
+  {
+    "id": 521,
+    "category": "sql",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Репликация, failover, high availability в PostgreSQL."
+  },
+  {
+    "id": 522,
+    "category": "sql",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Deadlocks в БД: причины, обнаружение, предотвращение."
+  },
+  {
+    "id": 523,
+    "category": "sql",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Архитектура базы данных для микросервисов: database per service vs shared database."
+  },
+  {
+    "id": 601,
+    "category": "sqlalchemy",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "ORM: зачем нужно? Преимущества и недостатки."
+  },
+  {
+    "id": 602,
+    "category": "sqlalchemy",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Сессии в SQLAlchemy: что это и как использовать?"
+  },
+  {
+    "id": 603,
+    "category": "sqlalchemy",
+    "difficulty": "easy",
+    "type": "coding",
+    "question": "Напишите модель User в SQLAlchemy и простой query для получения всех пользователей."
+  },
+  {
+    "id": 604,
+    "category": "sqlalchemy",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Основные типы колонок в SQLAlchemy: Integer, String, DateTime, Boolean."
+  },
+  {
+    "id": 605,
+    "category": "sqlalchemy",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Фильтры в SQLAlchemy: filter vs filter_by — в чём разница?"
+  },
+  {
+    "id": 606,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Scoped_session в SQLAlchemy: что это и когда использовать?"
+  },
+  {
+    "id": 607,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Транзакции в SQLAlchemy: commit, rollback, nested transactions."
+  },
+  {
+    "id": 608,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Lazy loading vs eager loading: joinedload, selectinload, subqueryload."
+  },
+  {
+    "id": 609,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Защита от SQL-инъекций в SQLAlchemy."
+  },
+  {
+    "id": 610,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Когда ORM выгоден, а когда лучше использовать raw SQL?"
+  },
+  {
+    "id": 611,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Полиморфные модели в SQLAlchemy: single-table vs joined-table inheritance."
+  },
+  {
+    "id": 612,
+    "category": "sqlalchemy",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Ассоциации many-to-many и one-to-many в SQLAlchemy."
+  },
+  {
+    "id": 613,
+    "category": "sqlalchemy",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "SQLAlchemy Core vs ORM: когда что использовать в high-load?"
+  },
+  {
+    "id": 614,
+    "category": "sqlalchemy",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Миграции с Alembic: best practices, backward compatibility."
+  },
+  {
+    "id": 615,
+    "category": "sqlalchemy",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Кастомные типы колонок в SQLAlchemy."
+  },
+  {
+    "id": 701,
+    "category": "docker",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Отличие Docker от виртуальной машины."
+  },
+  {
+    "id": 702,
+    "category": "docker",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Docker image vs container: в чём разница?"
+  },
+  {
+    "id": 703,
+    "category": "docker",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Dockerfile: базовая структура и основные команды (FROM, RUN, COPY, CMD)."
+  },
+  {
+    "id": 704,
+    "category": "docker",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Команды docker run, docker ps, docker stop: что делают?"
+  },
+  {
+    "id": 705,
+    "category": "docker",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чем разница между контейнеризацией и виртуализацией?"
+  },
+  {
+    "id": 706,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как устроен Docker-образ: layers, union filesystem."
+  },
+  {
+    "id": 707,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Multi-stage сборка в Docker: зачем и как использовать?"
+  },
+  {
+    "id": 708,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как уменьшить размер Docker-образа? Best practices."
+  },
+  {
+    "id": 709,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Volumes и Docker network: как работают?"
+  },
+  {
+    "id": 710,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Docker Compose: зачем нужен и как использовать?"
+  },
+  {
+    "id": 711,
+    "category": "docker",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Bind mount vs volume в Docker: разница и когда что использовать?"
+  },
+  {
+    "id": 712,
+    "category": "docker",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Микросервисная архитектура с Docker и Kubernetes: основные концепции."
+  },
+  {
+    "id": 713,
+    "category": "docker",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Security best practices для Docker-контейнеров."
+  },
+  {
+    "id": 714,
+    "category": "docker",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "CI/CD пайплайны с Docker: как организовать?"
+  },
+  {
+    "id": 715,
+    "category": "docker",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Мониторинг и логирование Docker-контейнеров."
+  },
+  {
+    "id": 801,
+    "category": "messaging",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое message queue? Зачем нужны очереди сообщений?"
+  },
+  {
+    "id": 802,
+    "category": "messaging",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Очереди vs топики: в чём разница?"
+  },
+  {
+    "id": 803,
+    "category": "messaging",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Kafka? Основные концепции: топики, партиции, consumer groups."
+  },
+  {
+    "id": 804,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работает RabbitMQ? Exchanges, queues, bindings."
+  },
+  {
+    "id": 805,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Чем Kafka отличается от RabbitMQ? Когда что использовать?"
+  },
+  {
+    "id": 806,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Dead Letter Queue (DLQ): что это и зачем нужно?"
+  },
+  {
+    "id": 807,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Exchange types в RabbitMQ: direct, topic, fanout, headers."
+  },
+  {
+    "id": 808,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Partitioning в Kafka и offset management."
+  },
+  {
+    "id": 809,
+    "category": "messaging",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Гарантии доставки в Kafka: at-most-once, at-least-once, exactly-once."
+  },
+  {
+    "id": 810,
+    "category": "messaging",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Exactly-once semantics в Kafka: как достичь?"
+  },
+  {
+    "id": 811,
+    "category": "messaging",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Масштабирование и failover кластеров Kafka/RabbitMQ."
+  },
+  {
+    "id": 812,
+    "category": "messaging",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "High-throughput и low-latency конфигурации для message brokers."
+  },
+  {
+    "id": 901,
+    "category": "elasticsearch",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Elasticsearch? Для каких задач используется?"
+  },
+  {
+    "id": 902,
+    "category": "elasticsearch",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Индексы, документы, shards в Elasticsearch: объясните концепции."
+  },
+  {
+    "id": 903,
+    "category": "elasticsearch",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Основные типы запросов в Elasticsearch: match, term, range."
+  },
+  {
+    "id": 904,
+    "category": "elasticsearch",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Агрегации в Elasticsearch: bucket и metric агрегации."
+  },
+  {
+    "id": 905,
+    "category": "elasticsearch",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Full-text search vs keyword в Elasticsearch."
+  },
+  {
+    "id": 906,
+    "category": "elasticsearch",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Mapping в Elasticsearch: что это и как настроить?"
+  },
+  {
+    "id": 907,
+    "category": "elasticsearch",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Analyzers и tokenizers в Elasticsearch."
+  },
+  {
+    "id": 908,
+    "category": "elasticsearch",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Тюнинг производительности и шардирования в Elasticsearch."
+  },
+  {
+    "id": 909,
+    "category": "elasticsearch",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Scoring и relevancy в Elasticsearch: как работает и как настроить?"
+  },
+  {
+    "id": 1001,
+    "category": "airflow",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое DAG в Airflow?"
+  },
+  {
+    "id": 1002,
+    "category": "airflow",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Task и Operator в Airflow: объясните разницу."
+  },
+  {
+    "id": 1003,
+    "category": "airflow",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое Scheduler в Airflow?"
+  },
+  {
+    "id": 1004,
+    "category": "airflow",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое ETL-пайплайн?"
+  },
+  {
+    "id": 1005,
+    "category": "airflow",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Trigger rules в Airflow: какие есть и когда использовать?"
+  },
+  {
+    "id": 1006,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "XCom в Airflow: что это и как передавать данные между тасками?"
+  },
+  {
+    "id": 1007,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Sensors в Airflow: что это и когда использовать?"
+  },
+  {
+    "id": 1008,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "PythonOperator vs BashOperator: разница и применение."
+  },
+  {
+    "id": 1009,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Retries и exponential backoff в Airflow."
+  },
+  {
+    "id": 1010,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "SLA в Airflow: как настроить и мониторить?"
+  },
+  {
+    "id": 1011,
+    "category": "airflow",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Pools и concurrency в Airflow."
+  },
+  {
+    "id": 1012,
+    "category": "airflow",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Архитектура большого Airflow кластера: Celery, Kubernetes executor."
+  },
+  {
+    "id": 1013,
+    "category": "airflow",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "High availability и failover для Airflow."
+  },
+  {
+    "id": 1101,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "RESTful API: что это и основные принципы."
+  },
+  {
+    "id": 1102,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "HTTP методы: GET, POST, PUT, PATCH, DELETE — когда какой использовать?"
+  },
+  {
+    "id": 1103,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "HTTP статус-коды: 2xx, 3xx, 4xx, 5xx — объясните категории."
+  },
+  {
+    "id": 1104,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое stateless системы? Почему это важно?"
+  },
+  {
+    "id": 1105,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Headers, cookies, query parameters: для чего каждый?"
+  },
+  {
+    "id": 1106,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чем разница между TCP и UDP?"
+  },
+  {
+    "id": 1107,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое gRPC? Чем отличается от REST?"
+  },
+  {
+    "id": 1108,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чем разница между HTTP и HTTPS?"
+  },
+  {
+    "id": 1109,
+    "category": "architecture",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чем разница между HTTP/1.1 и HTTP/2?"
+  },
+  {
+    "id": 1110,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Идемпотентность запросов: что это и какие методы идемпотентны?"
+  },
+  {
+    "id": 1111,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Микросервисы: преимущества, недостатки, способы общения между сервисами."
+  },
+  {
+    "id": 1112,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Eventual consistency: что это и когда применять?"
+  },
+  {
+    "id": 1113,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "CAP теорема: объясните и приведите примеры систем."
+  },
+  {
+    "id": 1114,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Backpressure: что это и как обрабатывать?"
+  },
+  {
+    "id": 1115,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "WebSockets vs Server-Sent Events (SSE): разница и применение."
+  },
+  {
+    "id": 1116,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "CQRS, MVC, DTO: объясните паттерны."
+  },
+  {
+    "id": 1117,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Sync vs async взаимодействие сервисов: когда что?"
+  },
+  {
+    "id": 1118,
+    "category": "architecture",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "API versioning: стратегии и best practices."
+  },
+  {
+    "id": 1119,
+    "category": "architecture",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Event-driven architecture: компоненты, паттерны, когда использовать."
+  },
+  {
+    "id": 1120,
+    "category": "architecture",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "SAGA pattern: что это и как реализовать?"
+  },
+  {
+    "id": 1121,
+    "category": "architecture",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Circuit breaker pattern: зачем нужен и как работает?"
+  },
+  {
+    "id": 1122,
+    "category": "architecture",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "API Gateway: функции, преимущества, примеры."
+  },
+  {
+    "id": 1123,
+    "category": "architecture",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Distributed tracing: зачем и какие инструменты?"
+  },
+  {
+    "id": 1201,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Asyncio: EventLoop, Task, Future — как работают вместе?"
+  },
+  {
+    "id": 1202,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Celery vs BackgroundTasks vs asyncio: когда что использовать?"
+  },
+  {
+    "id": 1203,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Периодические задачи в Celery: beat schedule."
+  },
+  {
+    "id": 1204,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Идемпотентность задач в Celery: зачем и как обеспечить?"
+  },
+  {
+    "id": 1205,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Result backend и retry в Celery."
+  },
+  {
+    "id": 1206,
+    "category": "async",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Chords, chains, groups в Celery: что это и примеры."
+  },
+  {
+    "id": 1207,
+    "category": "async",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Масштабирование Celery workers: стратегии и best practices."
+  },
+  {
+    "id": 1208,
+    "category": "async",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Мониторинг и alerting для Celery: Flower, Prometheus."
+  },
+  {
+    "id": 1301,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое inode в Linux?"
+  },
+  {
+    "id": 1302,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Разница между жёсткими ссылками (hard links) и символическими ссылками (soft links)."
+  },
+  {
+    "id": 1303,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как посмотреть занятое место на диске? (df, du)"
+  },
+  {
+    "id": 1304,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как найти файл по имени в Linux? (find, locate)"
+  },
+  {
+    "id": 1305,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как искать содержимое внутри файлов? (grep, ack, rg)"
+  },
+  {
+    "id": 1306,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как посмотреть запущенные процессы? (ps, top, htop)"
+  },
+  {
+    "id": 1307,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как убить процесс в Linux? (kill, killall, pkill)"
+  },
+  {
+    "id": 1308,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое сигналы процесса? SIGTERM, SIGKILL, SIGHUP."
+  },
+  {
+    "id": 1309,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Права доступа к файлам в Linux: chmod (755, 644). Что такое umask?"
+  },
+  {
+    "id": 1310,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Как изменить владельца файла в Linux? (chown)"
+  },
+  {
+    "id": 1311,
+    "category": "linux",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "В чём разница между потоком и процессом?"
+  },
+  {
+    "id": 1312,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Разница между > и >>, < и | в shell."
+  },
+  {
+    "id": 1313,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как отслеживать изменения в файле в реальном времени? (tail -f)"
+  },
+  {
+    "id": 1314,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как отсортировать вывод команды? (sort)"
+  },
+  {
+    "id": 1315,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как удалить дублирующиеся строки? (uniq)"
+  },
+  {
+    "id": 1316,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как вырезать определённые столбцы из текста? (cut)"
+  },
+  {
+    "id": 1317,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как заменить текст в файле? (sed)"
+  },
+  {
+    "id": 1318,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как работать с архивами в Linux? (tar, gzip, zip)"
+  },
+  {
+    "id": 1319,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое демоны (daemons) и как ими управлять? (systemctl, service)"
+  },
+  {
+    "id": 1320,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как посмотреть загрузку системы? (uptime, free, iostat)"
+  },
+  {
+    "id": 1321,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое load average и как его интерпретировать?"
+  },
+  {
+    "id": 1322,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как просмотреть открытые сетевые порты? (netstat, ss)"
+  },
+  {
+    "id": 1323,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Как настроить cron-задания?"
+  },
+  {
+    "id": 1324,
+    "category": "linux",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое /proc файловая система?"
+  },
+  {
+    "id": 1325,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "TCP/IP модель: уровни, протоколы, что такое порт?"
+  },
+  {
+    "id": 1326,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Как настроить SSH-ключи для доступа к серверу?"
+  },
+  {
+    "id": 1327,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Firewall в Linux: iptables, ufw — базовые правила."
+  },
+  {
+    "id": 1328,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "SSH port forwarding: локальный и удалённый проброс (ssh -L, ssh -R)."
+  },
+  {
+    "id": 1329,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Что такое SELinux/AppArmor?"
+  },
+  {
+    "id": 1330,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Как работать с переменными окружения? (export, env)"
+  },
+  {
+    "id": 1331,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Что такое sudo и как настроить права для пользователя? (sudoers)"
+  },
+  {
+    "id": 1332,
+    "category": "linux",
+    "difficulty": "hard",
+    "type": "theory",
+    "question": "Логирование и ротация логов в Linux: logrotate."
+  },
+  {
+    "id": 1401,
+    "category": "databases",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Какие типы БД знаете? SQL vs NoSQL."
+  },
+  {
+    "id": 1402,
+    "category": "databases",
+    "difficulty": "easy",
+    "type": "theory",
+    "question": "Что такое индекс в БД? Какие типы индексов существуют?"
+  },
+  {
+    "id": 1403,
+    "category": "databases",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое репликация БД? Master-slave, master-master."
+  },
+  {
+    "id": 1404,
+    "category": "databases",
+    "difficulty": "medium",
+    "type": "theory",
+    "question": "Что такое шардирование? Стратегии шардирования."
+  },
+  {
+    "id": 1405,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Опишите задачу машинного обучения. Дайте определение объекту, целевой переменной, признакам, модели, функционалу ошибки.",
+    "answer": "Задача машинного обучения — построение модели, которая по входным признакам объекта предсказывает целевую переменную. Объект — элемент выборки (например, клиент, изображение). Целевая переменная (target) — то, что нужно предсказать. Признаки (features) — характеристики объекта, используемые для предсказания. Модель — функция, преобразующая признаки в предсказание. Функционал ошибки (loss function) — мера качества модели, показывающая, насколько предсказания отличаются от истинных значений."
+  },
+  {
+    "id": 1406,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Чем отличается функция потерь от функционала ошибки?",
+    "answer": "Функция потерь (loss function) измеряет ошибку на одном объекте — это разница между предсказанием и истинным значением для конкретного примера. Функционал ошибки — это агрегированная мера по всей выборке, обычно среднее значение функции потерь по всем объектам. Например, MSE — это функционал ошибки, а (y - ŷ)² — функция потерь для одного объекта."
+  },
+  {
+    "id": 1407,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Какие функции потерь используются при решении задачи регрессии?",
+    "answer": "Основные функции потерь для регрессии: MSE (Mean Squared Error) — среднеквадратичная ошибка, штрафует большие ошибки сильнее; MAE (Mean Absolute Error) — средняя абсолютная ошибка, устойчива к выбросам; Huber Loss — комбинация MSE и MAE, квадратичная для малых ошибок и линейная для больших; Log-Cosh — логарифм гиперболического косинуса, гладкая версия MAE; MAPE — средняя абсолютная процентная ошибка для интерпретируемости."
+  },
+  {
+    "id": 1408,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Запишите формулу для линейной модели регрессии.",
+    "answer": "Линейная регрессия: ŷ = w₀ + w₁x₁ + w₂x₂ + ... + wₙxₙ = w₀ + Σwᵢxᵢ, или в векторной форме: ŷ = w^T·x + b, где w — вектор весов, x — вектор признаков, b (или w₀) — свободный член (bias). Модель предполагает линейную зависимость целевой переменной от признаков."
+  },
+  {
+    "id": 1409,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Чем отличаются функционалы MSE и MAE? В каких случаях лучше использовать MSE, а в каких MAE?",
+    "answer": "MSE = (1/n)Σ(yᵢ - ŷᵢ)² — квадратично штрафует ошибки, сильнее реагирует на выбросы, дифференцируема везде. MAE = (1/n)Σ|yᵢ - ŷᵢ| — линейно штрафует ошибки, устойчива к выбросам, не дифференцируема в нуле. MSE лучше использовать когда: важно сильно штрафовать большие ошибки, нет выбросов, нужна гладкость для оптимизации. MAE лучше когда: есть выбросы в данных, все ошибки одинаково важны, нужна интерпретируемость в единицах целевой переменной."
+  },
+  {
+    "id": 1410,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Что такое коэффициент детерминации R²? Как интерпретировать его значения?",
+    "answer": "R² = 1 - (SS_res / SS_tot), где SS_res = Σ(yᵢ - ŷᵢ)² — сумма квадратов остатков, SS_tot = Σ(yᵢ - ȳ)² — общая сумма квадратов. R² показывает долю дисперсии целевой переменной, объяснённую моделью. Интерпретация: R² = 1 — идеальная модель; R² = 0 — модель не лучше среднего; R² < 0 — модель хуже простого среднего; R² ∈ (0, 1) — модель объясняет часть вариации. Например, R² = 0.8 означает, что модель объясняет 80% вариации данных."
+  },
+  {
+    "id": 1411,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Что такое градиент? Какое его свойство используется при минимизации функций?",
+    "answer": "Градиент — вектор частных производных функции по всем переменным: ∇f = (∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xₙ). Ключевое свойство: градиент указывает направление наискорейшего возрастания функции. Для минимизации используется антиградиент (-∇f), который указывает направление наискорейшего убывания. Это позволяет итеративно двигаться к минимуму: w_new = w_old - α·∇f(w_old), где α — шаг обучения (learning rate)."
+  },
+  {
+    "id": 1412,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Что такое градиентный спуск? Опишите процесс алгоритма.",
+    "answer": "Градиентный спуск — итеративный алгоритм оптимизации для поиска минимума функции. Процесс: 1) Инициализация весов случайно или нулями; 2) Вычисление градиента функции потерь по весам; 3) Обновление весов: w = w - α·∇L(w), где α — learning rate; 4) Повторение шагов 2-3 до сходимости. Виды: полный (batch) — градиент по всей выборке; стохастический (SGD) — по одному объекту; мини-батч — по подвыборке. Критерии остановки: малое изменение loss, достижение числа итераций, малая норма градиента."
+  },
+  {
+    "id": 1413,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Что такое переобучение? Как можно отследить переобучение модели?",
+    "answer": "Переобучение (overfitting) — ситуация, когда модель слишком хорошо запоминает обучающую выборку, включая шум, и плохо обобщает на новые данные. Признаки: высокое качество на train, низкое на test/validation. Способы отслеживания: 1) Разделение на train/validation/test; 2) Кросс-валидация; 3) Learning curves — графики ошибки на train и val от числа итераций; 4) Сравнение метрик train vs val. Борьба: регуляризация (L1, L2), dropout, early stopping, увеличение данных, уменьшение сложности модели."
+  },
+  {
+    "id": 1414,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Что такое регуляризация? Для чего используется?",
+    "answer": "Регуляризация — добавление штрафа за сложность модели к функции потерь: L_reg = L + λ·R(w), где R(w) — регуляризатор, λ — коэффициент регуляризации. Цели: предотвращение переобучения, улучшение обобщающей способности, стабилизация решения. Интуиция: ограничивает величину весов, не давая модели подстраиваться под шум. Большие веса → сложная модель → переобучение. Регуляризация штрафует большие веса, заставляя модель быть проще."
+  },
+  {
+    "id": 1415,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Опишите, как работают L1- и L2-регуляризаторы.",
+    "answer": "L1 (Lasso): R(w) = Σ|wᵢ| — сумма модулей весов. Приводит к разреженным решениям (многие веса = 0), выполняет отбор признаков. L2 (Ridge): R(w) = Σwᵢ² — сумма квадратов весов. Уменьшает все веса равномерно, не обнуляет их полностью. Геометрически: L1 — ограничение в виде ромба, решение часто в вершинах (нулевые веса); L2 — ограничение в виде шара, решение обычно не в точках с нулевыми координатами. ElasticNet комбинирует оба: λ₁Σ|wᵢ| + λ₂Σwᵢ²."
+  },
+  {
+    "id": 1416,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "linear_models",
+    "question": "Почему L1-регуляризация отбирает признаки?",
+    "answer": "Геометрическая интерпретация: область допустимых решений L1 — ромб с вершинами на осях координат. Контуры функции потерь — эллипсы. Точка касания эллипса и ромба чаще всего находится в вершине ромба, где одна или несколько координат равны нулю. Для L2 область — шар, касание редко происходит на осях. Математически: субградиент |w| в нуле — интервал [-1, 1], что позволяет градиенту 'застрять' в нуле. У w² производная в нуле = 0, поэтому градиент всегда толкает от нуля."
+  },
+  {
+    "id": 1417,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "classification",
+    "question": "Что такое точность (Precision), полнота (Recall) и F-мера?",
+    "answer": "Precision = TP / (TP + FP) — доля правильных среди предсказанных положительных. 'Насколько можно доверять положительным предсказаниям'. Recall = TP / (TP + FN) — доля найденных среди всех реальных положительных. 'Какую долю положительных нашли'. F1 = 2 · (Precision · Recall) / (Precision + Recall) — гармоническое среднее. F-мера лучше среднего арифметического, т.к. штрафует за дисбаланс: если P=1, R=0, то F1=0 (а не 0.5). Fβ с β>1 даёт больший вес Recall, β<1 — Precision."
+  },
+  {
+    "id": 1418,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "classification",
+    "question": "Что такое AUC-ROC? Опишите алгоритм построения ROC-кривой.",
+    "answer": "ROC (Receiver Operating Characteristic) — график зависимости TPR от FPR при разных порогах классификации. TPR = TP/(TP+FN) = Recall; FPR = FP/(FP+TN). Построение: 1) Отсортировать объекты по убыванию score; 2) Перебирать пороги от макс до мин; 3) Для каждого порога вычислить TPR и FPR; 4) Построить точки (FPR, TPR). AUC-ROC — площадь под ROC-кривой. Интерпретация: вероятность того, что случайный положительный объект получит score выше случайного отрицательного. AUC=0.5 — случайная модель, AUC=1 — идеальная."
+  },
+  {
+    "id": 1419,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "classification",
+    "question": "Запишите функционал логистической регрессии. Как он связан с методом максимума правдоподобия?",
+    "answer": "Логистическая регрессия: P(y=1|x) = σ(w^T·x) = 1/(1 + e^(-w^T·x)). Функционал — бинарная кросс-энтропия: L = -Σ[yᵢ·log(p̂ᵢ) + (1-yᵢ)·log(1-p̂ᵢ)]. Связь с MLE: предполагаем y ~ Bernoulli(p), правдоподобие L = Π p̂ᵢ^yᵢ · (1-p̂ᵢ)^(1-yᵢ). Логарифм правдоподобия: log L = Σ[yᵢ·log(p̂ᵢ) + (1-yᵢ)·log(1-p̂ᵢ)]. Максимизация log L эквивалентна минимизации -log L, что и есть кросс-энтропия. Таким образом, минимизация лосса = максимизация правдоподобия."
+  },
+  {
+    "id": 1420,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "classification",
+    "question": "Как бороться с дисбалансом классов?",
+    "answer": "Методы борьбы с дисбалансом: 1) Взвешивание классов — увеличить вес редкого класса в loss; 2) Oversampling — увеличить редкий класс (SMOTE генерирует синтетические примеры); 3) Undersampling — уменьшить частый класс; 4) Изменение порога — сдвинуть threshold в пользу редкого класса; 5) Stratified split — сохранять пропорции при разбиении; 6) Специальные метрики — F1, AUC-PR вместо accuracy; 7) Ансамбли — bagging с balanced подвыборками; 8) Focal Loss — сильнее штрафует ошибки на сложных примерах."
+  },
+  {
+    "id": 1421,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "trees",
+    "question": "Что такое решающее дерево?",
+    "answer": "Решающее дерево — модель, представляющая последовательность условий (if-then правил) в виде дерева. Внутренние узлы — условия (предикаты) вида 'признак < порог'. Листья — предсказания (класс или значение). Путь от корня к листу — цепочка условий для предсказания. Преимущества: интерпретируемость, работа с разными типами признаков, не требует масштабирования. Недостатки: склонность к переобучению, нестабильность (малые изменения данных → другое дерево), ступенчатые границы решений."
+  },
+  {
+    "id": 1422,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "trees",
+    "question": "Опишите жадный алгоритм обучения решающего дерева.",
+    "answer": "Жадный алгоритм: 1) Начать с корня, содержащего все объекты; 2) Для текущего узла перебрать все признаки и пороги; 3) Выбрать разбиение, максимизирующее Information Gain (или минимизирующее impurity); 4) Создать дочерние узлы и распределить объекты; 5) Рекурсивно повторить для дочерних узлов; 6) Остановиться при: достижении max_depth, min_samples в узле, чистом узле (один класс). Критерии разбиения: Gini impurity, энтропия (для классификации), MSE, MAE (для регрессии). Жадность: на каждом шаге выбираем локально лучшее разбиение."
+  },
+  {
+    "id": 1423,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "trees",
+    "question": "Что такое критерий хаотичности? Как он используется для выбора предиката в решающем дереве?",
+    "answer": "Критерий хаотичности (impurity) — мера неоднородности узла. Для классификации: Gini = 1 - Σpᵢ², Entropy = -Σpᵢ·log(pᵢ), где pᵢ — доля класса i. Для регрессии: MSE = Σ(yᵢ - ȳ)²/n. Information Gain = H(parent) - Σ(nᵢ/n)·H(childᵢ) — уменьшение хаотичности после разбиения. Алгоритм: для каждого признака и порога вычисляем IG, выбираем разбиение с максимальным IG. Чистый узел: Gini=0, Entropy=0 (все объекты одного класса)."
+  },
+  {
+    "id": 1424,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "trees",
+    "question": "В чем отличия энтропийного критерия и критерия Джини?",
+    "answer": "Entropy = -Σpᵢ·log₂(pᵢ), Gini = 1 - Σpᵢ². Математически: энтропия — из теории информации, Джини — вероятность неправильной классификации случайного объекта. Практически: очень похожи, дают схожие деревья. Отличия: энтропия чуть медленнее (логарифм), Джини по умолчанию в sklearn. Энтропия более чувствительна к изменениям распределения классов. При двух классах: Gini_max = 0.5, Entropy_max = 1. Оба равны 0 для чистого узла. На практике выбор между ними редко влияет на качество."
+  },
+  {
+    "id": 1425,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "ensembles",
+    "question": "Что такое бэггинг? Как его смещение и разброс связаны со смещением и разбросом базовых моделей?",
+    "answer": "Bagging (Bootstrap Aggregating): 1) Создать N bootstrap-выборок (с возвратом); 2) Обучить базовую модель на каждой; 3) Усреднить предсказания (регрессия) или голосование (классификация). Влияние на bias-variance: Bias ≈ такой же как у базовой модели (усреднение не уменьшает смещение); Variance уменьшается в ~N раз для независимых моделей. Поэтому bagging эффективен для моделей с низким bias и высоким variance (глубокие деревья). Для моделей с высоким bias (пни) bagging малоэффективен."
+  },
+  {
+    "id": 1426,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "ensembles",
+    "question": "Что такое случайный лес? Чем он отличается от бэггинга над решающими деревьями?",
+    "answer": "Random Forest = Bagging + случайные подпространства признаков. Отличия от bagging: 1) При каждом разбиении узла рассматривается случайное подмножество признаков (обычно √p для классификации, p/3 для регрессии); 2) Деревья обучаются до конца (max_depth=None). Это дополнительно декоррелирует деревья, уменьшая variance ансамбля. Важные гиперпараметры: n_estimators (число деревьев), max_features (число признаков для разбиения), max_depth, min_samples_split. OOB-оценка — бесплатная валидация на ~37% объектов, не попавших в bootstrap."
+  },
+  {
+    "id": 1427,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "ensembles",
+    "question": "Чем отличается бустинг от бэггинга?",
+    "answer": "Bagging: модели обучаются независимо и параллельно, затем усредняются. Уменьшает variance, не меняет bias. Boosting: модели обучаются последовательно, каждая исправляет ошибки предыдущих. Уменьшает bias. В бустинге: новая модель обучается на остатках (gradient boosting) или на перевзвешенной выборке (AdaBoost). Итоговое предсказание — взвешенная сумма. Boosting склонен к переобучению при большом числе итераций. Bagging хорошо параллелится, boosting — нет. Gradient Boosting (XGBoost, LightGBM, CatBoost) — state-of-the-art на табличных данных."
+  },
+  {
+    "id": 1428,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "ensembles",
+    "question": "Расскажите о градиентном бустинге. Как обучается новая модель?",
+    "answer": "Gradient Boosting: ансамбль F(x) = Σαₘ·hₘ(x), где hₘ — базовые модели (обычно неглубокие деревья). Алгоритм: 1) F₀(x) = среднее/константа; 2) На итерации m: вычислить антиградиент loss по предсказаниям rₘ = -∂L/∂F_{m-1}(x) (псевдоостатки); 3) Обучить hₘ на (x, rₘ); 4) Fₘ = F_{m-1} + α·hₘ. Для MSE: rₘ = y - F_{m-1}(x) — просто остатки. Для других loss — соответствующий градиент. Learning rate α < 1 для регуляризации. Регуляризация: max_depth, min_samples, subsampling, L1/L2 на листья."
+  },
+  {
+    "id": 1429,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "neural_networks",
+    "question": "Что такое функция активации? Зачем она нужна?",
+    "answer": "Функция активации — нелинейное преобразование выхода нейрона: a = σ(z), где z = w·x + b. Без активаций: композиция линейных функций — линейная функция, сеть не сможет моделировать нелинейные зависимости. Популярные активации: Sigmoid σ(x) = 1/(1+e^(-x)) — для вероятностей, проблема затухания градиента; Tanh — от -1 до 1, центрирован; ReLU max(0,x) — простой, быстрый, проблема 'мёртвых нейронов'; Leaky ReLU — решает проблему мёртвых нейронов; GELU, Swish — современные, гладкие."
+  },
+  {
+    "id": 1430,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "neural_networks",
+    "question": "Что такое обратное распространение ошибки (backpropagation)?",
+    "answer": "Backpropagation — алгоритм вычисления градиентов loss по всем параметрам сети с помощью цепного правила. Этапы: 1) Forward pass: вычислить предсказания и loss; 2) Backward pass: вычислить градиенты от loss к параметрам. Для слоя l: ∂L/∂W_l = ∂L/∂z_l · ∂z_l/∂W_l, где ∂L/∂z_l вычисляется через градиенты следующих слоёв. Ключевая идея: переиспользование вычислений — градиент каждого слоя зависит только от градиентов следующих слоёв. Сложность O(n) — один проход вперёд, один назад."
+  },
+  {
+    "id": 1431,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "neural_networks",
+    "question": "Что такое Batch Normalization? Зачем она нужна?",
+    "answer": "Batch Normalization нормализует активации внутри мини-батча: x̂ = (x - μ_B)/√(σ²_B + ε), y = γ·x̂ + β, где μ_B, σ²_B — среднее и дисперсия по батчу, γ, β — обучаемые параметры. Преимущества: 1) Ускоряет сходимость — позволяет использовать больший learning rate; 2) Регуляризация — добавляет шум через статистики батча; 3) Уменьшает internal covariate shift — стабилизирует распределение активаций. На инференсе используются скользящие средние μ, σ² по training. Альтернативы: Layer Norm (для трансформеров), Instance Norm (для стилей)."
+  },
+  {
+    "id": 1432,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "neural_networks",
+    "question": "Что такое Dropout? Как он работает?",
+    "answer": "Dropout — техника регуляризации: во время обучения случайно 'выключаем' нейроны с вероятностью p. Каждый нейрон умножается на маску Bernoulli(1-p). На инференсе: все нейроны активны, выходы умножаются на (1-p) для сохранения масштаба (или inverted dropout — делим на 1-p при обучении). Интуиция: 1) Ансамбль — усреднение экспоненциального числа 'подсетей'; 2) Предотвращает ко-адаптацию нейронов — каждый должен быть полезен независимо. Типичные p: 0.5 для FC слоёв, 0.1-0.3 для сверточных. Не используется с Batch Norm (они оба — регуляризация)."
+  },
+  {
+    "id": 1433,
+    "category": "ml",
+    "difficulty": "hard",
+    "type": "theory",
+    "topic": "neural_networks",
+    "question": "Что такое ResNet и зачем нужны skip-connections?",
+    "answer": "ResNet (Residual Network) — архитектура с остаточными связями: y = F(x) + x, где F(x) — преобразование блока (conv-bn-relu-conv-bn). Skip-connection пропускает вход напрямую к выходу блока. Зачем нужны: 1) Решают проблему затухающего градиента — градиент может течь напрямую через skip; 2) Облегчают обучение глубоких сетей — сеть может 'выучить' identity (F(x)=0); 3) Позволяют строить сети в 100+ слоёв. Математически: ∂y/∂x = ∂F/∂x + 1 — градиент не может быть меньше 1. Варианты: ResNet-18/34/50/101/152, ResNeXt, DenseNet (все предыдущие слои)."
+  },
+  {
+    "id": 1434,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "cnn",
+    "question": "Что такое свёртка в контексте нейронных сетей?",
+    "answer": "Свёртка — операция применения фильтра (ядра) к входному изображению: (I * K)(i,j) = ΣₘΣₙ I(i+m, j+n)·K(m,n). Ядро (kernel) — маленькая матрица весов (3×3, 5×5). Свёртка скользит по изображению, вычисляя скалярное произведение. Свойства: 1) Локальность — нейрон связан только с небольшой областью; 2) Разделение весов — одно ядро для всего изображения; 3) Эквивариантность к сдвигу — сдвиг входа сдвигает выход. Параметры: размер ядра, stride (шаг), padding (дополнение нулями), число фильтров (выходных каналов)."
+  },
+  {
+    "id": 1435,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "cnn",
+    "question": "Что такое пулинг (Pooling)? Какие виды пулинга существуют?",
+    "answer": "Pooling — операция уменьшения размерности карты признаков, сохраняющая важную информацию. Виды: Max Pooling — выбирает максимум в окне, сохраняет наиболее выраженные признаки; Average Pooling — среднее в окне, сглаживает признаки; Global Average Pooling — среднее по всей карте, используется перед FC слоем. Параметры: размер окна (обычно 2×2), stride (обычно = размеру окна). Преимущества: уменьшает размерность, добавляет инвариантность к небольшим сдвигам, уменьшает переобучение. Современный тренд: strided convolution вместо pooling."
+  },
+  {
+    "id": 1436,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "bias_variance",
+    "question": "Что такое Bias-Variance Decomposition?",
+    "answer": "Bias-Variance Decomposition разлагает ожидаемую ошибку модели: E[(y - ŷ)²] = Bias² + Variance + σ² (необратимый шум). Bias = E[ŷ] - y* — систематическая ошибка, насколько в среднем модель отклоняется от истины. Высокий bias = недообучение (underfitting). Variance = E[(ŷ - E[ŷ])²] — чувствительность к обучающей выборке. Высокий variance = переобучение (overfitting). Trade-off: простые модели — высокий bias, низкий variance; сложные — наоборот. Цель: найти баланс, минимизирующий общую ошибку."
+  },
+  {
+    "id": 1437,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "bias_variance",
+    "question": "Приведите пример семейства алгоритмов с низким смещением и большим разбросом. А с большим смещением и низким разбросом?",
+    "answer": "Низкий bias, высокий variance (сложные, гибкие модели): глубокие решающие деревья без ограничений, k-NN с малым k, нейросети без регуляризации, полиномиальная регрессия высокой степени. Высокий bias, низкий variance (простые модели): линейная регрессия, логистическая регрессия, Naive Bayes, decision stumps (деревья глубины 1), k-NN с большим k. Практика: начинают с простых моделей (baseline), затем усложняют. Ансамбли: bagging уменьшает variance, boosting уменьшает bias."
+  },
+  {
+    "id": 1438,
+    "category": "ml",
+    "difficulty": "easy",
+    "type": "theory",
+    "topic": "metrics",
+    "question": "Когда используется accuracy и почему она может быть плохой метрикой?",
+    "answer": "Accuracy = (TP + TN) / (TP + TN + FP + FN) — доля правильных предсказаний. Проблема при дисбалансе классов: если 99% объектов класса 0, модель 'всегда 0' даёт accuracy=99%, но бесполезна для класса 1. Когда использовать: сбалансированные классы, все ошибки одинаково важны. Когда НЕ использовать: дисбаланс классов (fraud detection, медицина), разная цена ошибок (FP vs FN). Альтернативы: Precision, Recall, F1, AUC-ROC, AUC-PR, balanced accuracy = (TPR + TNR)/2."
+  },
+  {
+    "id": 1439,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "practical",
+    "question": "Расскажите про виды скейлинга данных. Зачем они нужны?",
+    "answer": "Виды масштабирования: StandardScaler: z = (x - μ) / σ — среднее 0, std 1. Для нормально распределённых данных, чувствителен к выбросам. MinMaxScaler: z = (x - min) / (max - min) — в диапазон [0, 1]. Сохраняет распределение, чувствителен к выбросам. RobustScaler: z = (x - median) / IQR — устойчив к выбросам, использует медиану и межквартильный размах. Зачем нужно: 1) Градиентные методы быстрее сходятся при одинаковых масштабах; 2) Регуляризация работает корректно; 3) k-NN, SVM зависят от масштаба. Не нужно для деревьев!"
+  },
+  {
+    "id": 1440,
+    "category": "ml",
+    "difficulty": "medium",
+    "type": "theory",
+    "topic": "practical",
+    "question": "Что такое mean-target encoding? Может ли он привести к переобучению?",
+    "answer": "Mean Target Encoding — замена категориального признака средним значением target для каждой категории. Например, для города: Moscow → 0.7 (если 70% положительных в Moscow). Проблема переобучения: если категория встречается 1 раз, mean target = точный target → утечка информации. Решения: 1) Smoothing: (n·mean + m·global_mean) / (n + m); 2) LOO (Leave-One-Out): считать без текущего объекта; 3) Складки: кодировать на фолдах как при CV; 4) Добавление шума. CatBoost делает это автоматически с ordered target encoding."
   }
 ]

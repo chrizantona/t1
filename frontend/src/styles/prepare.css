@@ -1,0 +1,358 @@
+/* Prepare Page - Countdown Animation */
+
+.prepare-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f23 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated Background */
+.prepare-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-circle-1 {
+  width: 400px;
+  height: 400px;
+  background: #00ADFF;
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.bg-circle-2 {
+  width: 300px;
+  height: 300px;
+  background: #7B61FF;
+  bottom: -50px;
+  right: -50px;
+  animation-delay: 2s;
+}
+
+.bg-circle-3 {
+  width: 250px;
+  height: 250px;
+  background: #00D4AA;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(20px, 10px) scale(1.05);
+  }
+}
+
+/* Content */
+.prepare-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px;
+}
+
+/* Logo */
+.logo-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 60px;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.logo-section .logo-icon {
+  font-size: 48px;
+  color: #00ADFF;
+  font-weight: 200;
+}
+
+.logo-section .logo-text {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+/* Ready Phase */
+.ready-section h1 {
+  font-size: 48px;
+  font-weight: 300;
+  opacity: 0.7;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Countdown Section */
+.countdown-section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.prepare-title {
+  font-size: 56px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  background: linear-gradient(135deg, #fff 0%, #00ADFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.prepare-subtitle {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 48px 0;
+  font-weight: 400;
+}
+
+/* Countdown Timer */
+.countdown-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 48px;
+}
+
+.countdown-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 96px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 2;
+  transition: all 0.3s ease;
+  animation: countPulse 1s ease-in-out infinite;
+}
+
+.countdown-number.urgent {
+  color: #FF6B6B;
+  animation: countPulseUrgent 0.5s ease-in-out infinite;
+}
+
+@keyframes countPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes countPulseUrgent {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.countdown-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.countdown-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.countdown-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 4;
+}
+
+.countdown-ring-progress {
+  fill: none;
+  stroke: #00ADFF;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* Tips */
+.tips-section {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tip-icon {
+  font-size: 20px;
+}
+
+/* GO Phase */
+.go-section {
+  animation: zoomIn 0.5s ease-out;
+}
+
+.go-text {
+  font-size: 96px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #00ADFF 0%, #00D4AA 50%, #7B61FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goShake 0.5s ease-in-out;
+}
+
+.go-icon {
+  font-size: 72px;
+  margin-top: 24px;
+  animation: rocketLaunch 1s ease-out forwards;
+}
+
+@keyframes goShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+
+@keyframes rocketLaunch {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Footer */
+.prepare-footer {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.prepare-footer p {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .prepare-title {
+    font-size: 36px;
+  }
+  
+  .prepare-subtitle {
+    font-size: 18px;
+  }
+  
+  .countdown-container {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .countdown-number {
+    font-size: 64px;
+  }
+  
+  .tips-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .go-text {
+    font-size: 56px;
+  }
+}
+

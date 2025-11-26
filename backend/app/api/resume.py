@@ -1,9 +1,11 @@
 """
 Resume analysis API endpoints.
 CV-based level suggestion feature with deterministic grading logic.
+Supports both text and PDF file uploads.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
+from io import BytesIO
 
 from ..core.db import get_db
 from ..schemas.interview import CVAnalysisRequest, CVAnalysisResponse
@@ -14,36 +16,92 @@ from ..services.grading_service import calculate_start_grade
 router = APIRouter()
 
 
-@router.post("/analyze", response_model=CVAnalysisResponse)
-async def analyze_resume(
-    cv_data: CVAnalysisRequest,
+def extract_text_from_pdf(file_content: bytes) -> str:
+    """Extract text from PDF file bytes."""
+    try:
+        from pypdf import PdfReader
+        
+        pdf_file = BytesIO(file_content)
+        reader = PdfReader(pdf_file)
+        
+        text_parts = []
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
+        
+        return "\n".join(text_parts)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to parse PDF: {str(e)}"
+        )
+
+
+@router.post("/upload", response_model=CVAnalysisResponse)
+async def upload_and_analyze_resume(
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     """
-    Analyze CV and suggest level and direction.
-    Killer feature #1: CV-based Level Suggestion.
+    Upload and analyze resume from PDF or text file.
+    Supports PDF and TXT formats.
     """
+    # Validate file type
+    filename = file.filename or ""
+    content_type = file.content_type or ""
     
-    # Prompt for CV analysis
-    system_prompt = """/no_think
-Ты эксперт по оценке резюме разработчиков.
-Проанализируй резюме и верни JSON с полями:
-- suggested_level: junior/middle/middle+/senior
-- suggested_direction: backend/frontend/fullstack/algorithms/data
-- years_of_experience: число лет опыта
-- key_technologies: список ключевых технологий
-- reasoning: краткое объяснение рекомендации
+    allowed_extensions = [".pdf", ".txt"]
+    allowed_mime_types = ["application/pdf", "text/plain"]
+    
+    file_ext = "." + filename.split(".")[-1].lower() if "." in filename else ""
+    
+    if file_ext not in allowed_extensions and content_type not in allowed_mime_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: PDF, TXT. Got: {content_type or file_ext}"
+        )
+    
+    # Read file content
+    file_content = await file.read()
+    
+    if len(file_content) == 0:
+        raise HTTPException(status_code=400, detail="Empty file")
+    
+    if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+    
+    # Extract text based on file type
+    if file_ext == ".pdf" or content_type == "application/pdf":
+        cv_text = extract_text_from_pdf(file_content)
+    else:
+        # Try to decode as text
+        try:
+            cv_text = file_content.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                cv_text = file_content.decode("cp1251")  # Try Windows Cyrillic
+            except UnicodeDecodeError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Could not decode text file. Please use UTF-8 encoding."
+                )
+    
+    if not cv_text.strip():
+        raise HTTPException(status_code=400, detail="No text could be extracted from file")
+    
+    # Now analyze the extracted text (reuse existing logic)
+    return await _analyze_cv_text(cv_text)
 
-Отвечай ТОЛЬКО валидным JSON без markdown, без ```json тегов."""
-    
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Резюме:\n\n{cv_data.cv_text}"}
-    ]
-    
+
+async def _analyze_cv_text(cv_text: str) -> CVAnalysisResponse:
+    """
+    Internal function to analyze CV text.
+    Used by both text and file upload endpoints.
+    """
     try:
         # Use LLM as parser only (not decision maker)
-        response = await scibox_client.analyze_resume(cv_data.cv_text)
+        response = await scibox_client.analyze_resume(cv_text)
         
         # Extract data from LLM
         years_exp = response.get("years_of_experience", 2.0)
@@ -54,7 +112,7 @@ async def analyze_resume(
         # Deterministic track determination
         suggested_direction = determine_track(
             self_claimed_track=None,  # User hasn't claimed yet
-            resume_text=cv_data.cv_text,
+            resume_text=cv_text,
             resume_tracks=resume_tracks
         )
         
@@ -91,4 +149,16 @@ async def analyze_resume(
             key_technologies=[],
             reasoning="Рекомендуем начать с уровня Middle по направлению Backend."
         )
+
+
+@router.post("/analyze", response_model=CVAnalysisResponse)
+async def analyze_resume(
+    cv_data: CVAnalysisRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Analyze CV text and suggest level and direction.
+    Killer feature #1: CV-based Level Suggestion.
+    """
+    return await _analyze_cv_text(cv_data.cv_text)
 

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import Editor from '@monaco-editor/react'
 import { interviewAPI } from '../api/client'
 import '../styles/interview.css'
 
@@ -10,23 +11,50 @@ function InterviewPage() {
   const [interview, setInterview] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0)
-  const [code, setCode] = useState('')
+  // Store code per task: { [taskId]: code }
+  const [taskCodes, setTaskCodes] = useState<Record<number, string>>({})
   const [result, setResult] = useState<any>(null)
+  // Store test details for showing failures
+  const [testDetails, setTestDetails] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
   const [currentHints, setCurrentHints] = useState<any[]>([])
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [progress, setProgress] = useState<any>(null)
+
+  // Get current code for current task
+  const currentTask = tasks[currentTaskIndex]
+  const code = currentTask ? (taskCodes[currentTask.id] || '') : ''
+  
+  // Update code for current task
+  const setCode = useCallback((newCode: string) => {
+    if (currentTask) {
+      setTaskCodes(prev => ({
+        ...prev,
+        [currentTask.id]: newCode
+      }))
+    }
+  }, [currentTask])
 
   useEffect(() => {
     loadInterview()
     loadTasks()
+    loadProgress()
   }, [interviewId])
 
   const loadInterview = async () => {
     try {
-      const data = await interviewAPI.getInterview(Number(interviewId))
+      const data = await interviewAPI.getInterviewV2(Number(interviewId))
       setInterview(data)
+      
+      // If interview is in theory stage, redirect
+      if (data.current_stage === 'theory') {
+        navigate(`/theory/${interviewId}`)
+      } else if (data.current_stage === 'completed') {
+        navigate(`/result/${interviewId}`)
+      }
     } catch (error) {
       console.error('Failed to load interview:', error)
     }
@@ -34,9 +62,9 @@ function InterviewPage() {
 
   const loadTasks = async () => {
     try {
-      const data = await interviewAPI.getTasks(Number(interviewId))
-      setTasks(data)
-      if (data.length > 0) {
+      const data = await interviewAPI.getAllTasks(Number(interviewId))
+      setTasks(data.tasks || [])
+      if (data.tasks && data.tasks.length > 0) {
         setCurrentTaskIndex(0)
       }
     } catch (error) {
@@ -44,10 +72,20 @@ function InterviewPage() {
     }
   }
 
-  const currentTask = tasks[currentTaskIndex]
+  const loadProgress = async () => {
+    try {
+      const data = await interviewAPI.getProgress(Number(interviewId))
+      setProgress(data)
+    } catch (error) {
+      console.error('Failed to load progress:', error)
+    }
+  }
 
   const submitCode = async () => {
     if (!currentTask || !code.trim()) return
+    
+    setSubmitLoading(true)
+    setTestDetails([])
 
     try {
       const submission = await interviewAPI.submitCode({
@@ -57,37 +95,35 @@ function InterviewPage() {
       })
       setResult(submission)
       
-      // Reload tasks to get updated scores
+      // Use test details from API response
+      if (submission.visible_test_details && submission.visible_test_details.length > 0) {
+        setTestDetails(submission.visible_test_details)
+      }
+      
+      // Reload tasks and progress to get updated scores
       await loadTasks()
-    } catch (error) {
+      await loadProgress()
+    } catch (error: any) {
       console.error('Failed to submit code:', error)
-      alert('Не удалось отправить код')
+      setResult({
+        error_message: error.response?.data?.detail || 'Не удалось выполнить код',
+        passed_visible: 0,
+        total_visible: currentTask.visible_tests?.length || 0,
+        passed_hidden: 0,
+        total_hidden: 0
+      })
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
-  const moveToNextTask = async () => {
-    // Check if there's already a next task
-    if (currentTaskIndex < tasks.length - 1) {
-      setCurrentTaskIndex(currentTaskIndex + 1)
-      setCode('')
-      setResult(null)
-      setCurrentHints([])
-    } else {
-      // Generate new task
-      try {
-        const newTask = await interviewAPI.generateNextTask(Number(interviewId))
-        setTasks([...tasks, newTask])
-        setCurrentTaskIndex(tasks.length)
-        setCode('')
-        setResult(null)
-        setCurrentHints([])
-      } catch (error) {
-        console.error('Failed to generate next task:', error)
-        if (confirm('Не удалось сгенерировать новую задачу. Завершить интервью?')) {
-          completeInterview()
-        }
-      }
-    }
+  // Switch to specific task (from navigation)
+  const switchToTask = (index: number) => {
+    setCurrentTaskIndex(index)
+    // Don't reset code - it's stored per task in taskCodes
+    setResult(null)
+    setTestDetails([])
+    setCurrentHints([])
   }
 
   const requestHint = async (level: string) => {
@@ -112,13 +148,18 @@ function InterviewPage() {
     }
   }
 
-  const completeInterview = async () => {
+  const proceedToTheoryStage = async () => {
+    if (!progress?.can_proceed_to_theory) {
+      alert('Сначала попробуйте решить хотя бы одну задачу')
+      return
+    }
+
     try {
-      await interviewAPI.completeInterview(Number(interviewId))
-      navigate(`/result/${interviewId}`)
-    } catch (error) {
-      console.error('Failed to complete interview:', error)
-      alert('Ошибка при завершении интервью')
+      await interviewAPI.proceedToTheory(Number(interviewId))
+      navigate(`/theory/${interviewId}`)
+    } catch (error: any) {
+      console.error('Failed to proceed to theory:', error)
+      alert(`Ошибка: ${error.response?.data?.detail || error.message}`)
     }
   }
 
@@ -162,6 +203,9 @@ function InterviewPage() {
     }
   }
 
+  // Count completed tasks
+  const completedTasks = tasks.filter(t => t.status === 'completed').length
+
   if (!interview || !currentTask) {
     return (
       <div className="loading-screen">
@@ -184,42 +228,72 @@ function InterviewPage() {
         
         <div className="header-center">
           <div className="task-nav">
-            {tasks.map((_, index) => (
+            {tasks.map((task, index) => (
               <button
                 key={index}
-                className={`task-dot ${index === currentTaskIndex ? 'active' : ''} ${tasks[index].status === 'completed' ? 'completed' : ''}`}
-                onClick={() => {
-                  setCurrentTaskIndex(index)
-                  setCode('')
-                  setResult(null)
-                  setCurrentHints([])
-                }}
+                className={`task-dot ${index === currentTaskIndex ? 'active' : ''} ${task.status === 'completed' ? 'completed' : ''} ${taskCodes[task.id] ? 'has-code' : ''}`}
+                onClick={() => switchToTask(index)}
+                title={`Задача ${index + 1}: ${task.difficulty}${task.status === 'completed' ? ' ✓' : ''}${taskCodes[task.id] ? ' (есть код)' : ''}`}
               >
-                {index + 1}
+                {task.status === 'completed' ? '✓' : index + 1}
               </button>
             ))}
+          </div>
+          <div className="progress-info">
+            <span className="progress-text">
+              Решено: {completedTasks}/{tasks.length}
+            </span>
           </div>
         </div>
         
         <div className="header-right">
-          <button className="btn-complete" onClick={completeInterview}>
-            Завершить интервью
+          <button 
+            className="btn-proceed"
+            onClick={proceedToTheoryStage}
+            disabled={!progress?.can_proceed_to_theory}
+            title={progress?.can_proceed_to_theory ? 'Перейти к теоретическим вопросам' : 'Сначала попробуйте решить задачи'}
+          >
+            Перейти к вопросам →
           </button>
         </div>
       </header>
+
+      {/* Stage Indicator */}
+      <div className="stage-indicator">
+        <div className="stage active">
+          <span className="stage-number">1</span>
+          <span className="stage-name">Задачи</span>
+        </div>
+        <div className="stage-connector"></div>
+        <div className="stage">
+          <span className="stage-number">2</span>
+          <span className="stage-name">Вопросы</span>
+        </div>
+        <div className="stage-connector"></div>
+        <div className="stage">
+          <span className="stage-number">3</span>
+          <span className="stage-name">Результат</span>
+        </div>
+      </div>
 
       {/* Main Layout */}
       <div className="interview-layout">
         {/* Left Panel - Task */}
         <div className="task-panel">
           <div className="task-header">
-            <h2>{currentTask.title}</h2>
+            <div className="task-title-row">
+              <span className="task-number">Задача {currentTask.task_order || currentTaskIndex + 1}</span>
+              <h2>{currentTask.title}</h2>
+            </div>
             <div className="task-meta">
               <span className={`difficulty-badge ${currentTask.difficulty}`}>
-                {currentTask.difficulty}
+                {currentTask.difficulty === 'easy' ? '🟢 Лёгкая' : 
+                 currentTask.difficulty === 'medium' ? '🟡 Средняя' : '🔴 Сложная'}
               </span>
               <span className="category-badge">{currentTask.category}</span>
-              <span className="score-badge">💯 {currentTask.max_score}pts</span>
+              <span className="score-badge">
+                {currentTask.status === 'completed' ? '✅' : '💯'} {currentTask.actual_score || 0}/{currentTask.max_score}pts
+              </span>
             </div>
           </div>
 
@@ -300,24 +374,45 @@ function InterviewPage() {
           <div className="editor-section">
             <div className="editor-header">
               <span>Python 3</span>
-              <button className="btn-run" onClick={submitCode}>
-                ▶️ Запустить
+              <button className="btn-run" onClick={submitCode} disabled={submitLoading}>
+                {submitLoading ? '⏳ Выполняется...' : '▶️ Запустить'}
               </button>
             </div>
             
-            <textarea
-              className="code-editor"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="def solution(...):\n    # Ваш код здесь\n    pass"
-              spellCheck={false}
-            />
+            <div className="monaco-editor-container">
+              <Editor
+                height="100%"
+                language="python"
+                theme="vs-dark"
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Monaco, Menlo, 'Courier New', monospace",
+                  lineNumbers: 'on',
+                  tabSize: 4,
+                  insertSpaces: true,
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  padding: { top: 16, bottom: 16 },
+                  suggest: {
+                    showKeywords: true,
+                    showSnippets: true,
+                  },
+                  quickSuggestions: true,
+                  folding: true,
+                  bracketPairColorization: { enabled: true },
+                }}
+              />
+            </div>
           </div>
 
           {/* Result */}
           {result && (
             <div className="result-section">
-              <h3>✅ Результаты:</h3>
+              <h3>{result.error_message ? '❌' : result.passed_visible === result.total_visible ? '✅' : '⚠️'} Результаты:</h3>
               <div className="result-stats">
                 <div className="stat">
                   <span>Видимые тесты:</span>
@@ -344,6 +439,36 @@ function InterviewPage() {
                 </div>
               )}
 
+              {/* Show detailed test results */}
+              {testDetails.length > 0 && !result.error_message && (
+                <div className="test-details-section">
+                  <h4>📋 Детали тестов:</h4>
+                  <div className="test-details-list">
+                    {testDetails.map((test, i) => (
+                      <div key={i} className={`test-detail ${test.passed ? 'passed' : 'failed'}`}>
+                        <div className="test-detail-header">
+                          <span className="test-status-icon">{test.passed ? '✅' : '❌'}</span>
+                          <span className="test-number">Тест {test.index}</span>
+                          {test.description && <span className="test-description">— {test.description}</span>}
+                        </div>
+                        {!test.passed && (
+                          <div className="test-detail-body">
+                            <div className="test-io-row">
+                              <span className="label">Вход:</span>
+                              <code>{JSON.stringify(test.input)}</code>
+                            </div>
+                            <div className="test-io-row">
+                              <span className="label">Ожидалось:</span>
+                              <code>{JSON.stringify(test.expected)}</code>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {!result.error_message && result.passed_visible === result.total_visible && result.passed_hidden === result.total_hidden && (
                 <div className="success-section">
                   <h4>🎉 Все тесты пройдены!</h4>
@@ -352,11 +477,22 @@ function InterviewPage() {
             </div>
           )}
 
-          {/* Actions */}
+          {/* Task Navigation */}
           <div className="task-actions">
-            <button className="btn-next" onClick={moveToNextTask}>
-              Следующая задача →
-            </button>
+            <div className="task-nav-buttons">
+              {tasks.map((task, index) => (
+                <button
+                  key={task.id}
+                  className={`task-nav-btn ${index === currentTaskIndex ? 'active' : ''} ${task.status === 'completed' ? 'completed' : ''}`}
+                  onClick={() => switchToTask(index)}
+                >
+                  {task.status === 'completed' ? '✓' : ''} Задача {index + 1}
+                  <span className="task-difficulty-mini">
+                    {task.difficulty === 'easy' ? '🟢' : task.difficulty === 'medium' ? '🟡' : '🔴'}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Chat */}

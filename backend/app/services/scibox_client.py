@@ -286,7 +286,7 @@ class SciBoxClient:
         user_code: str,
         known_tests: str
     ) -> Dict[str, Any]:
-        """4. AI Bug Hunter"""
+        """4. AI Bug Hunter - Basic version"""
         system_prompt = """/no_think
 Ты — модуль "AI Bug Hunter" платформы VibeCode.
 Твоя задача — по условию задачи и решению кандидата придумать входные данные,
@@ -323,6 +323,117 @@ class SciBoxClient:
         response = await self.code_completion(messages, temperature=0.3, max_tokens=512)
         
         return self._parse_json_response(response, {"generated_tests": []})
+
+    async def generate_edge_case_tests_enhanced(
+        self,
+        task_description: str,
+        input_format: str,
+        output_format: str,
+        examples: str,
+        candidate_code: str,
+        existing_tests: str
+    ) -> Dict[str, Any]:
+        """
+        4+. Enhanced AI Bug Hunter with expected outputs.
+        Generates edge case tests with correct expected values.
+        Uses code sanitization to prevent prompt injection.
+        """
+        from .code_sanitizer import sanitize_code_for_llm, get_security_summary
+        
+        # First, check code security
+        security_report = get_security_summary(candidate_code)
+        
+        if security_report["prompt_injection"]["detected"]:
+            # Prompt injection detected - return warning without processing
+            return {
+                "security_blocked": True,
+                "security_report": security_report,
+                "analysis": {
+                    "detected_algorithm": "НЕ ПРОАНАЛИЗИРОВАНО",
+                    "potential_weaknesses": ["Обнаружена попытка манипуляции системой"],
+                    "missing_checks": []
+                },
+                "edge_case_tests": []
+            }
+        
+        # Sanitize the code for LLM
+        sanitized_code, sanitize_report = sanitize_code_for_llm(candidate_code)
+        
+        system_prompt = """/no_think
+Ты — модуль "AI Bug Hunter" платформы VibeCode для технических собеседований.
+
+ТВОЯ ЗАДАЧА:
+Проанализировать задачу и код кандидата, найти слабые места в его решении 
+и сгенерировать тесты, которые с высокой вероятностью сломают этот код.
+
+АЛГОРИТМ РАБОТЫ:
+1. Изучи условие задачи и формат входных/выходных данных
+2. Проанализируй код кандидата на слабые места
+3. Сгенерируй edge cases: пустые данные, единичные элементы, граничные значения, 
+   большие числа, повторы, отсортированные данные
+
+ФОРМАТ ОТВЕТА (строго JSON):
+{
+  "analysis": {
+    "detected_algorithm": "описание алгоритма",
+    "potential_weaknesses": ["слабые места"],
+    "missing_checks": ["отсутствующие проверки"]
+  },
+  "edge_case_tests": [
+    {
+      "input": "входные данные",
+      "expected_output": "правильный результат",
+      "category": "empty|single|boundary|large|special|duplicate",
+      "description": "что проверяет",
+      "likely_to_fail": true
+    }
+  ]
+}
+
+ВАЖНО: expected_output должен быть ПРАВИЛЬНЫМ ответом для данного input!"""
+
+        user_prompt = f"""=== УСЛОВИЕ ЗАДАЧИ ===
+{task_description}
+
+=== ФОРМАТ ВХОДНЫХ ДАННЫХ ===
+{input_format}
+
+=== ФОРМАТ ВЫХОДНЫХ ДАННЫХ ===
+{output_format}
+
+=== ПРИМЕРЫ ИЗ УСЛОВИЯ ===
+{examples}
+
+=== КОД КАНДИДАТА ===
+{sanitized_code}
+
+=== УЖЕ СУЩЕСТВУЮЩИЕ ТЕСТЫ ===
+{existing_tests}
+
+Сгенерируй 3-5 edge case тестов с ПРАВИЛЬНЫМИ expected_output значениями."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.code_completion(messages, temperature=0.3, max_tokens=1024)
+        
+        result = self._parse_json_response(response, {
+            "analysis": {
+                "detected_algorithm": "Не удалось определить",
+                "potential_weaknesses": [],
+                "missing_checks": []
+            },
+            "edge_case_tests": []
+        })
+        
+        # Add security info to result
+        result["security_report"] = security_report
+        result["sanitize_report"] = sanitize_report
+        result["security_blocked"] = False
+        
+        return result
     
     async def generate_final_report(
         self,
@@ -549,6 +660,60 @@ class SciBoxClient:
             "constraints": "Стандартные ограничения",
             "difficulty_level": "middle",
             "topic_tags": ["algorithms"]
+        })
+
+
+    async def evaluate_theory_answer(
+        self,
+        question: str,
+        reference_answer: str,
+        user_answer: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluate user's theory answer against reference answer.
+        Returns score and detailed feedback.
+        """
+        system_prompt = """/no_think
+Ты — эксперт-экзаменатор по машинному обучению.
+
+Сравни ответ кандидата с эталонным ответом и оцени:
+- Корректность (40%) — нет ли фактических ошибок
+- Полнота (30%) — все ли ключевые моменты упомянуты
+- Понимание (20%) — глубина понимания темы
+- Ясность (10%) — чёткость изложения
+
+Ответ строго JSON:
+{
+  "score": 0-100,
+  "correct_points": ["что верно"],
+  "missing_points": ["что пропущено"],
+  "errors": ["ошибки"],
+  "feedback": "комментарий для кандидата"
+}
+
+Не требуй дословного совпадения. Засчитывай синонимы и перефразирования."""
+
+        user_prompt = f"""Вопрос: {question}
+
+Эталонный ответ: {reference_answer}
+
+Ответ кандидата: {user_answer}
+
+Оцени ответ кандидата."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.2, max_tokens=800)
+        
+        return self._parse_json_response(response, {
+            "score": 50,
+            "correct_points": [],
+            "missing_points": ["Не удалось проанализировать ответ"],
+            "errors": [],
+            "feedback": "Не удалось оценить ответ автоматически"
         })
 
 

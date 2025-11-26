@@ -26,3 +26,6 @@ starlette==0.35.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
+# PDF parsing
+pypdf==4.0.1
+

@@ -22,6 +22,9 @@ class Interview(Base):
     selected_level = Column(String, nullable=False)  # junior/middle/senior
     direction = Column(String, nullable=False)  # backend/frontend/algorithms
     
+    # Interview stage tracking
+    current_stage = Column(String, default="coding")  # coding/theory/completed
+    
     # Status
     status = Column(String, default="in_progress")  # in_progress/completed/cancelled
     
@@ -29,6 +32,13 @@ class Interview(Base):
     overall_grade = Column(String, nullable=True)  # junior/middle/senior
     overall_score = Column(Float, nullable=True)  # 0-100
     trust_score = Column(Float, default=100.0)  # 0-100
+    
+    # Adaptive scoring
+    confidence_score = Column(Float, default=50.0)  # 0-100, adaptive confidence
+    code_quality_score = Column(Float, nullable=True)
+    problem_solving_score = Column(Float, nullable=True)
+    code_explanation_score = Column(Float, nullable=True)
+    theory_knowledge_score = Column(Float, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -44,6 +54,7 @@ class Interview(Base):
     chat_messages = relationship("ChatMessage", back_populates="interview", cascade="all, delete-orphan")
     anti_cheat_events = relationship("AntiCheatEvent", back_populates="interview", cascade="all, delete-orphan")
     skill_assessment = relationship("SkillAssessment", back_populates="interview", uselist=False, cascade="all, delete-orphan")
+    theory_answers = relationship("TheoryAnswer", back_populates="interview", cascade="all, delete-orphan")
 
 
 class Task(Base):
@@ -53,11 +64,21 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     interview_id = Column(Integer, ForeignKey("interviews.id"), nullable=False)
     
+    # Task order (1, 2, 3 for the three tasks)
+    task_order = Column(Integer, default=1)  # 1=easy, 2=medium, 3=hard
+    
+    # Source question ID from questions.json
+    source_question_id = Column(Integer, nullable=True)
+    
     # Task details
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     difficulty = Column(String, nullable=False)  # easy/medium/hard
     category = Column(String, nullable=False)  # algorithms/data_structures/system_design
+    
+    # Input/Output format
+    input_format = Column(Text, nullable=True)
+    output_format = Column(Text, nullable=True)
     
     # Test cases
     visible_tests = Column(JSON, nullable=False)  # List of test cases
@@ -73,6 +94,9 @@ class Task(Base):
     # Robustness (AI Bug Hunter results)
     robustness_score = Column(Float, nullable=True)
     ai_generated_tests = Column(JSON, nullable=True)
+    
+    # Candidate's final code (for theory questions about solution)
+    final_code = Column(Text, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -204,4 +228,44 @@ class SkillAssessment(Base):
     
     # Relationships
     interview = relationship("Interview", back_populates="skill_assessment")
+
+
+class TheoryAnswer(Base):
+    """Theory question answer during interview."""
+    __tablename__ = "theory_answers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    interview_id = Column(Integer, ForeignKey("interviews.id"), nullable=False)
+    
+    # Question info
+    question_id = Column(Integer, nullable=True)  # ID from questions.json if exists
+    question_type = Column(String, nullable=False)  # "solution_algorithm", "solution_complexity", "theory"
+    question_text = Column(Text, nullable=False)
+    reference_answer = Column(Text, nullable=True)  # Expected answer if available
+    
+    # Related task (for solution questions)
+    related_task_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
+    
+    # Answer
+    candidate_answer = Column(Text, nullable=True)
+    
+    # Evaluation
+    score = Column(Float, nullable=True)  # 0-100
+    correctness = Column(Float, nullable=True)
+    completeness = Column(Float, nullable=True)
+    evaluation_details = Column(JSON, nullable=True)  # Full LLM evaluation
+    
+    # Order in interview
+    question_order = Column(Integer, nullable=False)
+    
+    # Status
+    status = Column(String, default="pending")  # pending/answered/skipped
+    
+    # Timestamp
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    answered_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    interview = relationship("Interview", back_populates="theory_answers")
+    related_task = relationship("Task")
 
