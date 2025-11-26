@@ -211,7 +211,8 @@ async def send_chat_message(
     db: Session = Depends(get_db)
 ):
     """
-    Send message to AI interviewer and get response.
+    💬 Send message to AI interviewer and get response.
+    Uses killer prompts for natural, helpful interviewer personality.
     """
     interview = db.query(Interview).filter(Interview.id == message_data.interview_id).first()
     if not interview:
@@ -227,26 +228,56 @@ async def send_chat_message(
     db.add(user_message)
     db.commit()
     
-    # Get conversation history
-    messages = db.query(ChatMessage).filter(
+    # Get current task context
+    current_task = None
+    task_title = "Текущая задача"
+    task_description = "Задача не выбрана"
+    user_code = ""
+    
+    if message_data.task_id:
+        current_task = db.query(Task).filter(Task.id == message_data.task_id).first()
+        if current_task:
+            task_title = current_task.title
+            task_description = current_task.description
+            # Get latest submission code
+            latest_submission = db.query(Submission).filter(
+                Submission.task_id == current_task.id
+            ).order_by(Submission.created_at.desc()).first()
+            if latest_submission:
+                user_code = latest_submission.code
+    
+    # Get conversation history for context
+    chat_history = db.query(ChatMessage).filter(
         ChatMessage.interview_id == message_data.interview_id
     ).order_by(ChatMessage.created_at).limit(10).all()
     
-    # Build messages for LLM
-    llm_messages = [
-        {"role": "system", "content": "/no_think\nТы опытный технический интервьюер. Отвечай кратко и по делу (2-3 предложения)."}
+    history_for_llm = [
+        {"role": msg.role, "content": msg.content}
+        for msg in chat_history
     ]
-    for msg in messages:
-        llm_messages.append({"role": msg.role, "content": msg.content})
     
-    # Get AI response
+    # Get AI response using killer prompts
     try:
-        ai_response = await scibox_client.chat_completion(llm_messages, temperature=0.7, max_tokens=512)
-        # Remove <think> tags if present
+        ai_response = await scibox_client.chat_with_interviewer(
+            task_text=task_description,
+            level=interview.selected_level or "middle",
+            direction=interview.direction or "backend",
+            task_title=task_title,
+            user_code=user_code,
+            user_message=message_data.content,
+            chat_history=history_for_llm
+        )
+        
+        # Clean response just in case
         import re
         ai_response = re.sub(r'<think>.*?</think>', '', ai_response, flags=re.DOTALL).strip()
+        
+        if not ai_response:
+            ai_response = "Интересный вопрос! Давай разберёмся вместе. 🤔"
+            
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI response failed: {str(e)}")
+        print(f"❌ AI chat error: {e}")
+        ai_response = "Хороший вопрос! Давай подумаем над этим. 💡"
     
     # Save AI message
     ai_message = ChatMessage(
@@ -268,33 +299,52 @@ async def request_hint(
     db: Session = Depends(get_db)
 ):
     """
-    Request hint for current task.
-    Applies score penalty based on hint level.
+    💡 Request hint for current task.
+    Uses killer prompts for helpful, progressive hints.
     """
     task = db.query(Task).filter(Task.id == hint_data.task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Determine penalty
-    penalties = {"light": 10, "medium": 20, "heavy": 35}
+    # Penalty based on hint level
+    penalties = {"light": 10, "medium": 25, "heavy": 40}
     penalty = penalties.get(hint_data.hint_level, 10)
     
-    # Generate hint using LLM
-    hint_prompts = {
-        "light": "Дай лёгкую подсказку - намекни на алгоритм или подход, но не раскрывай решение.",
-        "medium": "Дай среднюю подсказку - опиши алгоритм решения и ключевые шаги.",
-        "heavy": "Дай сильную подсказку - покажи детальный алгоритм с примером кода."
-    }
-    system_prompt = f"/no_think\nТы - система подсказок. {hint_prompts.get(hint_data.hint_level, hint_prompts['light'])} Отвечай кратко (максимум 2-3 предложения)."
+    # Get test results summary
+    latest_submission = db.query(Submission).filter(
+        Submission.task_id == task.id
+    ).order_by(Submission.created_at.desc()).first()
     
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Задача: {task.description}\n\nТекущий код:\n{hint_data.current_code or 'Нет кода'}"}
-    ]
+    test_results = "Тесты еще не запускались"
+    if latest_submission:
+        test_results = (
+            f"Видимые: {latest_submission.visible_passed or 0}/{latest_submission.total_visible or 0}, "
+            f"Скрытые: {latest_submission.hidden_passed or 0}/{latest_submission.total_hidden or 0}"
+        )
+        if latest_submission.error_message:
+            test_results += f"\nОшибка: {latest_submission.error_message}"
     
     try:
-        hint_content = await scibox_client.chat_completion(messages, temperature=0.5, max_tokens=256)
-        # Remove <think> tags if present
+        # Use killer hint prompts
+        hint_result = await scibox_client.generate_hint(
+            task_text=task.description,
+            user_code=hint_data.current_code or "# Код пока не написан",
+            test_results=test_results,
+            hint_level=hint_data.hint_level
+        )
+        
+        # Extract hint text with encouragement
+        hint_text = hint_result.get("hint_text", "Попробуй начать с базового случая.")
+        encouragement = hint_result.get("encouragement", "")
+        next_step = hint_result.get("next_step", "")
+        
+        # Build rich hint content
+        hint_content = hint_text
+        if encouragement:
+            hint_content = f"{encouragement}\n\n{hint_content}"
+        if next_step:
+            hint_content += f"\n\n💡 Следующий шаг: {next_step}"
+        
         import re
         hint_content = re.sub(r'<think>.*?</think>', '', hint_content, flags=re.DOTALL).strip()
     except Exception as e:
@@ -779,4 +829,87 @@ async def complete_interview_v2(interview_id: int, db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail=f"Failed to generate scores: {str(e)}")
     
     return FinalScoresResponse(**scores)
+
+
+# ============ Complexity Check Endpoints ============
+
+@router.post("/tasks/{task_id}/complexity-question")
+async def get_complexity_question(task_id: int, db: Session = Depends(get_db)):
+    """
+    Generate a question about time/space complexity after task is solved.
+    Called automatically after successful submission.
+    """
+    from ..services.complexity_checker import generate_complexity_question
+    
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    interview = db.query(Interview).filter(Interview.id == task.interview_id).first()
+    
+    # Get candidate's best submission code
+    best_submission = db.query(Submission).filter(
+        Submission.task_id == task_id
+    ).order_by(Submission.passed_visible.desc(), Submission.passed_hidden.desc()).first()
+    
+    candidate_code = best_submission.code if best_submission else ""
+    
+    question = await generate_complexity_question(
+        task_title=task.title,
+        task_description=task.description,
+        candidate_code=candidate_code,
+        difficulty=interview.selected_level if interview else "junior"
+    )
+    
+    return {
+        "task_id": task_id,
+        "task_title": task.title,
+        "question": question
+    }
+
+
+@router.post("/tasks/{task_id}/complexity-answer")
+async def submit_complexity_answer(
+    task_id: int,
+    answer: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Submit answer to complexity question and get evaluation.
+    Compares candidate's understanding with actual code analysis.
+    """
+    from ..services.complexity_checker import full_complexity_check
+    from pydantic import BaseModel
+    
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    interview = db.query(Interview).filter(Interview.id == task.interview_id).first()
+    
+    # Get candidate's best submission code
+    best_submission = db.query(Submission).filter(
+        Submission.task_id == task_id
+    ).order_by(Submission.passed_visible.desc(), Submission.passed_hidden.desc()).first()
+    
+    if not best_submission:
+        raise HTTPException(status_code=400, detail="No submission found for this task")
+    
+    result = await full_complexity_check(
+        task_title=task.title,
+        task_description=task.description,
+        candidate_code=best_submission.code,
+        candidate_answer=answer,
+        difficulty=interview.selected_level if interview else "junior"
+    )
+    
+    # Store complexity evaluation in task
+    task.robustness_score = result.get("complexity_score", 0)
+    db.commit()
+    
+    return {
+        "task_id": task_id,
+        "result": result,
+        "score_bonus": 10 if result.get("candidate_understands") else 0
+    }
 

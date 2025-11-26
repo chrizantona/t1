@@ -9,17 +9,17 @@ from typing import Optional
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
-    # SciBox LLM API
-    SCIBOX_API_KEY: str
+    # SciBox LLM API - ключ открытый
+    SCIBOX_API_KEY: str = "sk-5NTsD4a9Rif0Cwk4-p5pZQ"
     SCIBOX_BASE_URL: str = "https://llm.t1v.scibox.tech/v1"
     
     # Database
     POSTGRES_USER: str = "vibecode"
     POSTGRES_PASSWORD: str = "vibecode"
     POSTGRES_DB: str = "vibecode"
-    POSTGRES_HOST: str = "postgres"
-    POSTGRES_PORT: int = 5432
-    DATABASE_URL: str
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5433
+    DATABASE_URL: str = "postgresql+psycopg://vibecode:vibecode@postgres:5432/vibecode"
     
     # Backend
     BACKEND_HOST: str = "0.0.0.0"
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     
-    # Models
+    # Models (SciBox)
     CHAT_MODEL: str = "qwen3-32b-awq"  # 2 RPS - universal chat model
     CODER_MODEL: str = "qwen3-coder-30b-a3b-instruct-fp8"  # 2 RPS - code assistant
     EMBEDDING_MODEL: str = "bge-m3"  # 7 RPS - embeddings
@@ -39,8 +39,10 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL_RPS: int = 7
     
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()

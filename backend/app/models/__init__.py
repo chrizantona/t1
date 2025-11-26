@@ -6,7 +6,14 @@ from .interview import (
     ChatMessage,
     Hint,
     AntiCheatEvent,
-    SkillAssessment
+    SkillAssessment,
+    TheoryAnswer
+)
+from .vacancy import (
+    Vacancy,
+    VacancySkill,
+    CandidateProfile,
+    CandidateSkillSnapshot
 )
 from .questions import (
     TechQuestion,
@@ -17,6 +24,7 @@ from .questions import (
 )
 
 __all__ = [
+    # Interview models
     "Interview",
     "Task",
     "Submission",
@@ -24,6 +32,13 @@ __all__ = [
     "Hint",
     "AntiCheatEvent",
     "SkillAssessment",
+    "TheoryAnswer",
+    # Vacancy models
+    "Vacancy",
+    "VacancySkill",
+    "CandidateProfile",
+    "CandidateSkillSnapshot",
+    # Question models
     "TechQuestion",
     "QuestionCategory",
     "QuestionDifficulty",

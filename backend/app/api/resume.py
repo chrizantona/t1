@@ -96,58 +96,105 @@ async def upload_and_analyze_resume(
 
 async def _analyze_cv_text(cv_text: str) -> CVAnalysisResponse:
     """
-    Internal function to analyze CV text.
-    Used by both text and file upload endpoints.
+    🔥 Internal function to analyze CV text with enhanced AI analysis.
+    Returns comprehensive candidate assessment.
     """
     try:
-        # Use LLM as parser only (not decision maker)
+        print(f"📄 Analyzing CV ({len(cv_text)} chars)...")
+        
+        # Use killer prompts for deep analysis
         response = await scibox_client.analyze_resume(cv_text)
         
-        # Extract data from LLM
+        print(f"✅ LLM response: {response}")
+        
+        # Extract data from enhanced LLM response
         years_exp = response.get("years_of_experience", 2.0)
         resume_tracks = response.get("tracks", [])
         key_techs = response.get("key_technologies", [])
-        resume_grade = response.get("recommended_grade")
+        resume_grade = response.get("recommended_grade", "middle")
+        confidence = response.get("confidence", 70)
+        strengths = response.get("strengths", [])
+        weaknesses = response.get("weaknesses", [])
+        risk_factors = response.get("risk_factors", [])
+        interview_focus = response.get("interview_focus", [])
+        justification = response.get("justification", "")
         
         # Deterministic track determination
         suggested_direction = determine_track(
-            self_claimed_track=None,  # User hasn't claimed yet
+            self_claimed_track=None,
             resume_text=cv_text,
             resume_tracks=resume_tracks
         )
         
         # Deterministic grade calculation
-        # Assume user will claim "middle" if not specified
         grade_calc = calculate_start_grade(
             years_of_experience=years_exp,
-            self_claimed_grade="middle",  # Default assumption
+            self_claimed_grade="middle",
             resume_grade=resume_grade
         )
         
         suggested_level = grade_calc["start_grade"]
         
+        # Build rich reasoning
+        tech_str = ", ".join(key_techs[:5]) if key_techs else "не определены"
+        tracks_str = ", ".join(resume_tracks[:3]) if resume_tracks else suggested_direction
+        
         reasoning = (
-            f"На основе {years_exp:.1f} лет опыта и анализа технологий "
-            f"({', '.join(key_techs[:3])}) рекомендуем начать с уровня {suggested_level}. "
-            f"Направление: {suggested_direction}."
+            f"📊 Анализ резюме (уверенность: {confidence}%)\n\n"
+            f"🎯 Рекомендуемый грейд: {suggested_level.upper()}\n"
+            f"📁 Направление: {suggested_direction} (обнаружены: {tracks_str})\n"
+            f"⏳ Опыт: {years_exp:.1f} лет\n"
+            f"🛠️ Ключевые технологии: {tech_str}\n\n"
         )
+        
+        if justification:
+            reasoning += f"💡 {justification}\n\n"
+        
+        if strengths:
+            reasoning += f"✅ Сильные стороны: {', '.join(strengths[:3])}\n"
+        
+        if weaknesses:
+            reasoning += f"📈 Зоны роста: {', '.join(weaknesses[:3])}\n"
+        
+        if risk_factors:
+            reasoning += f"⚠️ Обратить внимание: {', '.join(risk_factors[:2])}\n"
         
         return CVAnalysisResponse(
             suggested_level=suggested_level,
             suggested_direction=suggested_direction,
             years_of_experience=years_exp,
-            key_technologies=key_techs,
-            reasoning=reasoning
+            key_technologies=key_techs[:10],  # Top 10 techs
+            reasoning=reasoning.strip(),
+            confidence=confidence,
+            all_tracks=resume_tracks,
+            strengths=strengths[:5],
+            weaknesses=weaknesses[:5],
+            risk_factors=risk_factors[:5],
+            interview_focus=interview_focus[:5]
         )
     
     except Exception as e:
+        print(f"❌ CV analysis error: {e}")
+        import traceback
+        traceback.print_exc()
+        
         # Fallback with deterministic defaults
         return CVAnalysisResponse(
             suggested_level="middle",
             suggested_direction="backend",
             years_of_experience=2.0,
             key_technologies=[],
-            reasoning="Рекомендуем начать с уровня Middle по направлению Backend."
+            reasoning=(
+                "📊 Не удалось полностью проанализировать резюме.\n"
+                "🎯 Рекомендуем начать с уровня MIDDLE по направлению Backend.\n"
+                "💡 На собеседовании уточним ваш опыт и подберём задачи."
+            ),
+            confidence=50,
+            all_tracks=["backend"],
+            strengths=[],
+            weaknesses=[],
+            risk_factors=["Требуется уточнение на собеседовании"],
+            interview_focus=["Проверить реальный опыт работы"]
         )
 
 

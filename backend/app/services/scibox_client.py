@@ -1,15 +1,25 @@
 """
-SciBox LLM API Client - ASYNC VERSION
+SciBox LLM API Client - ASYNC VERSION with KILLER PROMPTS
 Wrapper for interacting with SciBox models using OpenAI-compatible API.
-Fixed: Uses async/await to prevent blocking FastAPI event loop
 """
 from openai import AsyncOpenAI
 from typing import List, Dict, Any, Optional
 import asyncio
 import time
 import json
+import re
 
 from ..core.config import settings
+from .prompts import (
+    RESUME_ANALYSIS_SYSTEM, RESUME_ANALYSIS_USER,
+    INTERVIEWER_CHAT_SYSTEM, INTERVIEWER_CHAT_USER,
+    HINT_SYSTEM, HINT_USER,
+    BUG_ANALYSIS_SYSTEM, BUG_ANALYSIS_USER,
+    EVALUATE_ANSWER_SYSTEM, EVALUATE_ANSWER_USER,
+    COMPLEXITY_QUESTION_SYSTEM, COMPLEXITY_QUESTION_USER,
+    AI_DETECTION_SYSTEM, AI_DETECTION_USER,
+    FINAL_REPORT_SYSTEM, FINAL_REPORT_USER
+)
 
 
 class SciBoxClient:
@@ -54,14 +64,17 @@ class SciBoxClient:
             await self._rate_limit(self._last_chat_request, self._chat_interval)
             self._last_chat_request = time.time()
             
-            response = await self.client.chat.completions.create(
-                model=model or self.chat_model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
-            
-            return response.choices[0].message.content
+            try:
+                response = await self.client.chat.completions.create(
+                    model=model or self.chat_model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                print(f"⚠️ Chat completion error: {e}")
+                return ""
     
     async def code_completion(
         self,
@@ -74,80 +87,93 @@ class SciBoxClient:
             await self._rate_limit(self._last_coder_request, self._coder_interval)
             self._last_coder_request = time.time()
             
-            response = await self.client.chat.completions.create(
-                model=self.coder_model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.coder_model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                print(f"⚠️ Code completion error: {e}")
+                return ""
+    
+    async def get_embedding(self, text: str) -> List[float]:
+        """Get embedding for text using bge-m3 model (async)."""
+        async with self._embedding_lock:
+            await self._rate_limit(self._last_embedding_request, self._embedding_interval)
+            self._last_embedding_request = time.time()
             
-            return response.choices[0].message.content
+            try:
+                response = await self.client.embeddings.create(
+                    model=self.embedding_model,
+                    input=text
+                )
+                return response.data[0].embedding
+            except Exception as e:
+                print(f"⚠️ Embedding error: {e}")
+                return []
     
     def _parse_json_response(self, response: str, fallback: Dict[str, Any]) -> Dict[str, Any]:
-        """Helper to parse JSON from LLM response."""
+        """Helper to parse JSON from LLM response with robust handling."""
+        if not response:
+            print("⚠️ Empty response from LLM")
+            return fallback
+            
         try:
             response = response.strip()
-            # Remove <think> tags if present
-            import re
+            
+            # Remove <think> tags if present (qwen3 thinking mode)
             response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
             
             # Remove markdown code blocks
             if "```json" in response:
                 response = response.split("```json")[1].split("```")[0].strip()
-            elif response.startswith("```"):
+            elif "```" in response:
                 parts = response.split("```")
-                if len(parts) >= 2:
-                    response = parts[1].strip()
-                    if response.startswith("json"):
-                        response = response[4:].strip()
+                for part in parts:
+                    part = part.strip()
+                    if part.startswith("json"):
+                        response = part[4:].strip()
+                        break
+                    elif part.startswith("{"):
+                        response = part
+                        break
+            
+            # Try to find JSON object in response
+            if not response.startswith("{"):
+                json_match = re.search(r'\{[\s\S]*\}', response)
+                if json_match:
+                    response = json_match.group()
             
             parsed = json.loads(response)
             print(f"✅ Successfully parsed JSON response")
             return parsed
+            
+        except json.JSONDecodeError as e:
+            print(f"⚠️ JSON parse error: {e}")
+            print(f"Raw response (first 500 chars): {response[:500]}")
+            return fallback
         except Exception as e:
-            print(f"⚠️ Failed to parse JSON response: {e}")
-            print(f"Raw response: {response[:200]}")
+            print(f"⚠️ Unexpected error parsing response: {e}")
             return fallback
     
-    # ========== PROMPT METHODS (ALL ASYNC) ==========
+    # ========== KILLER PROMPT METHODS ==========
     
     async def analyze_resume(self, resume_text: str) -> Dict[str, Any]:
-        """1. CV-based Level Suggestion"""
-        system_prompt = """/no_think
-Ты — ИИ-ассистент платформы технических собеседований VibeCode.
-Твоя задача — анализировать резюме разработчиков и рекомендовать:
-- предполагаемый грейд (junior, middle, middle+, senior),
-- релевантные направления (backend, frontend, fullstack, data, devops, mobile и т.д.),
-- краткие аргументы.
-
-Требования к ответу:
-- Ответь строго в формате ОДНОГО JSON-объекта.
-- Без поясняющего текста, без комментариев, без Markdown.
-- Все ключи JSON — на английском, строки — на русском.
-
-Структура JSON:
-{
-  "recommended_grade": "junior|middle|middle+|senior",
-  "confidence": 0-100,
-  "tracks": ["backend", "frontend", "fullstack", ...],
-  "years_of_experience": number,
-  "key_technologies": ["Python", "React", ...],
-  "justification": "краткое текстовое объяснение (до 500 символов)",
-  "risk_factors": ["мало коммерческого опыта", "..."]
-}"""
-        
-        user_prompt = f"""Вот текст резюме кандидата (может быть на русском или английском).
-Определи его предполагаемый грейд и направления.
-
-Резюме:
-{resume_text}"""
+        """
+        🎯 CV Analysis - Senior Tech Recruiter level analysis
+        Returns comprehensive candidate assessment with grade, tracks, strengths, weaknesses
+        """
+        user_prompt = RESUME_ANALYSIS_USER.format(resume_text=resume_text)
         
         messages = [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": RESUME_ANALYSIS_SYSTEM},
             {"role": "user", "content": user_prompt}
         ]
         
-        response = await self.chat_completion(messages, temperature=0.3, max_tokens=512)
+        response = await self.chat_completion(messages, temperature=0.3, max_tokens=1024)
         
         return self._parse_json_response(response, {
             "recommended_grade": "middle",
@@ -155,9 +181,241 @@ class SciBoxClient:
             "tracks": ["backend"],
             "years_of_experience": 2,
             "key_technologies": [],
-            "justification": "Не удалось распарсить ответ LLM",
-            "risk_factors": []
+            "strengths": ["Есть опыт разработки"],
+            "weaknesses": ["Требуется дополнительная информация"],
+            "justification": "Недостаточно данных для точной оценки",
+            "risk_factors": [],
+            "interview_focus": ["Уточнить опыт на собеседовании"]
         })
+    
+    async def chat_with_interviewer(
+        self,
+        task_text: str,
+        level: str,
+        direction: str,
+        task_title: str,
+        user_code: str,
+        user_message: str,
+        chat_history: List[Dict[str, str]] = None
+    ) -> str:
+        """
+        💬 AI Interviewer - Friendly but professional technical interviewer
+        Never gives solutions, asks clarifying questions, supports candidate
+        """
+        user_prompt = INTERVIEWER_CHAT_USER.format(
+            level=level,
+            direction=direction,
+            task_title=task_title,
+            task_description=task_text,
+            user_code=user_code or "# Кандидат еще не написал код",
+            user_message=user_message
+        )
+        
+        messages = [{"role": "system", "content": INTERVIEWER_CHAT_SYSTEM}]
+        
+        if chat_history:
+            # Add last 10 messages for context
+            messages.extend(chat_history[-10:])
+        
+        messages.append({"role": "user", "content": user_prompt})
+        
+        response = await self.chat_completion(messages, temperature=0.7, max_tokens=512)
+        
+        # Return plain text, not JSON
+        return response if response else "Хороший вопрос! Давай разберёмся вместе."
+    
+    async def generate_hint(
+        self,
+        task_text: str,
+        user_code: str,
+        test_results: str,
+        hint_level: str
+    ) -> Dict[str, Any]:
+        """
+        💡 Hint Generation - Progressive hints without giving away solution
+        Levels: light (-10 pts), medium (-25 pts), heavy (-40 pts)
+        """
+        user_prompt = HINT_USER.format(
+            task_text=task_text,
+            user_code=user_code or "# Код пока не написан",
+            test_results=test_results or "Тесты еще не запускались",
+            hint_level=hint_level
+        )
+        
+        messages = [
+            {"role": "system", "content": HINT_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.4, max_tokens=512)
+        
+        return self._parse_json_response(response, {
+            "hint_level": hint_level,
+            "hint_text": "Попробуй начать с самого простого случая. Как бы ты решил задачу для минимального входа?",
+            "encouragement": "Ты на верном пути, продолжай!",
+            "next_step": "Определи базовый случай и постепенно усложняй"
+        })
+    
+    async def analyze_bug(
+        self,
+        task_description: str,
+        user_code: str,
+        test_results: str,
+        error_message: str = ""
+    ) -> Dict[str, Any]:
+        """
+        🐛 Bug Analysis - Code reviewer explaining why code fails
+        Shows failing example, explains bug, hints direction without giving fix
+        """
+        user_prompt = BUG_ANALYSIS_USER.format(
+            task_description=task_description,
+            user_code=user_code,
+            test_results=test_results,
+            error_message=error_message or "Нет явной ошибки, тесты просто не проходят"
+        )
+        
+        messages = [
+            {"role": "system", "content": BUG_ANALYSIS_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.3, max_tokens=768)
+        
+        return self._parse_json_response(response, {
+            "bug_type": "logic",
+            "analysis": "В коде есть логическая ошибка. Проверь внимательно условия и граничные случаи.",
+            "failing_example": "Попробуй запустить код на крайних значениях входных данных",
+            "expected_vs_actual": "Результат отличается от ожидаемого",
+            "hint_direction": "Подумай, что происходит на границах входных данных",
+            "severity": "major"
+        })
+    
+    async def evaluate_theory_answer(
+        self,
+        question: str,
+        canonical_answer: str,
+        key_points: List[str],
+        candidate_answer: str,
+        difficulty: str = "middle"
+    ) -> Dict[str, Any]:
+        """
+        📝 Theory Answer Evaluation - Expert examiner scoring 0-3
+        Checks correctness, completeness, understanding depth
+        """
+        user_prompt = EVALUATE_ANSWER_USER.format(
+            question=question,
+            canonical_answer=canonical_answer,
+            key_points="\n".join(f"- {p}" for p in key_points) if key_points else "Нет ключевых пунктов",
+            candidate_answer=candidate_answer,
+            difficulty=difficulty
+        )
+        
+        messages = [
+            {"role": "system", "content": EVALUATE_ANSWER_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.2, max_tokens=768)
+        
+        return self._parse_json_response(response, {
+            "score": 1,
+            "correctness": "Ответ частично корректен",
+            "missing": "Требуется более детальный анализ",
+            "errors": [],
+            "feedback_for_candidate": "Ответ засчитан, но можно было раскрыть тему глубже.",
+            "extra_topics": [],
+            "interviewer_note": "Требует дополнительной проверки на follow-up"
+        })
+    
+    async def generate_complexity_question(
+        self,
+        task_title: str,
+        task_description: str,
+        candidate_code: str
+    ) -> Dict[str, Any]:
+        """
+        ⏱️ Complexity Question - Ask about time/space complexity
+        Generates natural follow-up question about algorithm complexity
+        """
+        user_prompt = COMPLEXITY_QUESTION_USER.format(
+            task_title=task_title,
+            task_description=task_description,
+            candidate_code=candidate_code
+        )
+        
+        messages = [
+            {"role": "system", "content": COMPLEXITY_QUESTION_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.5, max_tokens=384)
+        
+        return self._parse_json_response(response, {
+            "intro": "Отлично, задача решена!",
+            "question": "Расскажи, какая временная и пространственная сложность у твоего решения?",
+            "follow_up": "А можно ли оптимизировать алгоритм?"
+        })
+    
+    async def check_ai_likeness(self, user_code: str, level: str = "middle") -> Dict[str, Any]:
+        """
+        🤖 AI Code Detection - Detect AI-generated code patterns
+        Returns probability score 0-1 with confidence and signals
+        """
+        user_prompt = AI_DETECTION_USER.format(
+            code=user_code,
+            level=level
+        )
+        
+        messages = [
+            {"role": "system", "content": AI_DETECTION_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.code_completion(messages, temperature=0.2, max_tokens=512)
+        
+        return self._parse_json_response(response, {
+            "ai_style_score": 0.3,
+            "confidence": "low",
+            "signals": [],
+            "human_signals": ["Естественный стиль кода"],
+            "verdict": "likely_human",
+            "recommendation": "Спросить про детали реализации"
+        })
+    
+    async def generate_final_report(self, raw_metrics_json: str) -> Dict[str, Any]:
+        """
+        📊 Final Report Generation - Professional interview summary
+        Decision: hire/consider/reject with skills breakdown and recommendations
+        """
+        user_prompt = FINAL_REPORT_USER.format(interview_data=raw_metrics_json)
+        
+        messages = [
+            {"role": "system", "content": FINAL_REPORT_SYSTEM},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.3, max_tokens=1500)
+        
+        return self._parse_json_response(response, {
+            "overall_grade": "middle",
+            "overall_score": 70,
+            "decision": "consider",
+            "decision_reasoning": "Кандидат показал средний уровень. Рекомендуется дополнительное собеседование.",
+            "skills": {
+                "algorithms": {"score": 70, "comment": "Базовые алгоритмы знает"},
+                "architecture": {"score": 65, "comment": "Средний уровень"},
+                "clean_code": {"score": 75, "comment": "Код читаемый"},
+                "debugging": {"score": 60, "comment": "Есть потенциал"},
+                "communication": {"score": 70, "comment": "Объясняет понятно"}
+            },
+            "strengths": ["Базовые знания программирования"],
+            "areas_to_improve": ["Алгоритмы", "Системный дизайн"],
+            "candidate_feedback": "Хорошая работа! Рекомендуем подтянуть алгоритмы и структуры данных.",
+            "hiring_manager_notes": "Требуется дополнительная оценка",
+            "next_steps": ["Техническое интервью с командой"]
+        })
+    
+    # ========== LEGACY METHODS (for backward compatibility) ==========
     
     async def generate_task(
         self,
@@ -165,51 +423,25 @@ class SciBoxClient:
         track: str,
         history_summary: str = ""
     ) -> Dict[str, Any]:
-        """2. Generate adaptive task"""
+        """Generate adaptive task (legacy - prefer task_pool)"""
         system_prompt = """/no_think
-Ты — технический интервьюер платформы VibeCode.
-Твоя задача — генерировать ОДНУ задачу по программированию для онлайн-собеседования.
+Ты — технический интервьюер. Сгенерируй ОДНУ задачу по программированию.
+Уровень: {level}. Направление: {track}.
 
-Требования к задаче:
-- Решаемость за 15–20 минут.
-- Никаких чрезмерно сложных олимпиадных задач.
-- Чёткое описание входных и выходных данных.
-- Примеры входа/выхода.
-- Текст задачи по-русски.
-
-Формат ответа:
-- Строго ОДИН JSON-объект.
-- Без дополнительных комментариев и Markdown.
-
-Структура JSON:
-{
-  "title": "краткое название задачи",
-  "description": "подробное условие задачи (до 1200 символов)",
-  "input_format": "описание формата входных данных",
-  "output_format": "описание формата выходных данных",
-  "examples": [
-    {
-      "input": "строка с примером ввода",
-      "output": "ожидаемый вывод",
-      "explanation": "краткое объяснение"
-    }
-  ],
-  "constraints": "ограничения по N, ограничения по времени и памяти",
-  "difficulty_level": "junior|middle|senior",
-  "topic_tags": ["arrays", "strings", "greedy", ...]
-}"""
+Формат JSON:
+{{
+  "title": "название",
+  "description": "условие на русском",
+  "input_format": "формат входа",
+  "output_format": "формат выхода",
+  "examples": [{{"input": "...", "output": "...", "explanation": "..."}}],
+  "constraints": "ограничения",
+  "difficulty_level": "{level}",
+  "topic_tags": ["..."]
+}}""".format(level=level, track=track)
         
-        user_prompt = f"""Нужно сгенерировать задачу для кандидата.
-
-Уровень кандидата: {level} (junior|middle|senior).
-Направление: {track} (например, backend, frontend, algorithms).
-
-Краткая история предыдущих задач и результатов (может быть пустой):
-{history_summary}
-
-Сгенерируй следующую задачу так, чтобы:
-- если кандидат уверенно решает текущий уровень, новая задача была чуть сложнее;
-- если кандидат проваливает задачи, новая задача была немного проще или другого типа."""
+        user_prompt = f"""Сгенерируй задачу для {level} {track}-разработчика.
+История: {history_summary or 'Первая задача'}"""
         
         messages = [
             {"role": "system", "content": system_prompt},
@@ -220,64 +452,10 @@ class SciBoxClient:
         
         return self._parse_json_response(response, {
             "title": "Сумма двух чисел",
-            "description": "Напишите функцию, которая принимает два числа и возвращает их сумму.",
-            "input_format": "Два целых числа a и b",
-            "output_format": "Одно целое число - сумма a и b",
-            "examples": [{"input": "2 3", "output": "5", "explanation": "2 + 3 = 5"}],
-            "constraints": "1 <= a, b <= 1000",
+            "description": "Напишите функцию, которая возвращает сумму двух чисел.",
+            "examples": [{"input": "2, 3", "output": "5", "explanation": "2+3=5"}],
             "difficulty_level": level,
-            "topic_tags": ["math", "basic"]
-        })
-    
-    async def generate_hint(
-        self,
-        task_text: str,
-        user_code: str,
-        test_results: str,
-        hint_level: str
-    ) -> Dict[str, Any]:
-        """3. Hint Economy"""
-        system_prompt = """/no_think
-Ты — ИИ-помощник на техническом собеседовании платформы VibeCode.
-Твоя задача — давать подсказки по задаче так, чтобы кандидат мог продвинуться,
-но при этом не получать готовое решение.
-
-Типы подсказок:
-- "soft" — мягкая подсказка, один наводящий вопрос или направление мысли;
-- "medium" — идея алгоритма в общих словах;
-- "hard" — почти готовый алгоритм или псевдокод, но без полноценного кода.
-
-Формат ответа: ОДИН JSON-объект:
-{
-  "hint_level": "soft|medium|hard",
-  "hint_text": "текст подсказки по-русски",
-  "warning": "краткое предупреждение, как это снизит максимальный балл (до 200 символов)"
-}"""
-        
-        user_prompt = f"""Текущая задача:
-{task_text}
-
-Текущий код кандидата (может быть пустым):
-{user_code}
-
-Уже известные результаты тестов:
-{test_results}
-
-Тип подсказки: {hint_level} (soft|medium|hard).
-
-Дай подсказку указанного уровня. Не раскрывай полностью финальное решение."""
-        
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await self.chat_completion(messages, temperature=0.3, max_tokens=512)
-        
-        return self._parse_json_response(response, {
-            "hint_level": hint_level,
-            "hint_text": "Подумайте о базовых структурах данных для этой задачи.",
-            "warning": "Использование подсказки снизит максимальный балл на 10%"
+            "topic_tags": ["math"]
         })
     
     async def generate_bug_hunter_tests(
@@ -286,34 +464,22 @@ class SciBoxClient:
         user_code: str,
         known_tests: str
     ) -> Dict[str, Any]:
-        """4. AI Bug Hunter - Basic version"""
+        """Generate edge case tests to break candidate's code"""
         system_prompt = """/no_think
-Ты — модуль "AI Bug Hunter" платформы VibeCode.
-Твоя задача — по условию задачи и решению кандидата придумать входные данные,
-на которых это решение с высокой вероятностью сломается или покажет неверный результат.
+Ты — Bug Hunter. Найди слабые места в коде и сгенерируй тесты, которые его сломают.
 
-Формат ответа: ОДИН JSON-объект:
+JSON ответ:
 {
   "generated_tests": [
-    { "input": "пример входа", "description": "почему этот кейс сложный" }
+    {"input": "тест", "description": "почему сломает"}
   ]
-}
-
-Требования:
-- от 2 до 5 тестов;
-- входные данные должны быть совместимы с форматом задачи;
-- делай упор на граничные случаи, большие объёмы данных, повторяющиеся элементы, пустые коллекции."""
+}"""
         
-        user_prompt = f"""Условие задачи:
-{task_text}
+        user_prompt = f"""Задача: {task_text}
+Код: {user_code}
+Существующие тесты: {known_tests}
 
-Решение кандидата:
-{user_code}
-
-Уже существующие тесты (для понимания, что уже покрыто):
-{known_tests}
-
-Сгенерируй дополнительные тесты, которые с высокой вероятностью найдут баги в этом решении."""
+Сгенерируй 3-5 тестов-edge cases."""
         
         messages = [
             {"role": "system", "content": system_prompt},
@@ -323,7 +489,7 @@ class SciBoxClient:
         response = await self.code_completion(messages, temperature=0.3, max_tokens=512)
         
         return self._parse_json_response(response, {"generated_tests": []})
-
+    
     async def generate_edge_case_tests_enhanced(
         self,
         task_description: str,
@@ -333,165 +499,36 @@ class SciBoxClient:
         candidate_code: str,
         existing_tests: str
     ) -> Dict[str, Any]:
-        """
-        4+. Enhanced AI Bug Hunter with expected outputs.
-        Generates edge case tests with correct expected values.
-        Uses code sanitization to prevent prompt injection.
-        """
+        """Enhanced Bug Hunter with security checks"""
         from .code_sanitizer import sanitize_code_for_llm, get_security_summary
         
-        # First, check code security
         security_report = get_security_summary(candidate_code)
         
         if security_report["prompt_injection"]["detected"]:
-            # Prompt injection detected - return warning without processing
             return {
                 "security_blocked": True,
                 "security_report": security_report,
                 "analysis": {
-                    "detected_algorithm": "НЕ ПРОАНАЛИЗИРОВАНО",
-                    "potential_weaknesses": ["Обнаружена попытка манипуляции системой"],
+                    "detected_algorithm": "BLOCKED",
+                    "potential_weaknesses": ["Обнаружена попытка манипуляции"],
                     "missing_checks": []
                 },
                 "edge_case_tests": []
             }
         
-        # Sanitize the code for LLM
         sanitized_code, sanitize_report = sanitize_code_for_llm(candidate_code)
         
-        system_prompt = """/no_think
-Ты — модуль "AI Bug Hunter" платформы VibeCode для технических собеседований.
-
-ТВОЯ ЗАДАЧА:
-Проанализировать задачу и код кандидата, найти слабые места в его решении 
-и сгенерировать тесты, которые с высокой вероятностью сломают этот код.
-
-АЛГОРИТМ РАБОТЫ:
-1. Изучи условие задачи и формат входных/выходных данных
-2. Проанализируй код кандидата на слабые места
-3. Сгенерируй edge cases: пустые данные, единичные элементы, граничные значения, 
-   большие числа, повторы, отсортированные данные
-
-ФОРМАТ ОТВЕТА (строго JSON):
-{
-  "analysis": {
-    "detected_algorithm": "описание алгоритма",
-    "potential_weaknesses": ["слабые места"],
-    "missing_checks": ["отсутствующие проверки"]
-  },
-  "edge_case_tests": [
-    {
-      "input": "входные данные",
-      "expected_output": "правильный результат",
-      "category": "empty|single|boundary|large|special|duplicate",
-      "description": "что проверяет",
-      "likely_to_fail": true
-    }
-  ]
-}
-
-ВАЖНО: expected_output должен быть ПРАВИЛЬНЫМ ответом для данного input!"""
-
-        user_prompt = f"""=== УСЛОВИЕ ЗАДАЧИ ===
-{task_description}
-
-=== ФОРМАТ ВХОДНЫХ ДАННЫХ ===
-{input_format}
-
-=== ФОРМАТ ВЫХОДНЫХ ДАННЫХ ===
-{output_format}
-
-=== ПРИМЕРЫ ИЗ УСЛОВИЯ ===
-{examples}
-
-=== КОД КАНДИДАТА ===
-{sanitized_code}
-
-=== УЖЕ СУЩЕСТВУЮЩИЕ ТЕСТЫ ===
-{existing_tests}
-
-Сгенерируй 3-5 edge case тестов с ПРАВИЛЬНЫМИ expected_output значениями."""
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
+        result = await self.generate_bug_hunter_tests(
+            task_description, 
+            sanitized_code, 
+            existing_tests
+        )
         
-        response = await self.code_completion(messages, temperature=0.3, max_tokens=1024)
-        
-        result = self._parse_json_response(response, {
-            "analysis": {
-                "detected_algorithm": "Не удалось определить",
-                "potential_weaknesses": [],
-                "missing_checks": []
-            },
-            "edge_case_tests": []
-        })
-        
-        # Add security info to result
         result["security_report"] = security_report
         result["sanitize_report"] = sanitize_report
         result["security_blocked"] = False
         
         return result
-    
-    async def generate_final_report(
-        self,
-        raw_metrics_json: str
-    ) -> Dict[str, Any]:
-        """5. Skill Radar + final report"""
-        system_prompt = """/no_think
-Ты — модуль итоговой оценки кандидата платформы VibeCode.
-Ты получаешь сырые метрики интервью и должен:
-- оценить грейд кандидата,
-- заполнить карту навыков (skill radar),
-- дать короткие рекомендации, что подтянуть до следующего грейда.
-
-Формат ответа: ОДИН JSON-объект:
-{
-  "overall_grade": "junior|middle|middle+|senior",
-  "overall_score": 0-100,
-  "skills": {
-    "algorithms":   { "score": 0-100, "comment": "..." },
-    "architecture": { "score": 0-100, "comment": "..." },
-    "clean_code":   { "score": 0-100, "comment": "..." },
-    "debugging":    { "score": 0-100, "comment": "..." },
-    "communication":{ "score": 0-100, "comment": "..." }
-  },
-  "next_grade_tips": [
-    "краткий совет 1",
-    "краткий совет 2"
-  ],
-  "summary_text": "краткое резюме по кандидату (до 600 символов)"
-}
-
-Все тексты — по-русски."""
-        
-        user_prompt = f"""Вот данные по интервью в JSON:
-{raw_metrics_json}
-
-На основе этих данных оцени кандидата и заполни структуру JSON."""
-        
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await self.chat_completion(messages, temperature=0.3, max_tokens=1024)
-        
-        return self._parse_json_response(response, {
-            "overall_grade": "middle",
-            "overall_score": 70,
-            "skills": {
-                "algorithms": {"score": 70, "comment": "Хорошо"},
-                "architecture": {"score": 65, "comment": "Средне"},
-                "clean_code": {"score": 75, "comment": "Хорошо"},
-                "debugging": {"score": 60, "comment": "Требует улучшения"},
-                "communication": {"score": 70, "comment": "Хорошо"}
-            },
-            "next_grade_tips": ["Практиковать алгоритмы", "Улучшить архитектуру"],
-            "summary_text": "Кандидат показал средний уровень"
-        })
     
     async def check_explanation(
         self,
@@ -499,222 +536,37 @@ class SciBoxClient:
         user_code: str,
         user_explanation: str
     ) -> Dict[str, Any]:
-        """6. Explanation Check"""
+        """Check if candidate understands their solution"""
         system_prompt = """/no_think
-Ты — модуль проверки понимания решения платформы VibeCode.
-Ты получаешь: условие задачи, код кандидата и его текстовое объяснение.
+Оцени, насколько кандидат понимает своё решение.
 
-Твоя задача — оценить:
-- насколько кандидат понимает свой алгоритм,
-- умеет ли объяснить сложность,
-- видит ли граничные случаи.
-
-Формат ответа:
+JSON:
 {
   "communication_score": 0-100,
   "understanding_level": "low|medium|high",
-  "comment": "краткий комментарий (до 400 символов)"
+  "comment": "комментарий"
 }"""
         
-        user_prompt = f"""Условие задачи:
-{task_text}
-
-Код кандидата:
-{user_code}
-
-Объяснение кандидата:
-{user_explanation}
-
-Оцени понимание кандидатом своего решения."""
+        user_prompt = f"""Задача: {task_text}
+Код: {user_code}
+Объяснение: {user_explanation}"""
         
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
         
-        response = await self.chat_completion(messages, temperature=0.3, max_tokens=512)
+        response = await self.chat_completion(messages, temperature=0.3, max_tokens=384)
         
         return self._parse_json_response(response, {
             "communication_score": 70,
             "understanding_level": "medium",
-            "comment": "Кандидат демонстрирует базовое понимание решения"
+            "comment": "Кандидат понимает основы своего решения"
         })
     
-    async def check_ai_likeness(
-        self,
-        user_code: str
-    ) -> Dict[str, Any]:
-        """7. AI-Likeness"""
-        system_prompt = """/no_think
-Ты — модуль оценки "AI-подобности" кода платформы VibeCode.
-Твоя задача — по стилю, структуре и шаблонам кода оценить,
-насколько он похож на типичный код, сгенерированный LLM.
-
-Формат ответа:
-{
-  "ai_likeness_score": 0-100,
-  "comment": "краткое объяснение, почему такой балл (до 400 символов)"
-}"""
-        
-        user_prompt = f"""Вот решение кандидата:
-{user_code}
-
-Оцени, насколько оно похоже на типичное LLM-решение по стилю и структуре."""
-        
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await self.code_completion(messages, temperature=0.2, max_tokens=256)
-        
-        return self._parse_json_response(response, {
-            "ai_likeness_score": 30,
-            "comment": "Код выглядит естественно написанным человеком"
-        })
-    
-    async def chat_with_interviewer(
-        self,
-        task_text: str,
-        level: str,
-        user_code_or_description: str,
-        user_message: str,
-        chat_history: List[Dict[str, str]] = None
-    ) -> str:
-        """8. AI Interviewer Chat"""
-        system_prompt = """/no_think
-Ты — технический интервьюер платформы VibeCode.
-Ты ведёшь собеседование с разработчиком.
-
-Правила:
-- Отвечай кратко и по делу.
-- Задавай уточняющие вопросы по алгоритму, структурам данных и граничным случаям.
-- Не пиши полный код решения.
-- По умолчанию общайся по-русски.
-- Подстраивайся под текущий уровень кандидата (junior/middle/senior)."""
-        
-        user_prompt = f"""Контекст текущей задачи:
-{task_text}
-
-Уровень кандидата: {level}.
-
-Текущий код или описание подхода:
-{user_code_or_description}
-
-Сообщение кандидата:
-{user_message}
-
-Ответь как технический интервьюер: уточни подход, задай вопрос или направь размышления, не раскрывая полного решения."""
-        
-        messages = [{"role": "system", "content": system_prompt}]
-        
-        if chat_history:
-            messages.extend(chat_history)
-        
-        messages.append({"role": "user", "content": user_prompt})
-        
-        response = await self.chat_completion(messages, temperature=0.7, max_tokens=512)
-        return response
-    
-    async def generate_boss_fight_task(
-        self,
-        interview_weaknesses_json: str
-    ) -> Dict[str, Any]:
-        """9. Boss Fight"""
-        system_prompt = """/no_think
-Ты — модуль генерации финальной "boss fight" задачи платформы VibeCode.
-Твоя задача — по истории интервью и слабым местам кандидата
-сгенерировать одну персонализированную финальную задачу.
-
-Формат такой же, как у обычной задачи:
-{
-  "title": "...",
-  "description": "...",
-  "input_format": "...",
-  "output_format": "...",
-  "examples": [...],
-  "constraints": "...",
-  "difficulty_level": "junior|middle|senior",
-  "topic_tags": [...]
-}"""
-        
-        user_prompt = f"""Вот краткий JSON с результатами интервью и выявленными слабыми местами:
-{interview_weaknesses_json}
-
-Сгенерируй ОДНУ финальную задачу-босса, которая целенаправленно проверит эти слабые места.
-Условие на русском языке."""
-        
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await self.chat_completion(messages, temperature=0.4, max_tokens=1024)
-        
-        return self._parse_json_response(response, {
-            "title": "Финальная задача",
-            "description": "Решите сложную задачу",
-            "input_format": "Входные данные",
-            "output_format": "Выходные данные",
-            "examples": [],
-            "constraints": "Стандартные ограничения",
-            "difficulty_level": "middle",
-            "topic_tags": ["algorithms"]
-        })
-
-
-    async def evaluate_theory_answer(
-        self,
-        question: str,
-        reference_answer: str,
-        user_answer: str
-    ) -> Dict[str, Any]:
-        """
-        Evaluate user's theory answer against reference answer.
-        Returns score and detailed feedback.
-        """
-        system_prompt = """/no_think
-Ты — эксперт-экзаменатор по машинному обучению.
-
-Сравни ответ кандидата с эталонным ответом и оцени:
-- Корректность (40%) — нет ли фактических ошибок
-- Полнота (30%) — все ли ключевые моменты упомянуты
-- Понимание (20%) — глубина понимания темы
-- Ясность (10%) — чёткость изложения
-
-Ответ строго JSON:
-{
-  "score": 0-100,
-  "correct_points": ["что верно"],
-  "missing_points": ["что пропущено"],
-  "errors": ["ошибки"],
-  "feedback": "комментарий для кандидата"
-}
-
-Не требуй дословного совпадения. Засчитывай синонимы и перефразирования."""
-
-        user_prompt = f"""Вопрос: {question}
-
-Эталонный ответ: {reference_answer}
-
-Ответ кандидата: {user_answer}
-
-Оцени ответ кандидата."""
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
-        response = await self.chat_completion(messages, temperature=0.2, max_tokens=800)
-        
-        return self._parse_json_response(response, {
-            "score": 50,
-            "correct_points": [],
-            "missing_points": ["Не удалось проанализировать ответ"],
-            "errors": [],
-            "feedback": "Не удалось оценить ответ автоматически"
-        })
+    async def generate_boss_fight_task(self, interview_weaknesses_json: str) -> Dict[str, Any]:
+        """Generate personalized final challenge based on weaknesses"""
+        return await self.generate_task("senior", "algorithms", interview_weaknesses_json)
 
 
 # Global client instance

@@ -40,12 +40,23 @@ class CVAnalysisRequest(BaseModel):
 
 
 class CVAnalysisResponse(BaseModel):
-    """CV analysis result."""
+    """
+    🔥 Enhanced CV analysis result.
+    Includes full candidate assessment with strengths, weaknesses, and interview focus.
+    """
     suggested_level: str
     suggested_direction: str
-    years_of_experience: Optional[float]
-    key_technologies: List[str]
+    years_of_experience: Optional[float] = None
+    key_technologies: List[str] = []
     reasoning: str
+    
+    # 🆕 Enhanced analysis fields
+    confidence: Optional[int] = None  # 0-100 confidence score
+    all_tracks: List[str] = []  # All detected tracks
+    strengths: List[str] = []  # Key strengths
+    weaknesses: List[str] = []  # Areas to improve
+    risk_factors: List[str] = []  # Red flags
+    interview_focus: List[str] = []  # What to check on interview
 
 
 # Task schemas

@@ -10,23 +10,33 @@ from ..core.db import Base
 
 
 class Interview(Base):
-    """Main interview session."""
+    """
+    Main interview session.
+    Connected to a Vacancy - the center of the platform.
+    """
     __tablename__ = "interviews"
     
     id = Column(Integer, primary_key=True, index=True)
+    
+    # Link to vacancy (optional - can be direct interview without vacancy)
+    vacancy_id = Column(Integer, ForeignKey("vacancies.id"), nullable=True)
+    
+    # Candidate info
     candidate_name = Column(String, nullable=True)
     candidate_email = Column(String, nullable=True)
     
     # Level and direction
     suggested_level = Column(String, nullable=True)  # From CV analysis
-    selected_level = Column(String, nullable=False)  # junior/middle/senior
-    direction = Column(String, nullable=False)  # backend/frontend/algorithms
+    selected_level = Column(String, nullable=False)  # chosen by candidate: junior/middle/senior
+    effective_level = Column(String, nullable=True)  # ADAPTIVE: may change during interview
+    direction = Column(String, nullable=False)  # backend/frontend/algorithms/ml/devops/data
     
     # Interview stage tracking
-    current_stage = Column(String, default="coding")  # coding/theory/completed
+    current_stage = Column(String, default="ALGO")  # ALGO/PRACTICE/THEORY/DONE
     
-    # Status
+    # Status and decision
     status = Column(String, default="in_progress")  # in_progress/completed/cancelled
+    decision = Column(String, nullable=True)  # hire/consider/reject
     
     # Final assessment
     overall_grade = Column(String, nullable=True)  # junior/middle/senior
@@ -40,6 +50,18 @@ class Interview(Base):
     code_explanation_score = Column(Float, nullable=True)
     theory_knowledge_score = Column(Float, nullable=True)
     
+    # Cheat signals aggregated (from AntiCheatEvents)
+    cheat_signals = Column(JSON, default=lambda: {
+        "copy_paste_count": 0,
+        "devtools_opened": False,
+        "focus_lost_count": 0,
+        "ai_style_score": 0.0,
+        "code_similarity_score": 0.0
+    })
+    
+    # Stage results (scores per block)
+    stage_results = Column(JSON, default=list)  # [{stage, taskId, rawScore, finalScore, details}]
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -50,6 +72,8 @@ class Interview(Base):
     years_of_experience = Column(Float, nullable=True)  # Extracted from CV or manual input
     
     # Relationships
+    vacancy = relationship("Vacancy", back_populates="interviews")
+    candidate_profile = relationship("CandidateProfile", back_populates="interview", uselist=False, cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="interview", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="interview", cascade="all, delete-orphan")
     anti_cheat_events = relationship("AntiCheatEvent", back_populates="interview", cascade="all, delete-orphan")

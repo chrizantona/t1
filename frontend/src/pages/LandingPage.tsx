@@ -119,10 +119,10 @@ function LandingPage() {
     console.log('Starting interview with payload:', payload)
     
     try {
-      // Use V2 API that creates all 3 tasks at once
-      const interview = await interviewAPI.startInterviewV2(payload)
-      // Navigate to preparation page instead of directly to interview
-      navigate(`/prepare/${interview.id}`)
+      // Use V1 API (more stable)
+      const interview = await interviewAPI.startInterview(payload)
+      // Navigate directly to interview page
+      navigate(`/interview/${interview.id}`)
     } catch (error: any) {
       console.error('Failed to start interview:', error)
       console.error('Error response:', error.response?.data)

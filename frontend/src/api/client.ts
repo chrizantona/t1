@@ -185,5 +185,29 @@ export const adminAPI = {
   },
 }
 
+// Vacancy API
+export const vacancyAPI = {
+  // List all vacancies
+  listVacancies: async (direction?: string, grade?: string) => {
+    const params: Record<string, string> = {}
+    if (direction) params.direction = direction
+    if (grade) params.grade = grade
+    const response = await api.get('/api/vacancy/', { params })
+    return response.data
+  },
+
+  // Get vacancy details
+  getVacancy: async (vacancyId: string) => {
+    const response = await api.get(`/api/vacancy/${vacancyId}`)
+    return response.data
+  },
+
+  // Get vacancy skills
+  getVacancySkills: async (vacancyId: string) => {
+    const response = await api.get(`/api/vacancy/skills/${vacancyId}`)
+    return response.data
+  },
+}
+
 export default api
 

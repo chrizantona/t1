@@ -1,17 +1,76 @@
 """
 Adaptive task generation service.
 Uses predefined task pool for reliability.
+
+ADAPTIVITY LOGIC (from ТЗ):
+- If candidate scores > 70 and ai_style_score < 0.5 -> level UP
+- junior -> middle, middle -> senior
+- This affects task selection for next task
 """
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple
 
-from ..models.interview import Task
+from ..models.interview import Task, Interview
 from .task_pool import get_task_sequence, get_task_by_difficulty
+
+# Level progression map
+LEVEL_UP_MAP = {
+    "intern": "junior",
+    "junior": "junior+",
+    "junior+": "middle",
+    "middle": "middle+",
+    "middle+": "senior",
+    "senior": "senior"  # Can't go higher
+}
+
+LEVEL_DOWN_MAP = {
+    "senior": "middle+",
+    "middle+": "middle",
+    "middle": "junior+",
+    "junior+": "junior",
+    "junior": "intern",
+    "intern": "intern"  # Can't go lower
+}
+
+# Thresholds for level adjustment
+LEVEL_UP_THRESHOLD = 70  # Score >= 70 to level up
+LEVEL_DOWN_THRESHOLD = 30  # Score <= 30 to level down
+AI_STYLE_MAX_FOR_LEVEL_UP = 0.5  # Must have low AI suspicion to level up
+
+
+def should_level_up(score: float, ai_style_score: float = 0.0) -> bool:
+    """Check if candidate should be leveled up based on performance."""
+    return score >= LEVEL_UP_THRESHOLD and ai_style_score < AI_STYLE_MAX_FOR_LEVEL_UP
+
+
+def should_level_down(score: float) -> bool:
+    """Check if candidate should be leveled down based on performance."""
+    return score <= LEVEL_DOWN_THRESHOLD
+
+
+def adjust_level(current_level: str, score: float, ai_style_score: float = 0.0) -> Tuple[str, str]:
+    """
+    Adjust level based on performance.
+    
+    Returns:
+        Tuple of (new_level, change_description)
+    """
+    if should_level_up(score, ai_style_score):
+        new_level = LEVEL_UP_MAP.get(current_level, current_level)
+        if new_level != current_level:
+            return new_level, f"Уровень повышен: {current_level} → {new_level}"
+    elif should_level_down(score):
+        new_level = LEVEL_DOWN_MAP.get(current_level, current_level)
+        if new_level != current_level:
+            return new_level, f"Уровень понижен: {current_level} → {new_level}"
+    
+    return current_level, None
 
 
 async def generate_first_task(interview_id: int, level: str, direction: str, db: Session) -> Task:
     """
     Generate first task from predefined pool.
+    Also sets initial effective_level on Interview.
     
     Args:
         interview_id: Interview ID
@@ -22,6 +81,11 @@ async def generate_first_task(interview_id: int, level: str, direction: str, db:
     Returns:
         Created Task object
     """
+    # Set initial effective level
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
+    if interview:
+        interview.effective_level = level
+    
     # Get first task from pool
     tasks_sequence = get_task_sequence(level, count=1)
     
@@ -37,6 +101,7 @@ async def generate_first_task(interview_id: int, level: str, direction: str, db:
     # Create task from pool
     task = Task(
         interview_id=interview_id,
+        task_order=1,
         title=task_data["title"],
         description=task_data["description"],
         difficulty=difficulty,
@@ -59,10 +124,15 @@ async def generate_next_task(
     previous_performance: float,
     current_level: str,
     direction: str,
-    db: Session
+    db: Session,
+    ai_style_score: float = 0.0
 ) -> Task:
     """
-    Generate next task from pool.
+    Generate next task from pool with ADAPTIVE level adjustment.
+    
+    According to ТЗ:
+    - If score > 70 and ai_style_score < 0.5 -> level UP
+    - Use new level for task selection
     
     Args:
         interview_id: Interview ID
@@ -70,28 +140,52 @@ async def generate_next_task(
         current_level: Current assessed level
         direction: Interview direction
         db: Database session
+        ai_style_score: AI similarity score (0-1)
     
     Returns:
-        Created Task object
+        Created Task object with level adjustment info
     """
+    interview = db.query(Interview).filter(Interview.id == interview_id).first()
+    
+    # Get effective level (may have been adjusted)
+    effective_level = interview.effective_level if interview and interview.effective_level else current_level
+    
+    # Check for level adjustment based on previous performance
+    new_level, change_message = adjust_level(effective_level, previous_performance, ai_style_score)
+    
+    # Update effective level on interview
+    if interview and new_level != effective_level:
+        interview.effective_level = new_level
+        # Store level change in stage_results
+        if interview.stage_results is None:
+            interview.stage_results = []
+        interview.stage_results.append({
+            "type": "level_change",
+            "from": effective_level,
+            "to": new_level,
+            "reason": change_message,
+            "triggered_by_score": previous_performance
+        })
+    
     # Get count of existing tasks
     existing_tasks = db.query(Task).filter(Task.interview_id == interview_id).count()
     
-    # Get full sequence for the level
-    all_tasks = get_task_sequence(current_level, count=5)
+    # Get full sequence for the NEW level
+    all_tasks = get_task_sequence(new_level, count=5)
     
     # Get next task from sequence
     if existing_tasks < len(all_tasks):
         task_data = all_tasks[existing_tasks]
     else:
-        # If completed all tasks in sequence, repeat with harder difficulty
-        task_data = get_task_by_difficulty("hard")
+        # If completed all tasks in sequence, get harder task
+        task_data = get_task_by_difficulty("hard" if new_level in ["middle+", "senior"] else "medium")
     
     difficulty = task_data["difficulty"]
     
     # Create task from pool
     task = Task(
         interview_id=interview_id,
+        task_order=existing_tasks + 1,
         title=task_data["title"],
         description=task_data["description"],
         difficulty=difficulty,
@@ -105,6 +199,11 @@ async def generate_next_task(
     db.add(task)
     db.commit()
     db.refresh(task)
+    
+    # Attach level change info to task (for frontend notification)
+    task._level_changed = new_level != effective_level
+    task._level_change_message = change_message
+    task._new_level = new_level
     
     return task
 
