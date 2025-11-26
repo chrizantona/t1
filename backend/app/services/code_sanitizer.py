@@ -266,3 +266,4 @@ def _get_recommendation(risk_level: str, injection: bool, dangerous: bool) -> st
     else:
         return "ОК: Код прошёл базовую проверку безопасности."
 
+

@@ -99,3 +99,4 @@ SOLUTION_ANSWER_EVALUATOR_USER = """Вопрос: {question}
   "feedback": "краткий фидбэк для кандидата"
 }}"""
 
+

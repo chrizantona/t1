@@ -67,3 +67,4 @@ TASK_SELECTOR_USER = """Направление кандидата: {direction}
   "selection_reasoning": "общее обоснование подбора"
 }}"""
 
+
