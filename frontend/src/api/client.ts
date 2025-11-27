@@ -18,6 +18,7 @@ export const interviewAPI = {
     selected_level: string
     direction: string
     cv_text?: string
+    vacancy_id?: string
   }) => {
     const response = await api.post('/api/interview/start', data)
     return response.data
@@ -262,6 +263,67 @@ export const vacancyAPI = {
   // Delete vacancy
   deleteVacancy: async (vacancyId: string) => {
     const response = await api.delete(`/api/vacancy/${vacancyId}`)
+    return response.data
+  },
+}
+
+// Question Block API (Part 2)
+export const questionBlockAPI = {
+  // Start question block
+  startBlock: async (interviewId: number, questionCount: number = 20) => {
+    const response = await api.post('/api/question-block/start', {
+      interview_id: interviewId,
+      question_count: questionCount
+    })
+    return response.data
+  },
+
+  // Get current question
+  getCurrentQuestion: async (blockId: number) => {
+    const response = await api.get(`/api/question-block/${blockId}/current`)
+    return response.data
+  },
+
+  // Submit answer
+  submitAnswer: async (answerId: number, candidateAnswer: string) => {
+    const response = await api.post('/api/question-block/answer', {
+      answer_id: answerId,
+      candidate_answer: candidateAnswer
+    })
+    return response.data
+  },
+
+  // Skip question
+  skipQuestion: async (answerId: number) => {
+    const response = await api.post('/api/question-block/skip', {
+      answer_id: answerId
+    })
+    return response.data
+  },
+
+  // Retry question (score halved each retry)
+  retryQuestion: async (answerId: number) => {
+    const response = await api.post('/api/question-block/retry', {
+      answer_id: answerId
+    })
+    return response.data
+  },
+
+  // Get block status
+  getBlockStatus: async (blockId: number) => {
+    const response = await api.get(`/api/question-block/${blockId}/status`)
+    return response.data
+  },
+
+  // Get block by interview
+  getBlockByInterview: async (interviewId: number) => {
+    const response = await api.get(`/api/question-block/interview/${interviewId}/block`)
+    return response.data
+  },
+
+  // Get detailed statistics
+  getStatistics: async (interviewId: number) => {
+    const response = await api.get(`/api/question-block/interview/${interviewId}/statistics`)
     return response.data
   },
 }

@@ -6,10 +6,12 @@ import AdminDashboard from './pages/AdminDashboard'
 import PreparePage from './pages/PreparePage'
 import InterviewPage from './pages/InterviewPage'
 import TheoryPage from './pages/TheoryPage'
+import QuestionsBlockPage from './pages/QuestionsBlockPage'
 import ResultPage from './pages/ResultPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import { QuestionsTestPage } from './pages/QuestionsTestPage'
 import './styles/questions.css'
+import './styles/questions-block.css'
 
 function App() {
   return (
@@ -26,6 +28,7 @@ function App() {
         <Route path="/prepare/:interviewId" element={<PreparePage />} />
         <Route path="/interview/:interviewId" element={<InterviewPage />} />
         <Route path="/theory/:interviewId" element={<TheoryPage />} />
+        <Route path="/questions/:interviewId" element={<QuestionsBlockPage />} />
         <Route path="/result/:interviewId" element={<ResultPage />} />
         
         {/* Admin routes */}

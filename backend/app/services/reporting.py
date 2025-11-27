@@ -3,6 +3,7 @@ Reporting service.
 Generates final interview reports with skill assessments.
 """
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import Dict, Any
 import json
 
@@ -10,6 +11,32 @@ from ..models.interview import Interview, Task, Submission, Hint, SkillAssessmen
 from ..schemas.interview import FinalReportResponse, SkillScore, SkillAssessmentResponse
 from .scibox_client import scibox_client
 from .anti_cheat import calculate_trust_score
+
+
+def _get_existing_assessment(interview_id: int, db: Session) -> SkillAssessmentResponse | None:
+    """Helper to get existing assessment if it exists."""
+    existing_assessment = db.query(SkillAssessment).filter(
+        SkillAssessment.interview_id == interview_id
+    ).first()
+    
+    if existing_assessment:
+        # Parse next_grade_tips if it's a string
+        tips = existing_assessment.next_grade_tips
+        if isinstance(tips, str):
+            try:
+                tips = json.loads(tips)
+            except:
+                tips = []
+        
+        return SkillAssessmentResponse(
+            algorithms=SkillScore(score=existing_assessment.algorithms_score, comment=existing_assessment.algorithms_comment),
+            architecture=SkillScore(score=existing_assessment.architecture_score, comment=existing_assessment.architecture_comment),
+            clean_code=SkillScore(score=existing_assessment.clean_code_score, comment=existing_assessment.clean_code_comment),
+            debugging=SkillScore(score=existing_assessment.debugging_score, comment=existing_assessment.debugging_comment),
+            communication=SkillScore(score=existing_assessment.communication_score, comment=existing_assessment.communication_comment),
+            next_grade_tips=tips if isinstance(tips, list) else []
+        )
+    return None
 
 
 async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAssessmentResponse:
@@ -25,20 +52,9 @@ async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAsse
         Skill assessment with radar data
     """
     # Check if assessment already exists
-    existing_assessment = db.query(SkillAssessment).filter(
-        SkillAssessment.interview_id == interview_id
-    ).first()
-    
-    if existing_assessment:
-        # Return existing assessment
-        return SkillAssessmentResponse(
-            algorithms=SkillScore(score=existing_assessment.algorithms_score, comment=existing_assessment.algorithms_comment),
-            architecture=SkillScore(score=existing_assessment.architecture_score, comment=existing_assessment.architecture_comment),
-            clean_code=SkillScore(score=existing_assessment.clean_code_score, comment=existing_assessment.clean_code_comment),
-            debugging=SkillScore(score=existing_assessment.debugging_score, comment=existing_assessment.debugging_comment),
-            communication=SkillScore(score=existing_assessment.communication_score, comment=existing_assessment.communication_comment),
-            next_grade_tips=existing_assessment.next_grade_tips or []
-        )
+    existing = _get_existing_assessment(interview_id, db)
+    if existing:
+        return existing
     
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
@@ -114,7 +130,7 @@ async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAsse
             ]
         }
     
-    # Save to database
+    # Save to database with race condition handling
     skill_assessment = SkillAssessment(
         interview_id=interview_id,
         algorithms_score=assessment_data.get("algorithms_score", 70),
@@ -127,18 +143,27 @@ async def generate_skill_assessment(interview_id: int, db: Session) -> SkillAsse
         debugging_comment=assessment_data.get("debugging_comment", ""),
         communication_score=assessment_data.get("communication_score", 75),
         communication_comment=assessment_data.get("communication_comment", ""),
-        next_grade_tips=assessment_data.get("next_grade_tips", [])
+        next_grade_tips=json.dumps(assessment_data.get("next_grade_tips", []), ensure_ascii=False)
     )
-    db.add(skill_assessment)
-    db.commit()
     
+    try:
+        db.add(skill_assessment)
+        db.commit()
+    except IntegrityError:
+        # Race condition: another request already created the assessment
+        db.rollback()
+        existing = _get_existing_assessment(interview_id, db)
+        if existing:
+            return existing
+    
+    tips = assessment_data.get("next_grade_tips", [])
     return SkillAssessmentResponse(
         algorithms=SkillScore(score=skill_assessment.algorithms_score, comment=skill_assessment.algorithms_comment),
         architecture=SkillScore(score=skill_assessment.architecture_score, comment=skill_assessment.architecture_comment),
         clean_code=SkillScore(score=skill_assessment.clean_code_score, comment=skill_assessment.clean_code_comment),
         debugging=SkillScore(score=skill_assessment.debugging_score, comment=skill_assessment.debugging_comment),
         communication=SkillScore(score=skill_assessment.communication_score, comment=skill_assessment.communication_comment),
-        next_grade_tips=skill_assessment.next_grade_tips or []
+        next_grade_tips=tips if isinstance(tips, list) else []
     )
 
 

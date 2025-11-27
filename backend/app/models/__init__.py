@@ -22,6 +22,10 @@ from .questions import (
     QuestionPanelType,
     QuestionEvalMode
 )
+from .question_session import (
+    QuestionBlock,
+    QuestionAnswer
+)
 
 __all__ = [
     # Interview models
@@ -43,6 +47,9 @@ __all__ = [
     "QuestionCategory",
     "QuestionDifficulty",
     "QuestionPanelType",
-    "QuestionEvalMode"
+    "QuestionEvalMode",
+    # Question block models (Part 2)
+    "QuestionBlock",
+    "QuestionAnswer"
 ]
 

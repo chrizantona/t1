@@ -323,25 +323,9 @@ function InterviewPage() {
     }
   }
 
-  const finishInterview = async () => {
-    // Check if at least one task is attempted
-    const attemptedTasks = tasks.filter(t => t.status === 'completed' || taskCodes[t.id])
-    if (attemptedTasks.length === 0) {
-      alert('Попробуйте решить хотя бы одну задачу перед завершением')
-      return
-    }
-
-    if (!confirm('Вы уверены, что хотите завершить собеседование?')) {
-      return
-    }
-
-    try {
-      await interviewAPI.completeInterview(Number(interviewId))
-      navigate(`/result/${interviewId}`)
-    } catch (error: any) {
-      console.error('Failed to complete interview:', error)
-      alert(`Ошибка: ${error.response?.data?.detail || error.message}`)
-    }
+  const goToQuestions = () => {
+    // Navigate directly to questions page
+    navigate(`/questions/${interviewId}`)
   }
 
   const sendMessage = async () => {
@@ -430,10 +414,10 @@ function InterviewPage() {
         <div className="header-right">
           <button 
             className="btn-proceed"
-            onClick={finishInterview}
-            title="Завершить собеседование и получить результаты"
+            onClick={goToQuestions}
+            title="Перейти к теоретическим вопросам (Часть 2)"
           >
-            Завершить →
+            📚 К вопросам →
           </button>
         </div>
       </header>
@@ -764,7 +748,15 @@ function InterviewPage() {
                     </button>
                   )}
                   {tasks.length >= 3 && (
-                    <p className="all-tasks-done">Все задачи пройдены! Можете завершить интервью.</p>
+                    <div className="all-tasks-done">
+                      <p>🎉 Все задачи пройдены!</p>
+                      <button 
+                        className="btn-next-task btn-to-questions"
+                        onClick={goToQuestions}
+                      >
+                        📚 Перейти к теоретическим вопросам →
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

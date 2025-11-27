@@ -79,6 +79,7 @@ class Interview(Base):
     anti_cheat_events = relationship("AntiCheatEvent", back_populates="interview", cascade="all, delete-orphan")
     skill_assessment = relationship("SkillAssessment", back_populates="interview", uselist=False, cascade="all, delete-orphan")
     theory_answers = relationship("TheoryAnswer", back_populates="interview", cascade="all, delete-orphan")
+    question_block = relationship("QuestionBlock", back_populates="interview", uselist=False, cascade="all, delete-orphan")
 
 
 class Task(Base):

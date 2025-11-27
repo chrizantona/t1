@@ -677,10 +677,23 @@
 }
 
 .all-tasks-done {
-  margin: 12px 0 0 0;
+  margin: 16px 0 0 0;
+  text-align: center;
+}
+
+.all-tasks-done p {
   color: #52C41A;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.btn-to-questions {
+  background: linear-gradient(135deg, #00ADFF, #00D4AA) !important;
+  color: #000 !important;
+  font-weight: 600;
+  padding: 14px 28px;
+  font-size: 15px;
 }
 
 /* Test Details */

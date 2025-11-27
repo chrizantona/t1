@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { interviewAPI } from '../api/client'
+import { interviewAPI, questionBlockAPI } from '../api/client'
 import '../styles/result.css'
 
 interface SkillScore {
@@ -51,11 +51,28 @@ const getGradeColor = (grade: string | null | undefined): string => {
   return '#FA8C16'
 }
 
+interface QuestionBlockStats {
+  block_id: number
+  interview_id: number
+  status: string
+  summary: {
+    total_questions: number
+    answered: number
+    skipped: number
+    correct: number
+    average_score: number
+    average_time_seconds: number
+  }
+  category_scores: Record<string, number>
+  difficulty_scores: Record<string, number>
+}
+
 function ResultPage() {
   const { interviewId } = useParams<{ interviewId: string }>()
   const navigate = useNavigate()
   
   const [report, setReport] = useState<FinalReport | null>(null)
+  const [questionBlockStats, setQuestionBlockStats] = useState<QuestionBlockStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -68,6 +85,16 @@ function ResultPage() {
       setLoading(true)
       const data = await interviewAPI.getFinalReport(Number(interviewId))
       setReport(data)
+      
+      // Try to load question block statistics
+      try {
+        const qbStats = await questionBlockAPI.getStatistics(Number(interviewId))
+        if (qbStats && !qbStats.error) {
+          setQuestionBlockStats(qbStats)
+        }
+      } catch {
+        // Question block may not exist, that's ok
+      }
     } catch (err: any) {
       console.error('Failed to load report:', err)
       setError('Не удалось загрузить отчёт')
@@ -322,6 +349,92 @@ function ResultPage() {
             ))}
           </div>
         </section>
+
+        {/* Question Block Statistics */}
+        {questionBlockStats && questionBlockStats.summary && (
+          <section className="questions-block-section">
+            <h2>📚 Блок теоретических вопросов</h2>
+            
+            <div className="qb-summary">
+              <div className="qb-stat-card">
+                <div className="qb-stat-icon">✅</div>
+                <div className="qb-stat-value">{questionBlockStats.summary.answered}</div>
+                <div className="qb-stat-label">Отвечено</div>
+              </div>
+              
+              <div className="qb-stat-card">
+                <div className="qb-stat-icon">⏭️</div>
+                <div className="qb-stat-value">{questionBlockStats.summary.skipped}</div>
+                <div className="qb-stat-label">Пропущено</div>
+              </div>
+              
+              <div className="qb-stat-card">
+                <div className="qb-stat-icon">🎯</div>
+                <div className="qb-stat-value">{questionBlockStats.summary.correct}</div>
+                <div className="qb-stat-label">Правильных</div>
+              </div>
+              
+              <div className="qb-stat-card">
+                <div className="qb-stat-icon">📊</div>
+                <div className="qb-stat-value">{questionBlockStats.summary.average_score.toFixed(0)}%</div>
+                <div className="qb-stat-label">Средний балл</div>
+              </div>
+              
+              <div className="qb-stat-card">
+                <div className="qb-stat-icon">⏱️</div>
+                <div className="qb-stat-value">{Math.round(questionBlockStats.summary.average_time_seconds)}с</div>
+                <div className="qb-stat-label">Среднее время</div>
+              </div>
+            </div>
+            
+            {/* Category breakdown */}
+            {Object.keys(questionBlockStats.category_scores).length > 0 && (
+              <div className="qb-breakdown">
+                <h3>Результаты по категориям</h3>
+                <div className="category-bars">
+                  {Object.entries(questionBlockStats.category_scores).map(([category, score]) => (
+                    <div className="category-bar-item" key={category}>
+                      <div className="category-bar-label">
+                        <span className="category-name">{category}</span>
+                        <span className="category-score">{Math.round(score)}%</span>
+                      </div>
+                      <div className="category-bar-container">
+                        <div 
+                          className="category-bar-fill"
+                          style={{ 
+                            width: `${score}%`,
+                            backgroundColor: score >= 70 ? '#10B981' : score >= 40 ? '#F59E0B' : '#EF4444'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Difficulty breakdown */}
+            {Object.keys(questionBlockStats.difficulty_scores).length > 0 && (
+              <div className="qb-breakdown">
+                <h3>Результаты по сложности</h3>
+                <div className="difficulty-stats">
+                  {Object.entries(questionBlockStats.difficulty_scores).map(([difficulty, score]) => (
+                    <div className="difficulty-stat-item" key={difficulty}>
+                      <span className={`difficulty-label ${difficulty}`}>
+                        {difficulty === 'easy' ? '🟢 Лёгкие' : difficulty === 'medium' ? '🟡 Средние' : '🔴 Сложные'}
+                      </span>
+                      <span className={`difficulty-score ${
+                        score >= 70 ? 'good' : score >= 40 ? 'medium' : 'poor'
+                      }`}>
+                        {Math.round(score)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Trust Score */}
         {interview.trust_score !== null && interview.trust_score !== undefined && (

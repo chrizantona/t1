@@ -92,6 +92,7 @@ async def start_interview(
     start_difficulty = level_to_difficulty.get(interview_data.selected_level, "medium")
     
     # Create interview
+    # Note: vacancy_id is string from pool, not DB FK - store separately if needed
     interview = Interview(
         candidate_name=interview_data.candidate_name,
         candidate_email=interview_data.candidate_email,

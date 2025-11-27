@@ -14,6 +14,7 @@ class InterviewCreate(BaseModel):
     selected_level: str  # junior/middle/senior
     direction: str  # backend/frontend/algorithms
     cv_text: Optional[str] = None
+    vacancy_id: Optional[str] = None  # String ID from vacancy pool
 
 
 class InterviewResponse(BaseModel):
