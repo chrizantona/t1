@@ -297,3 +297,4 @@ def get_all_questions() -> List[Dict[str, Any]]:
     """Get all available theory questions."""
     return list(THEORY_QUESTIONS.values())
 
+

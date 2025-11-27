@@ -152,3 +152,4 @@ class CandidateSkillSnapshot(Base):
     # Notes from evaluation
     notes = Column(Text, nullable=True)
 
+

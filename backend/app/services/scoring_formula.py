@@ -529,3 +529,4 @@ def generate_recommendations(
     
     return recommendations[:5]  # Max 5 recommendations
 
+

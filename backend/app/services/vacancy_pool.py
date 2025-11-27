@@ -222,3 +222,4 @@ def update_vacancy_in_pool(vacancy_id: str, updates: Dict[str, Any]) -> bool:
         VACANCY_POOL[vacancy_id].update(updates)
         return True
     return False
+

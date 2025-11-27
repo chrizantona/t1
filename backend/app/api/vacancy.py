@@ -353,3 +353,4 @@ async def delete_vacancy(vacancy_id: str):
     
     return {"message": "Vacancy deleted", "id": vacancy_id}
 
+
