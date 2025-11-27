@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
-import { interviewAPI } from '../api/client'
+import { interviewAPI, antiCheatAPI } from '../api/client'
 import '../styles/interview.css'
 
 function InterviewPage() {
@@ -34,6 +34,15 @@ function InterviewPage() {
   const [followupLoading, setFollowupLoading] = useState(false)
   const [followupResult, setFollowupResult] = useState<any>(null)
 
+  // Anti-cheat: Tab switch detection
+  const [tabSwitchCount, setTabSwitchCount] = useState(0)
+  const [showTabWarning, setShowTabWarning] = useState(false)
+  const [trustScore, setTrustScore] = useState(100)
+  const tabSwitchCountRef = useRef(0)
+
+  // Auto-hint on failed submission
+  const [autoHint, setAutoHint] = useState<any>(null)
+
   // Get current code for current task
   const currentTask = tasks[currentTaskIndex]
   const code = currentTask ? (taskCodes[currentTask.id] || '') : ''
@@ -52,6 +61,77 @@ function InterviewPage() {
     loadInterview()
     loadTasks()
   }, [interviewId])
+
+  // Anti-cheat: Detect tab switching / Alt+Tab
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        // User switched away from tab
+        const newCount = tabSwitchCountRef.current + 1
+        tabSwitchCountRef.current = newCount
+        setTabSwitchCount(newCount)
+
+        // Send event to backend
+        if (interviewId && currentTask) {
+          try {
+            await antiCheatAPI.submitEvents({
+              interviewId: Number(interviewId),
+              events: [{
+                type: 'visibility_change',
+                taskId: String(currentTask.id),
+                timestamp: Date.now(),
+                meta: { visible: false, switchCount: newCount }
+              }]
+            })
+          } catch (e) {
+            console.error('Failed to send anti-cheat event:', e)
+          }
+        }
+
+        // First time: show warning
+        if (newCount === 1) {
+          setShowTabWarning(true)
+        } else {
+          // Subsequent times: reduce trust score significantly
+          const penalty = Math.min(15, 5 + newCount * 3) // Progressive penalty
+          setTrustScore(prev => Math.max(0, prev - penalty))
+        }
+      } else {
+        // User came back - send focus event
+        if (interviewId && currentTask) {
+          try {
+            await antiCheatAPI.submitEvents({
+              interviewId: Number(interviewId),
+              events: [{
+                type: 'visibility_change',
+                taskId: String(currentTask.id),
+                timestamp: Date.now(),
+                meta: { visible: true }
+              }]
+            })
+          } catch (e) {
+            console.error('Failed to send anti-cheat event:', e)
+          }
+        }
+      }
+    }
+
+    // Also detect window blur (covers more cases)
+    const handleWindowBlur = () => {
+      if (!document.hidden) {
+        // Window lost focus but tab still visible (e.g., clicked outside browser)
+        handleVisibilityChange()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('blur', handleWindowBlur)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('blur', handleWindowBlur)
+    }
+  }, [interviewId, currentTask])
 
   // Load chat messages when switching tasks
   useEffect(() => {
@@ -121,6 +201,7 @@ function InterviewPage() {
     setTaskCompleted(false)
     setFollowupQuestion(null)
     setFollowupResult(null)
+    setAutoHint(null)
 
     try {
       const submission = await interviewAPI.submitCode({
@@ -138,6 +219,18 @@ function InterviewPage() {
         setTestDetails(submission.visible_test_details)
       }
       
+      // Handle auto-hint on failed submission
+      if (submission.auto_hint) {
+        setAutoHint(submission.auto_hint)
+        // Add hint to chat as assistant message
+        const hintMessage = `💡 **Подсказка** (-15 баллов)\n\n${submission.auto_hint.hint_text}\n\n📝 ${submission.auto_hint.input_format_tip}\n\n⚠️ ${submission.auto_hint.common_mistake}`
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: hintMessage,
+          created_at: new Date().toISOString()
+        }])
+      }
+      
       // Check if task is completed (all tests passed)
       const allPassed = submission.passed_visible === submission.total_visible && 
                        submission.passed_hidden === submission.total_hidden &&
@@ -145,6 +238,7 @@ function InterviewPage() {
       
       if (allPassed) {
         setTaskCompleted(true)
+        setAutoHint(null) // Clear hint on success
         // Generate follow-up question about the solution
         try {
           const followup = await interviewAPI.getSolutionFollowup(currentTask.id)
@@ -382,6 +476,43 @@ function InterviewPage() {
 
   return (
     <div className="interview-container">
+      {/* Tab Switch Warning Modal */}
+      {showTabWarning && (
+        <div className="tab-warning-overlay">
+          <div className="tab-warning-modal">
+            <div className="warning-icon">⚠️</div>
+            <h2>Внимание!</h2>
+            <p>
+              Вы покинули страницу собеседования. 
+              <br />
+              <strong>Переключение вкладок отслеживается</strong> и влияет на вашу оценку доверия.
+            </p>
+            <p className="warning-detail">
+              При повторных переключениях ваш Trust Score будет снижаться.
+              <br />
+              Текущий счёт: <span className="trust-value">{trustScore}</span>/100
+            </p>
+            <button 
+              className="btn-warning-close"
+              onClick={() => setShowTabWarning(false)}
+            >
+              Понятно, продолжить
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Trust Score Indicator (показываем если были переключения) */}
+      {tabSwitchCount > 0 && (
+        <div className={`trust-indicator ${trustScore < 70 ? 'low' : trustScore < 90 ? 'medium' : 'high'}`}>
+          <span className="trust-label">🛡️ Trust Score:</span>
+          <span className="trust-value">{trustScore}</span>
+          {tabSwitchCount > 1 && (
+            <span className="switch-count">({tabSwitchCount} переключений)</span>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <header className="interview-header">
         <div className="header-left">
@@ -645,6 +776,33 @@ function InterviewPage() {
                 <div className="error-section">
                   <h4>⚠️ Ошибка:</h4>
                   <pre>{result.error_message}</pre>
+                </div>
+              )}
+
+              {/* Auto-hint on failed submission */}
+              {autoHint && result.passed_visible !== result.total_visible && (
+                <div className="auto-hint-section">
+                  <div className="auto-hint-header">
+                    <span className="hint-icon">💡</span>
+                    <h4>Автоматическая подсказка</h4>
+                    <span className="hint-penalty">-15 баллов</span>
+                  </div>
+                  <div className="auto-hint-content">
+                    <p className="hint-main">{autoHint.hint_text}</p>
+                    <div className="hint-details">
+                      <div className="hint-detail">
+                        <span className="detail-icon">📝</span>
+                        <span>{autoHint.input_format_tip}</span>
+                      </div>
+                      <div className="hint-detail">
+                        <span className="detail-icon">⚠️</span>
+                        <span>{autoHint.common_mistake}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hint-new-max">
+                    Новый макс. балл: <strong>{result.max_score || currentTask.max_score}</strong>
+                  </div>
                 </div>
               )}
 

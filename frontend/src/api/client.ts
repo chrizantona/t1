@@ -366,6 +366,29 @@ export const authAPI = {
   },
 }
 
+// Anti-Cheat API
+export const antiCheatAPI = {
+  // Submit anti-cheat events
+  submitEvents: async (data: {
+    interviewId: number
+    events: Array<{
+      type: 'keydown' | 'paste' | 'copy' | 'cut' | 'focus' | 'blur' | 'visibility_change' | 'devtools'
+      taskId: string
+      timestamp: number
+      meta?: Record<string, any>
+    }>
+  }) => {
+    const response = await api.post('/api/anti_cheat/events', data)
+    return response.data
+  },
+
+  // Get trust score
+  getTrustScore: async (interviewId: number) => {
+    const response = await api.get(`/api/anti_cheat/${interviewId}/trust-score`)
+    return response.data
+  },
+}
+
 // Set auth token for all requests
 export const setAuthToken = (token: string | null) => {
   if (token) {

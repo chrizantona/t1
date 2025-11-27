@@ -71,3 +71,4 @@ TASK_SELECTOR_USER = """Направление кандидата: {direction}
 
 
 
+

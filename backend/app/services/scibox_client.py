@@ -278,6 +278,68 @@ class SciBoxClient:
             "next_step": "Определи базовый случай и постепенно усложняй"
         })
     
+    async def generate_auto_hint_on_failure(
+        self,
+        task_title: str,
+        task_description: str,
+        visible_tests: List[Dict],
+        user_code: str,
+        error_message: str = ""
+    ) -> Dict[str, Any]:
+        """
+        🔄 Auto-hint on submission failure
+        Gives helpful hint about input format, common mistakes, etc.
+        Penalty: -15 points from max_score
+        """
+        # Format visible tests for context
+        tests_info = ""
+        for i, test in enumerate(visible_tests[:2], 1):
+            tests_info += f"Тест {i}: вход={test.get('input')}, выход={test.get('expected_output')}\n"
+        
+        system_prompt = """/no_think
+Ты помощник на техническом собеседовании. Кандидат отправил неправильное решение.
+Твоя задача — дать КРАТКУЮ подсказку (2-3 предложения), которая поможет понять:
+1. Как правильно читать входные данные
+2. Какой тип данных ожидается на выходе
+3. Частые ошибки в подобных задачах
+
+НЕ давай готовое решение! Только направь в нужную сторону.
+
+Ответь в формате JSON:
+{
+    "hint_text": "краткая подсказка",
+    "input_format_tip": "как читать данные",
+    "common_mistake": "частая ошибка"
+}"""
+
+        user_prompt = f"""Задача: {task_title}
+Описание: {task_description}
+
+Примеры тестов:
+{tests_info}
+
+Код кандидата:
+```python
+{user_code[:500] if user_code else '# пусто'}
+```
+
+{f'Ошибка: {error_message}' if error_message else 'Тесты не прошли'}
+
+Дай краткую подсказку."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = await self.chat_completion(messages, temperature=0.4, max_tokens=300)
+        
+        return self._parse_json_response(response, {
+            "hint_text": "Проверь формат входных данных и тип возвращаемого значения.",
+            "input_format_tip": "Убедись, что правильно читаешь входные данные.",
+            "common_mistake": "Часто забывают про граничные случаи."
+        })
+
     async def analyze_bug(
         self,
         task_description: str,

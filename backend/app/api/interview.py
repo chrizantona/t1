@@ -160,6 +160,7 @@ async def submit_code(
     """
     Submit code for a task.
     Runs tests and stores results with detailed test output.
+    On failure: generates auto-hint and reduces max_score by 15.
     """
     task = db.query(Task).filter(Task.id == submission_data.task_id).first()
     if not task:
@@ -175,6 +176,35 @@ async def submit_code(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Code execution failed: {str(e)}")
+    
+    # Check if submission failed (not all visible tests passed)
+    all_visible_passed = result["passed_visible"] == result["total_visible"] and result["total_visible"] > 0
+    auto_hint = None
+    
+    # Generate auto-hint on failure and reduce max_score
+    if not all_visible_passed and submission_data.code.strip():
+        try:
+            auto_hint = await scibox_client.generate_auto_hint_on_failure(
+                task_title=task.title,
+                task_description=task.description,
+                visible_tests=task.visible_tests or [],
+                user_code=submission_data.code,
+                error_message=result.get("error_message", "")
+            )
+            # Reduce max_score by 15 (minimum 10)
+            if task.max_score > 25:
+                task.max_score = max(10, task.max_score - 15)
+                print(f"⚠️ Auto-hint given, max_score reduced to {task.max_score}")
+        except Exception as e:
+            print(f"Failed to generate auto-hint: {e}")
+            auto_hint = {
+                "hint_text": "Проверь внимательно формат входных данных и ожидаемый результат.",
+                "input_format_tip": "Убедись, что читаешь данные правильно.",
+                "common_mistake": "Обрати внимание на граничные случаи."
+            }
+            # Still reduce score even if hint generation failed
+            if task.max_score > 25:
+                task.max_score = max(10, task.max_score - 15)
     
     # Calculate score for this submission
     from ..services.adaptive import calculate_task_score
@@ -205,14 +235,14 @@ async def submit_code(
     if task.actual_score is None or score > task.actual_score:
         task.actual_score = score
         # Task is completed if ALL visible tests pass (hidden tests are bonus)
-        if result["passed_visible"] == result["total_visible"] and result["total_visible"] > 0:
+        if all_visible_passed:
             task.status = "completed"
     
     db.commit()
     db.refresh(submission)
     
-    # Return submission with test details
-    return {
+    # Return submission with test details and auto-hint if failed
+    response = {
         "id": submission.id,
         "passed_visible": submission.passed_visible,
         "total_visible": submission.total_visible,
@@ -221,8 +251,16 @@ async def submit_code(
         "execution_time_ms": submission.execution_time_ms,
         "error_message": submission.error_message,
         "ai_likeness_score": submission.ai_likeness_score,
-        "visible_test_details": result.get("visible_test_details", [])
+        "visible_test_details": result.get("visible_test_details", []),
+        "max_score": task.max_score  # Return updated max_score
     }
+    
+    # Add auto-hint if submission failed
+    if auto_hint:
+        response["auto_hint"] = auto_hint
+        response["score_penalty_applied"] = True
+    
+    return response
 
 
 @router.post("/chat", response_model=ChatMessageResponse)

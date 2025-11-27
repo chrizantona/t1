@@ -23,6 +23,8 @@ class AntiCheatSignals(BaseModel):
     suspiciously_fast_solutions: int = 0
     devtools_opened: bool = False
     ai_likeness_score: float | None = None
+    # Tab switch / focus lost tracking
+    focus_lost_count: int = 0
 
 
 TrustStatus = Literal["ok", "suspicious", "high_risk"]
@@ -85,8 +87,14 @@ def build_signals(interview_id: int, db: Session) -> AntiCheatSignals:
         if event.event_type == "devtools":
             if meta.get("opened", False):
                 signals.devtools_opened = True
+        
+        # 5. Focus lost / tab switch detection
+        if event.event_type == "visibility_change" and not meta.get("visible", True):
+            signals.focus_lost_count += 1
+        if event.event_type == "blur":
+            signals.focus_lost_count += 1
     
-    # 5. Suspiciously fast solutions
+    # 6. Suspiciously fast solutions
     tasks = db.query(Task).filter(Task.interview_id == interview_id).all()
     
     for task in tasks:
@@ -184,6 +192,13 @@ def calc_trust_score(signals: AntiCheatSignals) -> int:
         elif ai >= 60:
             score -= 10
     
+    # 6. Focus lost / tab switching - STRONG PENALTY
+    # First switch is a warning (no penalty), but subsequent switches hurt badly
+    if signals.focus_lost_count > 1:
+        # Progressive penalty: 8 points for 2nd, 10 for 3rd, etc.
+        penalty = sum(min(8 + (i * 2), 15) for i in range(signals.focus_lost_count - 1))
+        score -= min(penalty, 50)  # Cap at -50 total for tab switching
+    
     return max(0, min(100, score))
 
 
@@ -245,6 +260,16 @@ def build_trust_explanation(signals: AntiCheatSignals, trust_score: int) -> List
         elif ai >= 60:
             reasons.append(
                 f"код частично похож на LLM-генерированный (AI-likeness ~{ai:.0f}%)"
+            )
+    
+    # Focus lost / tab switching
+    if signals.focus_lost_count > 0:
+        if signals.focus_lost_count == 1:
+            reasons.append("зафиксировано переключение с вкладки (1 раз, предупреждение)")
+        else:
+            reasons.append(
+                f"многократные переключения вкладок ({signals.focus_lost_count} раз) — "
+                f"серьёзное снижение доверия"
             )
     
     if not reasons:
