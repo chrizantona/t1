@@ -9,9 +9,9 @@ from typing import Optional
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
-    # SciBox LLM API - ключ открытый
-    SCIBOX_API_KEY: str = "sk-5NTsD4a9Rif0Cwk4-p5pZQ"
-    SCIBOX_BASE_URL: str = "https://llm.t1v.scibox.tech/v1"
+    # Cloud.ru LLM API
+    SCIBOX_API_KEY: str = "ZjdkMmViNmYtNzBjNC00ZjJiLWI1MWYtNTNhMGRmOTQwZWQ2.3903d49de8fb6acef2bb178bea104a70"
+    SCIBOX_BASE_URL: str = "https://foundation-models.api.cloud.ru/v1"
     
     # Database
     POSTGRES_USER: str = "vibecode"
@@ -28,10 +28,10 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     
-    # Models (SciBox)
-    CHAT_MODEL: str = "qwen3-32b-awq"  # 2 RPS - universal chat model
-    CODER_MODEL: str = "qwen3-coder-30b-a3b-instruct-fp8"  # 2 RPS - code assistant
-    EMBEDDING_MODEL: str = "bge-m3"  # 7 RPS - embeddings
+    # Models (Cloud.ru)
+    CHAT_MODEL: str = "Qwen/Qwen3-235B-A22B-Instruct-2507"  # universal chat model
+    CODER_MODEL: str = "Qwen/Qwen3-Coder-480B-A35B-Instruct"  # code assistant
+    EMBEDDING_MODEL: str = "BAAI/bge-m3"  # embeddings
     
     # Rate limits (requests per second)
     CHAT_MODEL_RPS: int = 2

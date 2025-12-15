@@ -86,8 +86,8 @@ async def generate_first_task(interview_id: int, level: str, direction: str, db:
     if interview:
         interview.effective_level = level
     
-    # Get first task from pool
-    tasks_sequence = get_task_sequence(level, count=1)
+    # Get first task from pool (algorithm task for first)
+    tasks_sequence = get_task_sequence(level, count=1, direction=direction)
     
     if not tasks_sequence:
         # Fallback - should never happen
@@ -170,8 +170,8 @@ async def generate_next_task(
     # Get count of existing tasks
     existing_tasks = db.query(Task).filter(Task.interview_id == interview_id).count()
     
-    # Get full sequence for the NEW level
-    all_tasks = get_task_sequence(new_level, count=5)
+    # Get full sequence for the NEW level with direction for specialization
+    all_tasks = get_task_sequence(new_level, count=5, direction=direction)
     
     # Get next task from sequence
     if existing_tasks < len(all_tasks):

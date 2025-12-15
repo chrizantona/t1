@@ -137,7 +137,18 @@ async def generate_adaptive_task(
     candidate_level = interview.selected_level if interview else "middle"
     
     # Get task from pool based on difficulty
-    task_data = get_task_by_difficulty(difficulty, task_order)
+    # For task 3+, try to get specialization task based on direction
+    from .task_pool import get_specialization_task
+    
+    if task_order >= 3:
+        # Try to get specialization task for 3rd task
+        spec_task = get_specialization_task(direction, difficulty, set())
+        if spec_task:
+            task_data = spec_task
+        else:
+            task_data = get_task_by_difficulty(difficulty, task_order)
+    else:
+        task_data = get_task_by_difficulty(difficulty, task_order)
     
     # Determine target skills based on direction and task
     direction_skills = {
@@ -258,8 +269,9 @@ async def create_interview_tasks(
     # Get interview for context
     interview = db.query(Interview).filter(Interview.id == interview_id).first()
     
-    # Get 3 tasks from the pool based on level
-    pool_tasks = get_task_sequence(level, count=3)
+    # Get 3 tasks from the pool based on level and direction
+    # Task 1-2: algorithms, Task 3: specialization based on direction
+    pool_tasks = get_task_sequence(level, count=3, direction=direction)
     
     # Determine target skills based on direction
     direction_skills = {

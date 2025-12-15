@@ -389,6 +389,23 @@ export const antiCheatAPI = {
   },
 }
 
+// Voice API
+export const voiceAPI = {
+  // Transcribe audio to text
+  transcribe: async (audioBlob: Blob): Promise<{ success: boolean; text: string; message: string }> => {
+    const formData = new FormData()
+    formData.append('file', audioBlob, 'audio.webm')
+    
+    const response = await api.post('/api/voice/transcribe', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 second timeout for transcription
+    })
+    return response.data
+  },
+}
+
 // Set auth token for all requests
 export const setAuthToken = (token: string | null) => {
   if (token) {

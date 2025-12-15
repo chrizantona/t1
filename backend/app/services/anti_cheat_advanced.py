@@ -55,7 +55,8 @@ def build_signals(interview_id: int, db: Session) -> AntiCheatSignals:
     last_blur_time = None
     
     for event in events:
-        meta = event.meta or {}
+        # Use 'details' field (model has 'details', not 'meta')
+        meta = event.details or {}
         
         # 1. Big pastes
         if event.event_type == "paste":
