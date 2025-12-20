@@ -817,23 +817,10 @@ async def submit_solution_followup_answer(
     followup.status = "answered"
     followup.answered_at = datetime.utcnow()
     
-    # Update task score: 70% code + 30% followup answer
-    # Code score is based on tests passed (stored in task.actual_score before followup)
-    code_score = task.actual_score if task.actual_score is not None else 0
-    followup_score = evaluation.get("score", 50)  # 0-100
-    
-    # Calculate weighted total: 70% code + 30% followup
-    # Both scores are normalized to max_score
-    max_score = task.max_score or 100
-    code_weight = 0.7
-    followup_weight = 0.3
-    
-    # Code score is already scaled to max_score, normalize to 0-100
-    code_normalized = (code_score / max_score) * 100 if max_score > 0 else 0
-    
-    # Calculate final score
-    final_score = (code_normalized * code_weight + followup_score * followup_weight) * (max_score / 100)
-    task.actual_score = max(0, min(max_score, final_score))
+    # Update task score with bonus/penalty based on followup answer
+    if task.actual_score is not None:
+        followup_bonus = (evaluation.get("score", 50) - 50) / 10  # -5 to +5 points
+        task.actual_score = max(0, min(100, task.actual_score + followup_bonus))
     
     # Save candidate answer as chat message
     user_message = ChatMessage(

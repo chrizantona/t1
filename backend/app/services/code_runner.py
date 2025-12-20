@@ -6,22 +6,7 @@ import subprocess
 import json
 import time
 import ast
-import re as regex_module
 from typing import Dict, List, Any
-
-
-def preprocess_code(code: str) -> str:
-    """
-    Preprocess candidate code to remove typing imports that cause issues.
-    We provide List, Dict, etc. as built-in types in the execution environment.
-    """
-    # Remove 'from typing import ...' lines
-    code = regex_module.sub(r'^from typing import.*$', '', code, flags=regex_module.MULTILINE)
-    # Remove 'import typing' lines
-    code = regex_module.sub(r'^import typing.*$', '', code, flags=regex_module.MULTILINE)
-    # Remove 'from collections.abc import ...' lines (also can cause issues)
-    code = regex_module.sub(r'^from collections\.abc import.*$', '', code, flags=regex_module.MULTILINE)
-    return code
 
 
 def run_code(
@@ -83,21 +68,14 @@ def create_execution_env():
     """Create safe execution environment with all needed imports."""
     # Import typing for annotations
     import typing
-    from collections import defaultdict, Counter, deque
-    import heapq
-    import itertools
-    import functools
-    import math
-    import re
     
     env = {
         "__builtins__": __builtins__,
-        # Typing support - use built-in generics (Python 3.9+)
-        # These work both for type hints AND instantiation
-        "List": list,
-        "Dict": dict,
-        "Set": set,
-        "Tuple": tuple,
+        # Typing support
+        "List": typing.List,
+        "Dict": typing.Dict,
+        "Set": typing.Set,
+        "Tuple": typing.Tuple,
         "Optional": typing.Optional,
         "Any": typing.Any,
         "Union": typing.Union,
@@ -125,27 +103,6 @@ def create_execution_env():
         "all": all,
         "any": any,
         "print": print,
-        "input": input,
-        "ord": ord,
-        "chr": chr,
-        "pow": pow,
-        "round": round,
-        "divmod": divmod,
-        "isinstance": isinstance,
-        "type": type,
-        "hasattr": hasattr,
-        "getattr": getattr,
-        "setattr": setattr,
-        # Collections
-        "defaultdict": defaultdict,
-        "Counter": Counter,
-        "deque": deque,
-        # Modules
-        "heapq": heapq,
-        "itertools": itertools,
-        "functools": functools,
-        "math": math,
-        "re": re,
     }
     return env
 
@@ -164,14 +121,8 @@ def run_single_python_test_detailed(code: str, test: Dict[str, Any]) -> Dict[str
         local_vars = {}
         global_vars = create_execution_env()
         
-        # Preprocess code to remove typing imports
-        processed_code = preprocess_code(code)
-        
-        # Log the code being executed (first 500 chars)
-        print(f"📝 Executing code:\n{processed_code[:500]}...")
-        
         # Execute the code
-        exec(processed_code, global_vars, local_vars)
+        exec(code, global_vars, local_vars)
         
         # Find the solution function
         solution_func = None
@@ -218,11 +169,8 @@ def run_single_python_test(code: str, test: Dict[str, Any]) -> bool:
         local_vars = {}
         global_vars = create_execution_env()
         
-        # Preprocess code to remove typing imports
-        processed_code = preprocess_code(code)
-        
         # Execute the code
-        exec(processed_code, global_vars, local_vars)
+        exec(code, global_vars, local_vars)
         
         # Find the solution function
         solution_func = None

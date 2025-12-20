@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
-import { interviewAPI, antiCheatAPI, voiceAPI } from '../api/client'
+import { interviewAPI, antiCheatAPI } from '../api/client'
 import '../styles/interview.css'
 
 function InterviewPage() {
@@ -42,15 +42,6 @@ function InterviewPage() {
 
   // Auto-hint on failed submission
   const [autoHint, setAutoHint] = useState<any>(null)
-
-  // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // Voice input state
-  const [isRecording, setIsRecording] = useState(false)
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
 
   // Get current code for current task
   const currentTask = tasks[currentTaskIndex]
@@ -168,36 +159,16 @@ function InterviewPage() {
     }
   }
 
-  // Use ref to track current task ID to avoid stale closure
-  const currentTaskIdRef = useRef<number | null>(null)
-  
-  // Update ref when currentTask changes
-  useEffect(() => {
-    currentTaskIdRef.current = currentTask?.id || null
-  }, [currentTask?.id])
-
   const loadTasks = async () => {
     try {
+      // Use V1 API to get tasks
       const tasksData = await interviewAPI.getTasks(Number(interviewId))
       const tasksList = Array.isArray(tasksData) ? tasksData : (tasksData.tasks || [])
-      
-      // Save current task ID before updating
-      const savedTaskId = currentTaskIdRef.current
-      
       setTasks(tasksList)
       
-      // Restore position if we had a task selected
-      if (savedTaskId && tasksList.length > 0) {
-        const savedIdx = tasksList.findIndex((t: any) => t.id === savedTaskId)
-        if (savedIdx >= 0) {
-          setCurrentTaskIndex(savedIdx)
-          return // Don't change anything else
-        }
-      }
-      
-      // First load - go to first task
       if (tasksList.length > 0) {
         setCurrentTaskIndex(0)
+        // Load chat messages for first task
         if (tasksList[0]?.id) {
           loadTaskChatMessages(tasksList[0].id)
           if (tasksList[0].generation_meta) {
@@ -260,28 +231,23 @@ function InterviewPage() {
         }])
       }
       
-      // Check if at least 1 test passed - ask follow-up question
-      const hasProgress = submission.passed_visible > 0 && !submission.error_message
+      // Check if task is completed (all tests passed)
       const allPassed = submission.passed_visible === submission.total_visible && 
                        submission.passed_hidden === submission.total_hidden &&
                        !submission.error_message
       
       if (allPassed) {
         setTaskCompleted(true)
-        setAutoHint(null)
-      }
-      
-      // Generate follow-up question if at least 1 test passed (not just all)
-      if (hasProgress && !followupQuestion) {
+        setAutoHint(null) // Clear hint on success
+        // Generate follow-up question about the solution
         try {
           const followup = await interviewAPI.getSolutionFollowup(currentTask.id)
           if (followup && followup.question) {
             setFollowupQuestion(followup)
             // Add to chat messages
-            const prefix = allPassed ? '🎉 Отлично! Все тесты пройдены!\n\n' : '👍 Хороший прогресс!\n\n'
             setMessages(prev => [...prev, {
               role: 'assistant',
-              content: prefix + followup.question,
+              content: followup.question,
               created_at: new Date().toISOString()
             }])
           }
@@ -346,8 +312,8 @@ function InterviewPage() {
     }
   }
 
-  // Generate next task adaptively with FULLSCREEN generation animation
-  const generateNextTask = async (skipped: boolean = false) => {
+  // Generate next task adaptively with generation animation
+  const generateNextTask = async () => {
     if (tasks.length >= 3) {
       alert('Все задачи пройдены! Можете завершить интервью.')
       return
@@ -355,28 +321,27 @@ function InterviewPage() {
     
     setGeneratingTask(true)
     setTaskCompleted(false)
-    setFollowupQuestion(null)
-    setFollowupResult(null)
+    setShowGenerationInfo(true)
     
     // Show generation steps animation
     const steps = [
-      { step: 1, text: '📊 Анализ вашего профиля и результатов...', done: false },
-      { step: 2, text: '🎯 Определение оптимальной сложности...', done: false },
+      { step: 1, text: '📊 Анализ вакансии и вашего профиля...', done: false },
+      { step: 2, text: '🎯 Выбор трека и сложности...', done: false },
       { step: 3, text: '🧩 Подбор задачи под ваш уровень...', done: false },
-      { step: 4, text: '✨ Подготовка условия задачи...', done: false },
+      { step: 4, text: '💬 Формирование первого вопроса...', done: false },
     ]
     setGenerationSteps(steps)
     
-    // Animate steps with delays
+    // Animate steps
     for (let i = 0; i < steps.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800))
+      await new Promise(resolve => setTimeout(resolve, 500))
       setGenerationSteps(prev => prev.map((s, idx) => 
         idx <= i ? { ...s, done: true } : s
       ))
     }
     
     try {
-      // Use API with metadata
+      // Use new API with metadata
       const response = await interviewAPI.generateNextTaskWithMeta(Number(interviewId))
       
       // Set generation metadata
@@ -392,57 +357,24 @@ function InterviewPage() {
           created_at: new Date().toISOString()
         }))
         setMessages(openingMessages)
-      } else {
-        setMessages([])
       }
       
       // Reload tasks and switch to the new one
-      const tasksData = await interviewAPI.getTasks(Number(interviewId))
-      const tasksList = Array.isArray(tasksData) ? tasksData : (tasksData.tasks || [])
-      setTasks(tasksList)
+      await loadTasks()
       
-      // Switch to new task (last one)
-      setCurrentTaskIndex(tasksList.length - 1)
+      // Switch to new task
+      setCurrentTaskIndex(tasks.length) // Will be the index of new task
       setResult(null)
       setTestDetails([])
       setCurrentHints([])
-      setAutoHint(null)
-      
-      // Small delay before hiding animation
-      await new Promise(resolve => setTimeout(resolve, 500))
       
     } catch (error: any) {
       console.error('Failed to generate next task:', error)
       alert(error.response?.data?.detail || 'Не удалось сгенерировать задачу')
     } finally {
       setGeneratingTask(false)
+      setTimeout(() => setShowGenerationInfo(false), 2000)
     }
-  }
-
-  // Skip current task and generate next
-  const skipTask = async () => {
-    if (!currentTask) return
-    
-    const confirmed = window.confirm(
-      'Вы уверены, что хотите пропустить задачу?\n\nЗа пропущенную задачу вы получите 0 баллов.'
-    )
-    
-    if (!confirmed) return
-    
-    // Mark task as skipped (0 score)
-    try {
-      // Submit empty solution to mark as attempted
-      await interviewAPI.submitCode({
-        task_id: currentTask.id,
-        code: '# Задача пропущена',
-        language: 'python'
-      })
-    } catch (e) {
-      // Ignore errors
-    }
-    
-    // Generate next task
-    await generateNextTask(true)
   }
 
   // Switch to specific task (from navigation)
@@ -500,39 +432,16 @@ function InterviewPage() {
     }
     
     setMessages([...messages, userMessage])
-    const messageText = chatInput
     setChatInput('')
     setChatLoading(true)
 
     try {
-      // Check if there's a pending followup question - answer it instead of regular chat
-      if (followupQuestion && followupQuestion.status === 'pending' && !followupResult) {
-        const result = await interviewAPI.submitFollowupAnswer(followupQuestion.followup_id, messageText)
-        setFollowupResult(result)
-        
-        // Add feedback to chat
-        let feedbackContent = `📊 **Оценка ответа: ${result.score}/100**\n\n${result.feedback || 'Ответ учтён.'}`
-        if (result.correct_answer) {
-          feedbackContent += `\n\n📚 **Правильный ответ:** ${result.correct_answer}`
-        }
-        
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: feedbackContent,
-          created_at: new Date().toISOString()
-        }])
-        
-        // Reload tasks to see updated score
-        await loadTasks()
-      } else {
-        // Regular chat message
-        const response = await interviewAPI.sendMessage({
-          interview_id: Number(interviewId),
-          content: messageText,
-          task_id: currentTask?.id,
-        })
-        setMessages(prev => [...prev, response])
-      }
+      const response = await interviewAPI.sendMessage({
+        interview_id: Number(interviewId),
+        content: chatInput,
+        task_id: currentTask?.id,
+      })
+      setMessages(prev => [...prev, response])
     } catch (error) {
       console.error('Failed to send message:', error)
       const errorMsg = {
@@ -553,100 +462,6 @@ function InterviewPage() {
     }
   }
 
-  // Voice recording with Cloud.ru Whisper API
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-      mediaRecorderRef.current = mediaRecorder
-      audioChunksRef.current = []
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data)
-        }
-      }
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        stream.getTracks().forEach(track => track.stop())
-        
-        setIsTranscribing(true)
-        try {
-          const result = await voiceAPI.transcribe(audioBlob)
-          if (result.success && result.text) {
-            // Auto-send voice message to chat
-            const voiceText = result.text
-            
-            // Add user message with voice indicator
-            const userMessage = {
-              role: 'user',
-              content: `🎤 ${voiceText}`,
-              created_at: new Date().toISOString()
-            }
-            setMessages(prev => [...prev, userMessage])
-            
-            // Send to AI
-            setIsTranscribing(false)
-            setChatLoading(true)
-            try {
-              const response = await interviewAPI.sendMessage({
-                interview_id: Number(interviewId),
-                content: voiceText,
-                task_id: currentTask?.id,
-              })
-              setMessages(prev => [...prev, response])
-            } catch (e) {
-              setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: 'Извините, произошла ошибка.',
-                created_at: new Date().toISOString()
-              }])
-            } finally {
-              setChatLoading(false)
-            }
-          } else {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: `🎤 ${result.message || 'Не удалось распознать речь.'}`,
-              created_at: new Date().toISOString()
-            }])
-            setIsTranscribing(false)
-          }
-        } catch (error) {
-          console.error('Transcription error:', error)
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: '🎤 Ошибка распознавания речи.',
-            created_at: new Date().toISOString()
-          }])
-          setIsTranscribing(false)
-        }
-      }
-
-      mediaRecorder.start()
-      setIsRecording(true)
-    } catch (error) {
-      console.error('Failed to start recording:', error)
-      alert('Не удалось получить доступ к микрофону.')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
-    }
-  }
-
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording()
-    } else {
-      startRecording()
-    }
-  }
-
   // Count completed tasks
   const completedTasks = tasks.filter(t => t.status === 'completed').length
 
@@ -661,44 +476,6 @@ function InterviewPage() {
 
   return (
     <div className="interview-container">
-      {/* FULLSCREEN Task Generation Overlay */}
-      {generatingTask && (
-        <div className="fullscreen-generation-overlay">
-          <div className="generation-content">
-            <div className="generation-logo">
-              <span className="logo-icon">🧠</span>
-              <h1>VibeCode</h1>
-            </div>
-            <div className="generation-title">
-              <h2>Генерация следующей задачи</h2>
-              <p>Анализируем ваши результаты и подбираем оптимальную задачу...</p>
-            </div>
-            <div className="generation-steps-fullscreen">
-              {generationSteps.map((step) => (
-                <div key={step.step} className={`gen-step ${step.done ? 'done' : 'pending'}`}>
-                  <div className="step-indicator">
-                    {step.done ? (
-                      <span className="step-check">✓</span>
-                    ) : (
-                      <span className="step-spinner"></span>
-                    )}
-                  </div>
-                  <span className="step-text">{step.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="generation-progress">
-              <div className="progress-bar-gen">
-                <div 
-                  className="progress-fill-gen" 
-                  style={{ width: `${(generationSteps.filter(s => s.done).length / generationSteps.length) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Tab Switch Warning Modal */}
       {showTabWarning && (
         <div className="tab-warning-overlay">
@@ -736,210 +513,434 @@ function InterviewPage() {
         </div>
       )}
 
-      {/* Minimal Header */}
-      <header className="interview-header-minimal">
+      {/* Header */}
+      <header className="interview-header">
         <div className="header-left">
           <h1>VibeCode</h1>
-          <div className="task-pills">
+          <span className="header-divider">|</span>
+          <span className="interview-direction">{interview.direction}</span>
+          <span className="interview-level">{interview.selected_level}</span>
+        </div>
+        
+        <div className="header-center">
+          <div className="task-nav">
             {tasks.map((task, index) => (
               <button
                 key={index}
-                className={`task-pill ${index === currentTaskIndex ? 'active' : ''} ${task.status === 'completed' ? 'completed' : ''}`}
+                className={`task-dot ${index === currentTaskIndex ? 'active' : ''} ${task.status === 'completed' ? 'completed' : ''} ${taskCodes[task.id] ? 'has-code' : ''}`}
                 onClick={() => switchToTask(index)}
+                title={`Задача ${index + 1}: ${task.difficulty}${task.status === 'completed' ? ' ✓' : ''}${taskCodes[task.id] ? ' (есть код)' : ''}`}
               >
                 {task.status === 'completed' ? '✓' : index + 1}
               </button>
             ))}
           </div>
+          <div className="progress-info">
+            <span className="progress-text">
+              Решено: {completedTasks}/{tasks.length}
+            </span>
+          </div>
         </div>
         
         <div className="header-right">
-          <span className="score-display">
-            {currentTask.actual_score || 0}/{currentTask.max_score} pts
-          </span>
           <button 
-            className="btn-sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            title="Настройки и подсказки"
+            className="btn-proceed"
+            onClick={goToQuestions}
+            title="Перейти к теоретическим вопросам (Часть 2)"
           >
-            ⚙️
+            📚 К вопросам →
           </button>
         </div>
       </header>
 
-      {/* Sidebar Panel */}
-      <div className={`sidebar-panel ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h3>Панель управления</h3>
-          <button className="btn-close-sidebar" onClick={() => setSidebarOpen(false)}>✕</button>
+      {/* Progress Bar */}
+      <div className="progress-bar-container">
+        <div className="progress-bar">
+          <div 
+            className="progress-fill" 
+            style={{ width: `${(completedTasks / tasks.length) * 100}%` }}
+          ></div>
         </div>
-        
-        <div className="sidebar-content">
-          {/* Task Info */}
-          <div className="sidebar-section">
-            <h4>📋 Задача {currentTaskIndex + 1}</h4>
-            <div className="sidebar-meta">
-              <span className={`difficulty-tag ${currentTask.difficulty}`}>
+        <span className="progress-label">
+          Решено {completedTasks} из {tasks.length} задач
+        </span>
+      </div>
+
+      {/* Main Layout */}
+      <div className="interview-layout">
+        {/* Left Panel - Task */}
+        <div className="task-panel">
+          <div className="task-header">
+            <div className="task-title-row">
+              <span className="task-number">Задача {currentTask.task_order || currentTaskIndex + 1}</span>
+              <h2>{currentTask.title}</h2>
+            </div>
+            <div className="task-meta">
+              <span className={`difficulty-badge ${currentTask.difficulty}`}>
                 {currentTask.difficulty === 'easy' ? '🟢 Лёгкая' : 
                  currentTask.difficulty === 'medium' ? '🟡 Средняя' : '🔴 Сложная'}
               </span>
-              <span className="category-tag">{currentTask.category}</span>
+              <span className="category-badge">{currentTask.category}</span>
+              <span className="score-badge">
+                {currentTask.status === 'completed' ? '✅' : '💯'} {currentTask.actual_score || 0}/{currentTask.max_score}pts
+              </span>
             </div>
-          </div>
-
-          {/* Generation Info */}
-          {generationMeta && (
-            <div className="sidebar-section">
-              <h4>🤖 Подбор задачи</h4>
-              <p className="sidebar-text">{generationMeta.selection_reason || 'Задача подобрана под ваш уровень'}</p>
-            </div>
-          )}
-
-          {/* Hints */}
-          <div className="sidebar-section">
-            <h4>💡 Подсказки</h4>
-            {currentHints.length > 0 ? (
-              <div className="hints-list">
-                {currentHints.map((hint, i) => (
-                  <div key={i} className="hint-item">
-                    <span className="hint-badge">{hint.level}</span>
-                    <p>{hint.hint_content}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="hint-buttons-sidebar">
-                <button onClick={() => requestHint('light')} disabled={hintLoading}>
-                  🟢 Лёгкая (-10)
-                </button>
-                <button onClick={() => requestHint('medium')} disabled={hintLoading}>
-                  🟡 Средняя (-20)
-                </button>
-                <button onClick={() => requestHint('heavy')} disabled={hintLoading}>
-                  🔴 Сильная (-35)
-                </button>
+            
+            {/* Generation Info Badge */}
+            {generationMeta && (
+              <div className="generation-info-badge" onClick={() => setShowGenerationInfo(!showGenerationInfo)}>
+                <span className="llm-badge">🤖 LLM-подбор</span>
+                <span className="toggle-info">{showGenerationInfo ? '▲' : '▼'}</span>
               </div>
             )}
           </div>
-
-          {/* Actions */}
-          <div className="sidebar-section">
-            <h4>⚡ Действия</h4>
-            <div className="sidebar-actions">
-              {currentTask.status !== 'completed' && tasks.length < 3 && (
-                <button className="btn-skip" onClick={skipTask} disabled={generatingTask}>
-                  ⏭️ Пропустить задачу
-                </button>
-              )}
-              <button className="btn-questions" onClick={goToQuestions}>
-                📚 К теории →
-              </button>
-            </div>
-          </div>
-
-          {/* Trust Score */}
-          {tabSwitchCount > 0 && (
-            <div className="sidebar-section">
-              <h4>🛡️ Trust Score</h4>
-              <div className={`trust-display ${trustScore < 70 ? 'low' : trustScore < 90 ? 'medium' : 'high'}`}>
-                <span className="trust-value-big">{trustScore}</span>
-                <span className="trust-label-small">/100</span>
+          
+          {/* Generation Info Panel */}
+          {showGenerationInfo && generationMeta && (
+            <div className="generation-info-panel">
+              <h4>📋 Как была подобрана задача:</h4>
+              <div className="generation-meta-details">
+                <div className="meta-row">
+                  <span className="meta-label">Трек:</span>
+                  <span className="meta-value">{generationMeta.track}</span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-label">Сложность:</span>
+                  <span className="meta-value">{generationMeta.difficulty}</span>
+                </div>
+                {generationMeta.target_skills && (
+                  <div className="meta-row">
+                    <span className="meta-label">Навыки:</span>
+                    <span className="meta-value">{generationMeta.target_skills.join(', ')}</span>
+                  </div>
+                )}
               </div>
+              {generationMeta.selection_reason && (
+                <div className="selection-reason">
+                  <h5>💡 Почему именно она:</h5>
+                  <p>{generationMeta.selection_reason}</p>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-
-      {/* Main Layout - Clean 3-column */}
-      <div className="interview-layout-clean">
-        {/* Left Panel - Task Description */}
-        <div className="task-panel-clean">
-          <div className="task-header-clean">
-            <h2>{currentTask.title}</h2>
-            <span className={`difficulty-pill ${currentTask.difficulty}`}>
-              {currentTask.difficulty === 'easy' ? '🟢' : currentTask.difficulty === 'medium' ? '🟡' : '🔴'}
-            </span>
-          </div>
           
-          <div className="task-description-clean">
-            {currentTask.description}
-          </div>
-
-          {/* Test Examples - Compact */}
-          {currentTask.visible_tests && currentTask.visible_tests.length > 0 && (
-            <div className="test-examples-clean">
-              <h4>Примеры:</h4>
-              {currentTask.visible_tests.slice(0, 2).map((test: any, i: number) => (
-                <div key={i} className="test-example-clean">
-                  <code>Вход: {JSON.stringify(test.input)}</code>
-                  <code>Выход: {JSON.stringify(test.expected_output)}</code>
+          {/* Generation Steps Animation */}
+          {generatingTask && generationSteps.length > 0 && (
+            <div className="generation-steps">
+              <h4>🔄 Подбор задачи...</h4>
+              {generationSteps.map((step) => (
+                <div key={step.step} className={`generation-step ${step.done ? 'done' : 'pending'}`}>
+                  <span className="step-icon">{step.done ? '✓' : '○'}</span>
+                  <span className="step-text">{step.text}</span>
                 </div>
               ))}
             </div>
           )}
+
+          <div className="task-content">
+            <div className="task-description">
+              {currentTask.description}
+            </div>
+
+            {currentTask.visible_tests && currentTask.visible_tests.length > 0 && (
+              <div className="test-examples">
+                <h3>Примеры тестов:</h3>
+                {currentTask.visible_tests.map((test: any, i: number) => (
+                  <div key={i} className="test-example">
+                    <div className="test-label">Тест {i + 1}:</div>
+                    <div className="test-io">
+                      <div><strong>Вход:</strong> {JSON.stringify(test.input)}</div>
+                      <div><strong>Выход:</strong> {JSON.stringify(test.expected_output)}</div>
+                    </div>
+                    {test.description && (
+                      <div className="test-desc">{test.description}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hints Section */}
+            {currentHints.length > 0 && (
+              <div className="hints-section">
+                <h3>💡 Полученные подсказки:</h3>
+                {currentHints.map((hint, i) => (
+                  <div key={i} className={`hint-card hint-${hint.level}`}>
+                    <div className="hint-header">
+                      <span className="hint-level">
+                        {hint.level === 'light' ? '🟢 Лёгкая' : hint.level === 'medium' ? '🟡 Средняя' : '🔴 Жёсткая'}
+                      </span>
+                      <span className="hint-penalty">-{hint.score_penalty}pts</span>
+                    </div>
+                    <div className="hint-content">{hint.hint_content}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hint Buttons */}
+            <div className="hint-actions">
+              <h3>Нужна подсказка?</h3>
+              <div className="hint-buttons">
+                <button
+                  className="hint-btn hint-light"
+                  onClick={() => requestHint('light')}
+                  disabled={hintLoading}
+                >
+                  🟢 Лёгкая (-10pts)
+                </button>
+                <button
+                  className="hint-btn hint-medium"
+                  onClick={() => requestHint('medium')}
+                  disabled={hintLoading}
+                >
+                  🟡 Средняя (-20pts)
+                </button>
+                <button
+                  className="hint-btn hint-heavy"
+                  onClick={() => requestHint('heavy')}
+                  disabled={hintLoading}
+                >
+                  🔴 Жёсткая (-35pts)
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Center Panel - Code Editor */}
-        <div className="code-panel-clean">
-          <div className="editor-header-clean">
-            <span>Python 3</span>
-            <button className="btn-run-clean" onClick={submitCode} disabled={submitLoading}>
-              {submitLoading ? '⏳' : '▶️'} {submitLoading ? 'Выполняется...' : 'Запустить'}
-            </button>
+        {/* Right Panel - Code & Chat */}
+        <div className="code-panel">
+          {/* Code Editor */}
+          <div className="editor-section">
+            <div className="editor-header">
+              <span>Python 3</span>
+              <button className="btn-run" onClick={submitCode} disabled={submitLoading}>
+                {submitLoading ? '⏳ Выполняется...' : '▶️ Запустить'}
+              </button>
+            </div>
+            
+            <div className="monaco-editor-container">
+              <Editor
+                height="100%"
+                language="python"
+                theme="vs-dark"
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Monaco, Menlo, 'Courier New', monospace",
+                  lineNumbers: 'on',
+                  tabSize: 4,
+                  insertSpaces: true,
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  padding: { top: 16, bottom: 16 },
+                  suggest: {
+                    showKeywords: true,
+                    showSnippets: true,
+                  },
+                  quickSuggestions: true,
+                  folding: true,
+                  bracketPairColorization: { enabled: true },
+                }}
+              />
+            </div>
           </div>
-          
-          <div className="monaco-editor-container">
-            <Editor
-              height="100%"
-              language="python"
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value || '')}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                fontFamily: "'JetBrains Mono', 'Fira Code', Monaco, Menlo, 'Courier New', monospace",
-                lineNumbers: 'on',
-                tabSize: 4,
-                insertSpaces: true,
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                wordWrap: 'on',
-                padding: { top: 16, bottom: 16 },
-              }}
-            />
-          </div>
-          
-          {/* Compact Result */}
+
+          {/* Result */}
           {result && (
-            <div className={`result-bar ${result.error_message ? 'error' : result.passed_visible === result.total_visible ? 'success' : 'partial'}`}>
-              <span className="result-icon">
-                {result.error_message ? '❌' : result.passed_visible === result.total_visible ? '✅' : '⚠️'}
-              </span>
-              <span className="result-text">
-                {result.error_message ? 'Ошибка' : `Тесты: ${result.passed_visible}/${result.total_visible}`}
-              </span>
-              {result.execution_time_ms && <span className="result-time">{result.execution_time_ms.toFixed(0)}ms</span>}
+            <div className="result-section">
+              <h3>{result.error_message ? '❌' : result.passed_visible === result.total_visible ? '✅' : '⚠️'} Результаты:</h3>
+              <div className="result-stats">
+                <div className="stat">
+                  <span>Видимые тесты:</span>
+                  <strong className={result.passed_visible === result.total_visible ? 'success' : 'warning'}>
+                    {result.passed_visible}/{result.total_visible}
+                  </strong>
+                </div>
+                <div className="stat">
+                  <span>Скрытые тесты:</span>
+                  <strong className={result.passed_hidden === result.total_hidden ? 'success' : 'warning'}>
+                    {result.passed_hidden}/{result.total_hidden}
+                  </strong>
+                </div>
+                <div className="stat">
+                  <span>Время:</span>
+                  <strong className="score">{result.execution_time_ms ? result.execution_time_ms.toFixed(0) + 'ms' : '-'}</strong>
+                </div>
+              </div>
+
+              {result.error_message && (
+                <div className="error-section">
+                  <h4>⚠️ Ошибка:</h4>
+                  <pre>{result.error_message}</pre>
+                </div>
+              )}
+
+              {/* Auto-hint on failed submission */}
+              {autoHint && result.passed_visible !== result.total_visible && (
+                <div className="auto-hint-section">
+                  <div className="auto-hint-header">
+                    <span className="hint-icon">💡</span>
+                    <h4>Автоматическая подсказка</h4>
+                    <span className="hint-penalty">-15 баллов</span>
+                  </div>
+                  <div className="auto-hint-content">
+                    <p className="hint-main">{autoHint.hint_text}</p>
+                    <div className="hint-details">
+                      <div className="hint-detail">
+                        <span className="detail-icon">📝</span>
+                        <span>{autoHint.input_format_tip}</span>
+                      </div>
+                      <div className="hint-detail">
+                        <span className="detail-icon">⚠️</span>
+                        <span>{autoHint.common_mistake}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hint-new-max">
+                    Новый макс. балл: <strong>{result.max_score || currentTask.max_score}</strong>
+                  </div>
+                </div>
+              )}
+
+              {/* Show detailed test results */}
+              {testDetails.length > 0 && !result.error_message && (
+                <div className="test-details-section">
+                  <h4>📋 Детали тестов:</h4>
+                  <div className="test-details-list">
+                    {testDetails.map((test, i) => (
+                      <div key={i} className={`test-detail ${test.passed ? 'passed' : 'failed'}`}>
+                        <div className="test-detail-header">
+                          <span className="test-status-icon">{test.passed ? '✅' : '❌'}</span>
+                          <span className="test-number">Тест {test.index}</span>
+                          {test.description && <span className="test-description">— {test.description}</span>}
+                        </div>
+                        {!test.passed && (
+                          <div className="test-detail-body">
+                            <div className="test-io-row">
+                              <span className="label">Вход:</span>
+                              <code>{JSON.stringify(test.input)}</code>
+                            </div>
+                            <div className="test-io-row">
+                              <span className="label">Ожидалось:</span>
+                              <code>{JSON.stringify(test.expected)}</code>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Success if ALL visible tests passed (hidden tests optional) */}
+              {!result.error_message && result.passed_visible === result.total_visible && result.total_visible > 0 && (
+                <div className="success-section">
+                  <h4>
+                    {result.passed_hidden === result.total_hidden 
+                      ? '🎉 Все тесты пройдены!' 
+                      : `✅ Публичные тесты пройдены! (скрытые: ${result.passed_hidden}/${result.total_hidden})`
+                    }
+                  </h4>
+                  
+                  {/* Follow-up question section */}
+                  {followupQuestion && followupQuestion.status === 'pending' && !followupResult && (
+                    <div className="followup-section">
+                      <div className="followup-question">
+                        <span className="followup-label">🤖 Вопрос по решению:</span>
+                        <p>{followupQuestion.question}</p>
+                      </div>
+                      <div className="followup-input">
+                        <textarea
+                          placeholder="Введите ваш ответ..."
+                          value={followupAnswer}
+                          onChange={(e) => setFollowupAnswer(e.target.value)}
+                          rows={3}
+                        />
+                        <button 
+                          className="btn-followup-submit"
+                          onClick={submitFollowupAnswer}
+                          disabled={followupLoading || !followupAnswer.trim()}
+                        >
+                          {followupLoading ? 'Отправка...' : 'Ответить'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Follow-up result */}
+                  {followupResult && (
+                    <div className={`followup-result ${followupResult.score >= 70 ? 'good' : followupResult.score >= 40 ? 'medium' : 'poor'}`}>
+                      <div className="followup-score">
+                        <span className="score-label">Оценка ответа:</span>
+                        <span className="score-value">{followupResult.score}/100</span>
+                      </div>
+                      <p className="followup-feedback">{followupResult.feedback}</p>
+                      {followupResult.correct_answer && (
+                        <div className="correct-answer">
+                          <span>📚 Правильный ответ:</span>
+                          <p>{followupResult.correct_answer}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Show next task button only after answering followup or if no followup */}
+                  {(!followupQuestion || followupResult || followupQuestion.status === 'answered') && tasks.length < 3 && (
+                    <button 
+                      className="btn-next-task"
+                      onClick={generateNextTask}
+                      disabled={generatingTask}
+                    >
+                      {generatingTask ? (
+                        <>
+                          <span className="generating-spinner"></span>
+                          Генерация следующей задачи...
+                        </>
+                      ) : (
+                        <>Следующая задача →</>
+                      )}
+                    </button>
+                  )}
+                  {tasks.length >= 3 && (
+                    <div className="all-tasks-done">
+                      <p>🎉 Все задачи пройдены!</p>
+                      <button 
+                        className="btn-next-task btn-to-questions"
+                        onClick={goToQuestions}
+                      >
+                        📚 Перейти к теоретическим вопросам →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Next Task Button - show when tests passed */}
-          {result && result.passed_visible > 0 && tasks.length < 3 && (
-            <button 
-              className="btn-next-task-clean"
-              onClick={() => generateNextTask()}
-              disabled={generatingTask}
-            >
-              {generatingTask ? '⏳ Генерация...' : '→ Следующая задача'}
-            </button>
-          )}
-        </div>
+          {/* Task Navigation */}
+          <div className="task-actions">
+            <div className="task-nav-buttons">
+              {tasks.map((task, index) => (
+                <button
+                  key={task.id}
+                  className={`task-nav-btn ${index === currentTaskIndex ? 'active' : ''} ${task.status === 'completed' ? 'completed' : ''}`}
+                  onClick={() => switchToTask(index)}
+                >
+                  {task.status === 'completed' ? '✓' : ''} Задача {index + 1}
+                  <span className="task-difficulty-mini">
+                    {task.difficulty === 'easy' ? '🟢' : task.difficulty === 'medium' ? '🟡' : '🔴'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {/* Right Panel - Chat */}
-        <div className="chat-panel-clean">
+          {/* Chat */}
+          <div className="chat-section">
             <h3>💬 AI Ассистент</h3>
             <div className="chat-messages">
               {messages.map((msg, i) => (
@@ -959,26 +960,18 @@ function InterviewPage() {
             </div>
             
             <div className="chat-input">
-              <button 
-                className={`voice-btn ${isRecording ? 'recording' : ''} ${isTranscribing ? 'transcribing' : ''}`}
-                onClick={toggleRecording}
-                disabled={isTranscribing || chatLoading}
-                title={isRecording ? 'Остановить запись' : 'Голосовой ввод'}
-              >
-                {isTranscribing ? '⏳' : isRecording ? '⏹️' : '🎤'}
-              </button>
               <input
                 type="text"
-                placeholder={isRecording ? '🔴 Говорите...' : isTranscribing ? 'Распознавание...' : 'Задайте вопрос или нажмите 🎤'}
+                placeholder="Задайте вопрос ассистенту..."
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                disabled={isRecording || isTranscribing}
               />
-              <button onClick={sendMessage} disabled={chatLoading || isRecording || isTranscribing || !chatInput.trim()}>
+              <button onClick={sendMessage} disabled={chatLoading}>
                 📤
               </button>
             </div>
+          </div>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import uvicorn
 
 from app.core.config import settings
 from app.core.db import init_db
-from app.api import interview, admin, resume, anti_cheat, questions, claude, vacancy, auth, question_block, voice
+from app.api import interview, admin, resume, anti_cheat, questions, claude, vacancy, auth, question_block
 
 # Create FastAPI app
 app = FastAPI(
@@ -53,11 +53,10 @@ app.include_router(interview.router, prefix="/api/interview", tags=["Interview"]
 app.include_router(vacancy.router, prefix="/api/vacancy", tags=["Vacancy"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(resume.router, prefix="/api/resume", tags=["Resume"])
-app.include_router(anti_cheat.router, prefix="/api/anti_cheat", tags=["Anti-Cheat"])
+app.include_router(anti_cheat.router, prefix="/api/anti-cheat", tags=["Anti-Cheat"])
 app.include_router(questions.router, prefix="/api/questions", tags=["Questions"])
 app.include_router(claude.router, prefix="/api/claude", tags=["Claude LLM"])
 app.include_router(question_block.router, prefix="/api/question-block", tags=["Question Block"])
-app.include_router(voice.router, prefix="/api/voice", tags=["Voice"])
 
 
 # Root endpoint

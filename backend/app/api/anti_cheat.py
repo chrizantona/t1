@@ -41,28 +41,12 @@ async def submit_events(
     try:
         # Store events in database
         for event_data in data.events:
-            # Map event type to severity
-            severity_map = {
-                "paste": "high",
-                "copy": "medium",
-                "cut": "medium",
-                "blur": "low",
-                "focus": "low",
-                "visibility_change": "medium",
-                "devtools": "high",
-                "keydown": "low"
-            }
-            severity = severity_map.get(event_data.type, "low")
-            
             event = AntiCheatEvent(
                 interview_id=data.interviewId,
+                task_id=event_data.taskId,
                 event_type=event_data.type,
-                severity=severity,
-                details={
-                    "task_id": event_data.taskId,
-                    "timestamp_ms": event_data.timestamp,
-                    **event_data.meta
-                }
+                timestamp_ms=event_data.timestamp,
+                meta=event_data.meta
             )
             db.add(event)
         

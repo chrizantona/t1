@@ -420,300 +420,6 @@ operations - список операций: ["get", key] или ["put", key, val
             {"input": "1, [['put',1,1],['put',2,2],['get',1],['get',2]]", "expected_output": "[-1,2]", "description": "Вместимость 1"},
             {"input": "2, [['get',1],['put',1,1],['get',1]]", "expected_output": "[-1,1]", "description": "Get пустого"}
         ]
-    },
-    
-    # ========== ML / DATA SCIENCE TASKS ==========
-    
-    "normalize_data": {
-        "title": "Нормализация данных",
-        "description": """Реализуйте функцию нормализации данных (Min-Max Scaling).
-
-Формула: x_norm = (x - min) / (max - min)
-
-Функция должна принять список чисел и вернуть нормализованный список, где все значения будут в диапазоне [0, 1].
-
-Пример 1:
-Вход: data = [1, 2, 3, 4, 5]
-Выход: [0.0, 0.25, 0.5, 0.75, 1.0]
-
-Пример 2:
-Вход: data = [10, 20, 30]
-Выход: [0.0, 0.5, 1.0]
-
-Пример 3:
-Вход: data = [5, 5, 5]
-Выход: [0.0, 0.0, 0.0]  # Все одинаковые - возвращаем нули
-
-Ограничения:
-- 1 <= len(data) <= 10^4
-- -10^6 <= data[i] <= 10^6
-
-Сигнатура функции:
-def normalize(data: List[float]) -> List[float]:""",
-        "difficulty": "easy",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[1, 2, 3, 4, 5]", "expected_output": "[0.0, 0.25, 0.5, 0.75, 1.0]", "description": "Базовый случай"},
-            {"input": "[10, 20, 30]", "expected_output": "[0.0, 0.5, 1.0]", "description": "Три числа"},
-            {"input": "[5, 5, 5]", "expected_output": "[0.0, 0.0, 0.0]", "description": "Все одинаковые"}
-        ],
-        "hidden_tests": [
-            {"input": "[0, 100]", "expected_output": "[0.0, 1.0]", "description": "Два числа"},
-            {"input": "[-10, 0, 10]", "expected_output": "[0.0, 0.5, 1.0]", "description": "Отрицательные"}
-        ]
-    },
-    
-    "calculate_accuracy": {
-        "title": "Метрика Accuracy",
-        "description": """Реализуйте функцию расчёта метрики Accuracy для задачи классификации.
-
-Accuracy = (количество правильных предсказаний) / (общее количество предсказаний)
-
-Функция принимает два списка одинаковой длины:
-- y_true: истинные метки классов
-- y_pred: предсказанные метки классов
-
-Пример 1:
-Вход: y_true = [1, 0, 1, 1, 0], y_pred = [1, 0, 0, 1, 0]
-Выход: 0.8
-Объяснение: 4 из 5 предсказаний верны
-
-Пример 2:
-Вход: y_true = [1, 1, 1], y_pred = [0, 0, 0]
-Выход: 0.0
-
-Ограничения:
-- 1 <= len(y_true) == len(y_pred) <= 10^4
-- Метки - целые числа
-
-Сигнатура функции:
-def accuracy(y_true: List[int], y_pred: List[int]) -> float:""",
-        "difficulty": "easy",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[1, 0, 1, 1, 0], [1, 0, 0, 1, 0]", "expected_output": "0.8", "description": "80% accuracy"},
-            {"input": "[1, 1, 1], [0, 0, 0]", "expected_output": "0.0", "description": "Все неверно"},
-            {"input": "[0, 1, 0, 1], [0, 1, 0, 1]", "expected_output": "1.0", "description": "Все верно"}
-        ],
-        "hidden_tests": [
-            {"input": "[1], [1]", "expected_output": "1.0", "description": "Один элемент"},
-            {"input": "[0, 0, 1, 1], [1, 0, 1, 0]", "expected_output": "0.5", "description": "50%"}
-        ]
-    },
-    
-    "confusion_matrix": {
-        "title": "Confusion Matrix",
-        "description": """Реализуйте функцию построения матрицы ошибок (Confusion Matrix) для бинарной классификации.
-
-Матрица ошибок 2x2:
-[[TN, FP],
- [FN, TP]]
-
-Где:
-- TN (True Negative): предсказано 0, истина 0
-- FP (False Positive): предсказано 1, истина 0
-- FN (False Negative): предсказано 0, истина 1
-- TP (True Positive): предсказано 1, истина 1
-
-Пример:
-Вход: y_true = [0, 0, 1, 1], y_pred = [0, 1, 0, 1]
-Выход: [[1, 1], [1, 1]]
-Объяснение: TN=1, FP=1, FN=1, TP=1
-
-Сигнатура функции:
-def confusion_matrix(y_true: List[int], y_pred: List[int]) -> List[List[int]]:""",
-        "difficulty": "medium",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[0, 0, 1, 1], [0, 1, 0, 1]", "expected_output": "[[1, 1], [1, 1]]", "description": "Базовый случай"},
-            {"input": "[0, 0, 0], [0, 0, 0]", "expected_output": "[[3, 0], [0, 0]]", "description": "Все TN"},
-            {"input": "[1, 1, 1], [1, 1, 1]", "expected_output": "[[0, 0], [0, 3]]", "description": "Все TP"}
-        ],
-        "hidden_tests": [
-            {"input": "[0, 1], [1, 0]", "expected_output": "[[0, 1], [1, 0]]", "description": "Все ошибки"},
-            {"input": "[0, 0, 1, 1, 0, 1], [0, 0, 1, 1, 1, 0]", "expected_output": "[[2, 1], [1, 2]]", "description": "Смешанный"}
-        ]
-    },
-    
-    "softmax": {
-        "title": "Softmax функция",
-        "description": """Реализуйте функцию Softmax - преобразование вектора в вероятностное распределение.
-
-Формула: softmax(x_i) = exp(x_i) / sum(exp(x_j) for all j)
-
-Результат - вектор той же длины, где сумма всех элементов равна 1.
-
-Для численной стабильности вычтите максимум из всех элементов перед экспонентой:
-x_stable = x - max(x)
-softmax(x_i) = exp(x_stable_i) / sum(exp(x_stable_j))
-
-Пример 1:
-Вход: x = [1.0, 2.0, 3.0]
-Выход: [0.09, 0.24, 0.67] (примерно)
-
-Пример 2:
-Вход: x = [0.0, 0.0]
-Выход: [0.5, 0.5]
-
-Округлите результат до 2 знаков после запятой.
-
-Сигнатура функции:
-def softmax(x: List[float]) -> List[float]:""",
-        "difficulty": "medium",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[0.0, 0.0]", "expected_output": "[0.5, 0.5]", "description": "Равные значения"},
-            {"input": "[1.0, 0.0]", "expected_output": "[0.73, 0.27]", "description": "Разные значения"},
-            {"input": "[1.0, 2.0, 3.0]", "expected_output": "[0.09, 0.24, 0.67]", "description": "Три значения"}
-        ],
-        "hidden_tests": [
-            {"input": "[100.0, 100.0]", "expected_output": "[0.5, 0.5]", "description": "Большие числа"},
-            {"input": "[-1.0, 0.0, 1.0]", "expected_output": "[0.09, 0.24, 0.67]", "description": "Отрицательные"}
-        ]
-    },
-    
-    "knn_predict": {
-        "title": "K-Nearest Neighbors",
-        "description": """Реализуйте простой алгоритм K-ближайших соседей (KNN) для классификации.
-
-Дано:
-- X_train: список точек обучающей выборки [[x1, y1], [x2, y2], ...]
-- y_train: метки классов для обучающей выборки
-- point: точка для классификации [x, y]
-- k: количество соседей
-
-Алгоритм:
-1. Вычислить евклидово расстояние от point до каждой точки в X_train
-2. Найти k ближайших соседей
-3. Вернуть наиболее частую метку среди k соседей
-
-Пример:
-X_train = [[0, 0], [1, 1], [2, 2], [10, 10]]
-y_train = [0, 0, 0, 1]
-point = [1, 0]
-k = 3
-Выход: 0 (3 ближайших соседа имеют метку 0)
-
-Сигнатура функции:
-def knn_predict(X_train: List[List[float]], y_train: List[int], point: List[float], k: int) -> int:""",
-        "difficulty": "medium",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[[0, 0], [1, 1], [2, 2], [10, 10]], [0, 0, 0, 1], [1, 0], 3", "expected_output": "0", "description": "Базовый KNN"},
-            {"input": "[[0, 0], [10, 10]], [0, 1], [9, 9], 1", "expected_output": "1", "description": "k=1"},
-            {"input": "[[0, 0], [0, 1], [1, 0], [1, 1]], [0, 0, 1, 1], [0.5, 0.5], 4", "expected_output": "0", "description": "Центр"}
-        ],
-        "hidden_tests": [
-            {"input": "[[0, 0], [1, 1]], [0, 1], [0.4, 0.4], 1", "expected_output": "0", "description": "Ближе к 0"},
-            {"input": "[[0, 0], [1, 1], [2, 2]], [0, 1, 0], [1.1, 1.1], 2", "expected_output": "0", "description": "Tie-break"}
-        ]
-    },
-    
-    "gradient_descent_step": {
-        "title": "Шаг градиентного спуска",
-        "description": """Реализуйте один шаг градиентного спуска для линейной регрессии.
-
-Дано:
-- X: матрица признаков (список списков)
-- y: вектор целевых значений
-- weights: текущие веса модели
-- learning_rate: скорость обучения
-
-Формулы:
-- Предсказание: y_pred = X @ weights
-- Градиент: gradient = (2/n) * X.T @ (y_pred - y)
-- Обновление: weights_new = weights - learning_rate * gradient
-
-Верните обновлённые веса, округлённые до 4 знаков.
-
-Пример:
-X = [[1, 1], [1, 2], [1, 3]]
-y = [1, 2, 3]
-weights = [0, 0]
-learning_rate = 0.1
-Выход: [0.4, 0.9333] (примерно)
-
-Сигнатура функции:
-def gradient_step(X: List[List[float]], y: List[float], weights: List[float], lr: float) -> List[float]:""",
-        "difficulty": "hard",
-        "category": "ml",
-        "visible_tests": [
-            {"input": "[[1, 1], [1, 2], [1, 3]], [1, 2, 3], [0, 0], 0.1", "expected_output": "[0.4, 0.9333]", "description": "Базовый шаг"},
-            {"input": "[[1, 0], [1, 1]], [0, 1], [0, 0], 0.5", "expected_output": "[0.25, 0.5]", "description": "Простой случай"}
-        ],
-        "hidden_tests": [
-            {"input": "[[1, 1]], [2], [0, 0], 1.0", "expected_output": "[2.0, 2.0]", "description": "Один пример"},
-            {"input": "[[1, 2], [1, 4]], [3, 5], [1, 1], 0.1", "expected_output": "[1.0, 1.0]", "description": "Уже оптимум"}
-        ]
-    },
-    
-    # ========== PANDAS / DATA TASKS ==========
-    
-    "filter_outliers": {
-        "title": "Фильтрация выбросов",
-        "description": """Реализуйте функцию фильтрации выбросов методом IQR (Interquartile Range).
-
-Алгоритм:
-1. Вычислить Q1 (25-й перцентиль) и Q3 (75-й перцентиль)
-2. IQR = Q3 - Q1
-3. Нижняя граница = Q1 - 1.5 * IQR
-4. Верхняя граница = Q3 + 1.5 * IQR
-5. Вернуть только значения в пределах границ
-
-Пример:
-Вход: data = [1, 2, 3, 4, 5, 100]
-Выход: [1, 2, 3, 4, 5]  # 100 - выброс
-
-Для расчёта перцентилей используйте линейную интерполяцию.
-
-Сигнатура функции:
-def filter_outliers(data: List[float]) -> List[float]:""",
-        "difficulty": "medium",
-        "category": "data_science",
-        "visible_tests": [
-            {"input": "[1, 2, 3, 4, 5, 100]", "expected_output": "[1, 2, 3, 4, 5]", "description": "Один выброс"},
-            {"input": "[1, 2, 3, 4, 5]", "expected_output": "[1, 2, 3, 4, 5]", "description": "Без выбросов"},
-            {"input": "[-100, 1, 2, 3, 4, 5]", "expected_output": "[1, 2, 3, 4, 5]", "description": "Отрицательный выброс"}
-        ],
-        "hidden_tests": [
-            {"input": "[1, 1, 1, 1, 1]", "expected_output": "[1, 1, 1, 1, 1]", "description": "Все одинаковые"},
-            {"input": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50]", "expected_output": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]", "description": "Длинный список"}
-        ]
-    },
-    
-    "moving_average": {
-        "title": "Скользящее среднее",
-        "description": """Реализуйте функцию расчёта скользящего среднего (Moving Average).
-
-Для каждой позиции i вычислите среднее window_size элементов, заканчивающихся на i.
-Для первых (window_size - 1) элементов используйте доступные данные.
-
-Пример:
-Вход: data = [1, 2, 3, 4, 5], window_size = 3
-Выход: [1.0, 1.5, 2.0, 3.0, 4.0]
-
-Объяснение:
-- i=0: avg([1]) = 1.0
-- i=1: avg([1, 2]) = 1.5
-- i=2: avg([1, 2, 3]) = 2.0
-- i=3: avg([2, 3, 4]) = 3.0
-- i=4: avg([3, 4, 5]) = 4.0
-
-Округлите до 2 знаков после запятой.
-
-Сигнатура функции:
-def moving_average(data: List[float], window_size: int) -> List[float]:""",
-        "difficulty": "easy",
-        "category": "data_science",
-        "visible_tests": [
-            {"input": "[1, 2, 3, 4, 5], 3", "expected_output": "[1.0, 1.5, 2.0, 3.0, 4.0]", "description": "Базовый случай"},
-            {"input": "[10, 20, 30], 2", "expected_output": "[10.0, 15.0, 25.0]", "description": "Окно 2"},
-            {"input": "[1, 1, 1, 1], 4", "expected_output": "[1.0, 1.0, 1.0, 1.0]", "description": "Все одинаковые"}
-        ],
-        "hidden_tests": [
-            {"input": "[5], 3", "expected_output": "[5.0]", "description": "Один элемент"},
-            {"input": "[1, 2, 3, 4, 5, 6], 1", "expected_output": "[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]", "description": "Окно 1"}
-        ]
     }
 }
 
@@ -737,25 +443,17 @@ def get_task_by_difficulty(difficulty: str, task_order: int = 1) -> Dict[str, An
     return matching_tasks[idx]
 
 
-def get_task_sequence(level: str, count: int = 3, direction: str = "backend") -> List[Dict[str, Any]]:
+def get_task_sequence(level: str, count: int = 3) -> List[Dict[str, Any]]:
     """
-    Get a sequence of tasks for a given level and direction.
-    
-    Structure:
-    - Task 1: Algorithm (easy/medium based on level)
-    - Task 2: Algorithm (medium/hard based on level)  
-    - Task 3: Specialization task (ML/Data/Frontend based on direction)
+    Get a sequence of tasks for a given level.
     
     Args:
         level: intern, junior, middle, senior
         count: number of tasks to return
-        direction: ml, data-science, backend, frontend, etc.
     
     Returns:
         List of tasks with appropriate difficulty
     """
-    import random
-    
     level_mapping = {
         "intern": ["easy", "easy", "easy"],
         "junior": ["easy", "easy", "medium"],
@@ -770,79 +468,18 @@ def get_task_sequence(level: str, count: int = 3, direction: str = "backend") ->
     tasks = []
     used_keys = set()
     
-    # First 2 tasks: algorithms
-    for i, difficulty in enumerate(difficulties[:2]):
+    for difficulty in difficulties:
         matching = {
             key: task for key, task in TASK_POOL.items()
-            if task["difficulty"] == difficulty 
-            and key not in used_keys
-            and task.get("category") not in ["ml", "data_science", "pandas"]  # Exclude specialization
+            if task["difficulty"] == difficulty and key not in used_keys
         }
         
         if matching:
+            import random
             task_key = random.choice(list(matching.keys()))
             tasks.append(matching[task_key])
             used_keys.add(task_key)
         else:
             tasks.append(get_task_by_difficulty(difficulty))
     
-    # Task 3: Specialization based on direction
-    if count >= 3:
-        spec_difficulty = difficulties[2] if len(difficulties) > 2 else "medium"
-        spec_task = get_specialization_task(direction, spec_difficulty, used_keys)
-        if spec_task:
-            tasks.append(spec_task)
-        else:
-            # Fallback to regular algorithm task
-            matching = {
-                key: task for key, task in TASK_POOL.items()
-                if task["difficulty"] == spec_difficulty and key not in used_keys
-            }
-            if matching:
-                task_key = random.choice(list(matching.keys()))
-                tasks.append(matching[task_key])
-            else:
-                tasks.append(get_task_by_difficulty(spec_difficulty))
-    
     return tasks
-
-
-def get_specialization_task(direction: str, difficulty: str, used_keys: set) -> Dict[str, Any]:
-    """
-    Get a specialization task based on direction.
-    """
-    import random
-    
-    # Map directions to categories
-    direction_categories = {
-        "ml": ["ml", "data_science", "pandas"],
-        "data-science": ["ml", "data_science", "pandas"],
-        "data": ["data_science", "pandas", "sql"],
-        "backend": ["design", "algorithms"],
-        "frontend": ["frontend", "algorithms"],
-        "devops": ["design", "algorithms"],
-    }
-    
-    categories = direction_categories.get(direction, ["algorithms"])
-    
-    # Find matching tasks
-    matching = {
-        key: task for key, task in TASK_POOL.items()
-        if task.get("category") in categories
-        and key not in used_keys
-        and task["difficulty"] == difficulty
-    }
-    
-    # If no exact match, try any difficulty
-    if not matching:
-        matching = {
-            key: task for key, task in TASK_POOL.items()
-            if task.get("category") in categories
-            and key not in used_keys
-        }
-    
-    if matching:
-        task_key = random.choice(list(matching.keys()))
-        return matching[task_key]
-    
-    return None
