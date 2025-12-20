@@ -64,3 +64,5 @@ networks:
   vibecode-network:
     driver: bridge
 
+# пидормот
+
