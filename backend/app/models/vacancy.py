@@ -153,3 +153,5 @@ class CandidateSkillSnapshot(Base):
     notes = Column(Text, nullable=True)
 
 
+
+# пидормот

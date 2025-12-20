@@ -118,3 +118,5 @@ def index_to_grade(index: int) -> GradeLevel:
     """Convert index to grade string."""
     index = max(0, min(3, index))
     return INDEX_TO_GRADE[index]
+
+# пидормот

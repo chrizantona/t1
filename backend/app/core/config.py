@@ -47,3 +47,5 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+
+# пидормот

@@ -28,3 +28,5 @@ class TrustScoreResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+# пидормот

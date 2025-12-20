@@ -70,3 +70,5 @@ export const EvaluationResult: React.FC<Props> = ({ result, question, onNext }) 
     </div>
   );
 };
+
+// пидормот

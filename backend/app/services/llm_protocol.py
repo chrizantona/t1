@@ -457,3 +457,5 @@ async def small_talk(
     )
 
 
+
+# пидормот

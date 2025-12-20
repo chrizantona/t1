@@ -54,3 +54,5 @@ class TechQuestion(Base):
     tags = Column(ARRAY(String), default=[])
     
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+# пидормот

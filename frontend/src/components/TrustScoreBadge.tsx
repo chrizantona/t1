@@ -48,3 +48,5 @@ function TrustScoreBadge({ score }: TrustScoreBadgeProps) {
 
 export default TrustScoreBadge
 
+
+// пидормот

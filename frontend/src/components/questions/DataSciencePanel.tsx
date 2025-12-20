@@ -52,3 +52,5 @@ export const DataSciencePanel: React.FC<Props> = ({ question, onSubmit, isSubmit
     </div>
   );
 };
+
+// пидормот

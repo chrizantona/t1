@@ -22,3 +22,5 @@ __all__ = [
     "AI_DETECTOR_SYSTEM", "AI_DETECTOR_USER",
     "FINAL_REPORT_SYSTEM", "FINAL_REPORT_USER",
 ]
+
+# пидормот

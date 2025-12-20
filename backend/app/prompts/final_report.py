@@ -68,3 +68,5 @@ FINAL_REPORT_USER = """=== RESUME_PARSED_JSON ===
     "рассмотреть на вакансию уровня middle вместо senior"
   ]
 }}"""
+
+# пидормот

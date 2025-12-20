@@ -103,3 +103,5 @@ class QuestionAnswer(Base):
     # Relationships
     question_block = relationship("QuestionBlock", back_populates="question_answers")
 
+
+# пидормот

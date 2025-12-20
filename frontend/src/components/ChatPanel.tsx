@@ -129,3 +129,5 @@ function ChatPanel({ interviewId, taskId }: ChatPanelProps) {
 
 export default ChatPanel
 
+
+// пидормот

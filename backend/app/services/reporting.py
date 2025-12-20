@@ -231,3 +231,5 @@ async def generate_final_report(interview_id: int, db: Session) -> FinalReportRe
         average_task_time=None  # TODO: calculate from timestamps
     )
 
+
+# пидормот

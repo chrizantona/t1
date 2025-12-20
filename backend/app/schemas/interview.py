@@ -341,3 +341,5 @@ class FinalScoresResponse(BaseModel):
     recommendations: List[str]
     summary: str
 
+
+# пидормот

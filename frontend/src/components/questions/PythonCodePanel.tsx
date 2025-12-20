@@ -52,3 +52,5 @@ export const PythonCodePanel: React.FC<Props> = ({ question, onSubmit, isSubmitt
     </div>
   );
 };
+
+// пидормот

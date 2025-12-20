@@ -64,3 +64,5 @@ class QuestionAnswerEval(BaseModel):
     passed: bool
     short_feedback: str
     mistakes: list[str] = []
+
+# пидормот

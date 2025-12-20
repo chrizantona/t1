@@ -164,3 +164,5 @@ def calculate_coding_score(results: list[TaskResult]) -> float:
     coding_score = (total_score / max(1, total_weight)) * 100.0
     
     return min(100.0, max(0.0, coding_score))
+
+# пидормот

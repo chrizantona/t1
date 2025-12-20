@@ -52,3 +52,5 @@ export const FrontendCodePanel: React.FC<Props> = ({ question, onSubmit, isSubmi
     </div>
   );
 };
+
+// пидормот

@@ -55,3 +55,5 @@ class AdminUserProfile(Base):
     
     user = relationship("User", back_populates="admin_profile")
 
+
+# пидормот

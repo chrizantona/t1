@@ -68,3 +68,5 @@ TASK_GENERATOR_USER = """Трек: {track}
     "common_mistakes": ["типичные ошибки"]
   }}
 }}"""
+
+# пидормот

@@ -282,3 +282,5 @@ async def demo_admin_login(db: Session = Depends(get_db)):
         full_name=user.full_name
     )
 
+
+# пидормот

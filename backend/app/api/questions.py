@@ -285,3 +285,5 @@ async def get_ml_question_with_answer(question_id: int):
         raise HTTPException(status_code=404, detail="ML question not found")
     
     return question
+
+# пидормот

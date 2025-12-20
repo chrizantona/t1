@@ -298,3 +298,5 @@ def get_all_questions() -> List[Dict[str, Any]]:
     return list(THEORY_QUESTIONS.values())
 
 
+
+# пидормот

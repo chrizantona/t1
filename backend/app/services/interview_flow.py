@@ -959,3 +959,5 @@ async def generate_final_scores(interview_id: int, db: Session) -> Dict[str, Any
         "summary": "Автоматическая оценка недоступна"
     }
 
+
+# пидормот

@@ -223,3 +223,5 @@ def update_vacancy_in_pool(vacancy_id: str, updates: Dict[str, Any]) -> bool:
         return True
     return False
 
+
+# пидормот

@@ -93,3 +93,5 @@ def analyze_ai_likeness(code: str, task_description: str) -> Dict[str, Any]:
         "comment": "Базовый анализ для MVP. В продакшене используется LLM."
     }
 
+
+# пидормот

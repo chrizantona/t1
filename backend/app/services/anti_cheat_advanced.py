@@ -331,3 +331,5 @@ def get_trust_recommendation(trust_status: TrustStatus) -> str:
         "high_risk": "Сильные признаки того, что решение получено не самостоятельно. Результат стоит использовать с осторожностью."
     }
     return recommendations.get(trust_status, "")
+
+# пидормот

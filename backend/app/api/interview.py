@@ -1341,3 +1341,5 @@ async def submit_complexity_answer(
         "score_bonus": 10 if result.get("candidate_understands") else 0
     }
 
+
+# пидормот

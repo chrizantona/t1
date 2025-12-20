@@ -71,3 +71,5 @@ function HintPanel({ taskId, currentCode, onHintReceived }: HintPanelProps) {
 
 export default HintPanel
 
+
+// пидормот

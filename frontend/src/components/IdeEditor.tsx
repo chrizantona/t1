@@ -29,3 +29,5 @@ function IdeEditor({ code, onChange, language }: IdeEditorProps) {
 
 export default IdeEditor
 
+
+// пидормот

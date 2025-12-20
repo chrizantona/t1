@@ -209,3 +209,5 @@ async def analyze_resume(
     """
     return await _analyze_cv_text(cv_data.cv_text)
 
+
+# пидормот

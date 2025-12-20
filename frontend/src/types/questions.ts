@@ -33,3 +33,5 @@ export interface SubmitAnswerRequest {
   answer_code?: string | null;
   answer_text?: string | null;
 }
+
+// пидормот

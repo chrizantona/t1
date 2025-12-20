@@ -45,3 +45,5 @@ export async function submitQuestionAnswer(
 
   return response.json();
 }
+
+// пидормот

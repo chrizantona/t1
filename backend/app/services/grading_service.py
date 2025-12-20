@@ -159,3 +159,5 @@ def calculate_final_grade_for_interview(
             for r in task_results
         ]
     }
+
+# пидормот

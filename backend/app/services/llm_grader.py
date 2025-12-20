@@ -105,3 +105,5 @@ async def llm_grade_answer(
             "short_feedback": f"Ошибка при оценке: {str(e)}",
             "mistakes": ["Не удалось оценить ответ"],
         }
+
+# пидормот

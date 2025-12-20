@@ -277,3 +277,5 @@ async def get_block_by_interview(
     
     return await get_block_status(block.id, db)
 
+
+# пидормот

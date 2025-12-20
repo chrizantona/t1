@@ -483,3 +483,5 @@ def get_task_sequence(level: str, count: int = 3) -> List[Dict[str, Any]]:
             tasks.append(get_task_by_difficulty(difficulty))
     
     return tasks
+
+# пидормот

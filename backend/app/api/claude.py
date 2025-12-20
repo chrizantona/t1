@@ -200,3 +200,5 @@ async def api_generate_final_report(request: FinalReportRequest):
         return FinalReportResult(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# пидормот

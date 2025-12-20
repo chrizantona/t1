@@ -610,3 +610,5 @@ async def get_block_statistics(
         "questions_breakdown": questions_breakdown
     }
 
+
+# пидормот

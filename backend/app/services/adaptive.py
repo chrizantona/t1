@@ -258,3 +258,5 @@ def calculate_task_score(
     hidden_score = (passed_hidden / total_hidden) * 0.4
     
     return (visible_score + hidden_score) * max_score
+
+# пидормот

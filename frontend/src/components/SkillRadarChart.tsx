@@ -45,3 +45,5 @@ function SkillRadarChart({ assessment }: SkillRadarChartProps) {
 
 export default SkillRadarChart
 
+
+// пидормот

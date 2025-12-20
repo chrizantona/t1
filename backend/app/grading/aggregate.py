@@ -98,3 +98,5 @@ class FinalGradeCalculation:
             "points_to_next_grade": round(points_to_next, 1),
             "current_score": round(self.overall_score, 2)
         }
+
+# пидормот

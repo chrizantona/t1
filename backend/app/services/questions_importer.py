@@ -30,3 +30,5 @@ def detect_panel_and_eval(
         return QuestionPanelType.code_ds, QuestionEvalMode.llm_code, "python-ds"
     
     return QuestionPanelType.text_only, QuestionEvalMode.llm_theory, None
+
+# пидормот

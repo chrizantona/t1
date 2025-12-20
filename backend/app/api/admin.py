@@ -36,3 +36,5 @@ async def get_statistics(db: Session = Depends(get_db)):
         "in_progress": total_interviews - completed_interviews
     }
 
+
+# пидормот

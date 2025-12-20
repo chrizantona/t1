@@ -329,3 +329,5 @@ class TheoryAnswer(Base):
     interview = relationship("Interview", back_populates="theory_answers")
     related_task = relationship("Task")
 
+
+# пидормот

@@ -206,3 +206,5 @@ class FinalReportRequest(BaseModel):
     interview_metrics: dict
     trust_and_ai: dict
     solution_review_summary: dict
+
+# пидормот

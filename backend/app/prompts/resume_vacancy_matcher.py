@@ -44,3 +44,5 @@ MATCHER_USER = """=== RESUME_PARSED_JSON ===
   ],
   "recommended_difficulty": "easy|middle|hard|mixed"
 }}"""
+
+# пидормот

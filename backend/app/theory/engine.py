@@ -69,3 +69,5 @@ def should_ask_theory(
     - Not more than max_theory_questions total
     """
     return task_was_strong_pass and theory_questions_asked < max_theory_questions
+
+# пидормот
